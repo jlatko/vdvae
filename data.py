@@ -3,7 +3,7 @@ import pickle
 import os
 import torch
 from torch.utils.data import TensorDataset
-from torchvision.datasets import ImageFolder
+from torchvision.datasets import ImageFolder, DatasetFolder
 import torchvision.transforms as transforms
 from sklearn.model_selection import train_test_split
 
@@ -65,9 +65,13 @@ def set_up_data(H):
     shift_loss = torch.tensor([shift_loss]).cuda().view(1, 1, 1, 1)
     scale_loss = torch.tensor([scale_loss]).cuda().view(1, 1, 1, 1)
 
-    if H.dataset in ('ffhq_1024', 'celebahq'):
+    if H.dataset  == 'ffhq_1024':
         train_data = ImageFolder(trX, transforms.ToTensor())
         valid_data = ImageFolder(eval_dataset, transforms.ToTensor())
+        untranspose = True
+    elif H.dataset == 'celebahq':
+        train_data = DatasetFolder(trX, transforms.ToTensor())
+        valid_data = DatasetFolder(eval_dataset, transforms.ToTensor())
         untranspose = True
     else:
         train_data = TensorDataset(torch.as_tensor(trX))
