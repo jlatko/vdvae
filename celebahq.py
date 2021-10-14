@@ -4,7 +4,8 @@ import torch
 import pandas as pd
 from torch.utils.data import Dataset
 
-from paths import CELEBAHQ_DIR
+
+CELEBAHQ_DIR = "/scratch/s193223/celebahq2/CelebAMask-HQ/"
 
 class CelebAHQDataset(Dataset):
     """Face Landmarks dataset."""
