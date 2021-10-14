@@ -29,6 +29,12 @@ def set_up_data(H):
         H.image_channels = 3
         shift = -112.8666757481
         scale = 1. / 69.84780273
+    elif H.dataset == 'celebahq':
+        trX, vaX, teX = celebahq(H.data_root)
+        H.image_size = 256
+        H.image_channels = 3
+        shift = -112.8666757481
+        scale = 1. / 69.84780273
     elif H.dataset == 'ffhq_1024':
         trX, vaX, teX = ffhq1024(H.data_root)
         H.image_size = 1024
@@ -130,6 +136,10 @@ def imagenet64(data_root):
 def ffhq1024(data_root):
     # we did not significantly tune hyperparameters on ffhq-1024, and so simply evaluate on the test set
     return os.path.join(data_root, 'ffhq1024/train'), os.path.join(data_root, 'ffhq1024/valid'), os.path.join(data_root, 'ffhq1024/valid')
+
+
+def celebahq(data_root):
+    return os.path.join(data_root, 'img256train'), os.path.join(data_root, 'img256val'), os.path.join(data_root, 'img256val')
 
 
 def ffhq256(data_root):

@@ -80,6 +80,8 @@ class Encoder(HModule):
         self.enc_blocks = nn.ModuleList(enc_blocks)
 
     def forward(self, x):
+        """ Gets deterministic Bottom Up activations
+        """
         x = x.permute(0, 3, 1, 2).contiguous()
         x = self.in_conv(x)
         activations = {}
@@ -103,33 +105,45 @@ class DecBlock(nn.Module):
         use_3x3 = res > 2
         cond_width = int(width * H.bottleneck_multiple)
         self.zdim = H.zdim
+        # q(z_i | z <i, x) from activations + input (hence width*2 input dimension, zdim*2 is for mean and variance)
         self.enc = Block(width * 2, cond_width, H.zdim * 2, residual=False, use_3x3=use_3x3)
+        # p(z_i | z <i)
         self.prior = Block(width, cond_width, H.zdim * 2 + width, residual=False, use_3x3=use_3x3, zero_last=True)
+        # 1x1 convolution on z after sampling
         self.z_proj = get_1x1(H.zdim, width)
         self.z_proj.weight.data *= np.sqrt(1 / n_blocks)
+        # resnet applied after everything
         self.resnet = Block(width, cond_width, width, residual=True, use_3x3=use_3x3)
         self.resnet.c4.weight.data *= np.sqrt(1 / n_blocks)
         self.z_fn = lambda x: self.z_proj(x)
 
     def sample(self, x, acts):
+        """ Computes block output using bottom up activations and q(z).
+            Will sample latents from q(z). p(z) is only used for KL-div"""
         qm, qv = self.enc(torch.cat([x, acts], dim=1)).chunk(2, dim=1)
         feats = self.prior(x)
         pm, pv, xpp = feats[:, :self.zdim, ...], feats[:, self.zdim:self.zdim * 2, ...], feats[:, self.zdim * 2:, ...]
         x = x + xpp
+        # sample z from q(z)
         z = draw_gaussian_diag_samples(qm, qv)
         kl = gaussian_analytical_kl(qm, pm, qv, pv)
         return z, x, kl
 
     def sample_uncond(self, x, t=None, lvs=None):
+        """ Computes block output without bottom up activations and skips q(z).
+            Will sample z with temperature t or use passed latent. """
         n, c, h, w = x.shape
         feats = self.prior(x)
         pm, pv, xpp = feats[:, :self.zdim, ...], feats[:, self.zdim:self.zdim * 2, ...], feats[:, self.zdim * 2:, ...]
         x = x + xpp
         if lvs is not None:
+            # use given latents as z
             z = lvs
         else:
             if t is not None:
+                # adjust variance to given temperature
                 pv = pv + torch.ones_like(pv) * np.log(t)
+            # sample z from p(z)
             z = draw_gaussian_diag_samples(pm, pv)
         return z, x
 
@@ -146,6 +160,7 @@ class DecBlock(nn.Module):
     def forward(self, xs, activations, get_latents=False):
         x, acts = self.get_inputs(xs, activations)
         if self.mixin is not None:
+            # this is some upscaling stuff
             x = x + F.interpolate(xs[self.mixin][:, :x.shape[1], ...], scale_factor=self.base // self.mixin)
         z, x, kl = self.sample(x, acts)
         x = x + self.z_fn(z)
@@ -190,6 +205,7 @@ class Decoder(HModule):
         self.final_fn = lambda x: x * self.gain + self.bias
 
     def forward(self, activations, get_latents=False):
+        """ Will use activations and sample using q(z), p(z) will be calculated for KL."""
         stats = []
         xs = {a.shape[2]: a for a in self.bias_xs}
         for block in self.dec_blocks:
@@ -199,6 +215,7 @@ class Decoder(HModule):
         return xs[self.H.image_size], stats
 
     def forward_uncond(self, n, t=None, y=None):
+        """ Will use either given latents of sample using p(z). """
         xs = {}
         for bias in self.bias_xs:
             xs[bias.shape[2]] = bias.repeat(n, 1, 1, 1)
@@ -215,7 +232,8 @@ class Decoder(HModule):
         xs = {}
         for bias in self.bias_xs:
             xs[bias.shape[2]] = bias.repeat(n, 1, 1, 1)
-        for block, lvs in itertools.zip_longest(self.dec_blocks, latents):
+        for block, lvs in itertools.zip_longest(self.dec_blocks, latents): # yields None for latents that are not given
+            # will use lvs
             xs = block.forward_uncond(xs, t, lvs=lvs)
         xs[self.H.image_size] = self.final_fn(xs[self.H.image_size])
         return xs[self.H.image_size]
@@ -248,5 +266,6 @@ class VAE(HModule):
         return self.decoder.out_net.sample(px_z)
 
     def forward_samples_set_latents(self, n_batch, latents, t=None):
+        # I guess this samples images based on passed latents
         px_z = self.decoder.forward_manual_latents(n_batch, latents, t=t)
         return self.decoder.out_net.sample(px_z)

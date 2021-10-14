@@ -1,6 +1,6 @@
 import torch
 import numpy as np
-from mpi4py import MPI
+# from mpi4py import MPI
 import socket
 import argparse
 import os
@@ -15,7 +15,7 @@ from utils import (logger,
 from data import mkdir_p
 from contextlib import contextmanager
 import torch.distributed as dist
-from apex.optimizers import FusedAdam as AdamW
+# from apex.optimizers import FusedAdam as AdamW
 from vae import VAE
 from torch.nn.parallel.distributed import DistributedDataParallel
 
@@ -110,7 +110,7 @@ def set_up_hyperparams(s=None):
     parser = argparse.ArgumentParser()
     parser = add_vae_arguments(parser)
     parse_args_and_update_hparams(H, parser, s=s)
-    setup_mpi(H)
+    # setup_mpi(H) # TODO: uncomment
     setup_save_dirs(H)
     logprint = logger(H.logdir)
     for i, k in enumerate(sorted(H)):
@@ -161,10 +161,11 @@ def load_vaes(H, logprint):
         ema_vae.load_state_dict(vae.state_dict())
     ema_vae.requires_grad_(False)
 
-    vae = vae.cuda(H.local_rank)
-    ema_vae = ema_vae.cuda(H.local_rank)
+    if torch.cuda.is_available():
+        vae = vae.cuda(H.local_rank)
+        ema_vae = ema_vae.cuda(H.local_rank)
 
-    vae = DistributedDataParallel(vae, device_ids=[H.local_rank], output_device=H.local_rank)
+    # vae = DistributedDataParallel(vae, device_ids=[H.local_rank], output_device=H.local_rank)
 
     if len(list(vae.named_parameters())) != len(list(vae.parameters())):
         raise ValueError('Some params are not named. Please name all params.')

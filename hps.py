@@ -69,6 +69,11 @@ ffhq_256.skip_threshold = 180.
 HPARAMS_REGISTRY['ffhq256'] = ffhq_256
 
 
+celebahq = Hyperparams()
+celebahq.update(ffhq_256)
+celebahq.dataset = 'celebahq'
+HPARAMS_REGISTRY['celebahq'] = celebahq
+
 ffhq1024 = Hyperparams()
 ffhq1024.update(ffhq_256)
 ffhq1024.dataset = 'ffhq_1024'
