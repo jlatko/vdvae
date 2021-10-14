@@ -65,7 +65,7 @@ def set_up_data(H):
     shift_loss = torch.tensor([shift_loss]).cuda().view(1, 1, 1, 1)
     scale_loss = torch.tensor([scale_loss]).cuda().view(1, 1, 1, 1)
 
-    if H.dataset == 'ffhq_1024':
+    if H.dataset in ('ffhq_1024', 'celebahq'):
         train_data = ImageFolder(trX, transforms.ToTensor())
         valid_data = ImageFolder(eval_dataset, transforms.ToTensor())
         untranspose = True
