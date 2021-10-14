@@ -7,6 +7,8 @@ from torchvision.datasets import ImageFolder, DatasetFolder
 import torchvision.transforms as transforms
 from sklearn.model_selection import train_test_split
 
+from celebahq import CelebAHQDataset
+
 
 def set_up_data(H):
     shift_loss = -127.5
@@ -70,8 +72,8 @@ def set_up_data(H):
         valid_data = ImageFolder(eval_dataset, transforms.ToTensor())
         untranspose = True
     elif H.dataset == 'celebahq':
-        train_data = DatasetFolder(trX, transforms.ToTensor())
-        valid_data = DatasetFolder(eval_dataset, transforms.ToTensor())
+        train_data = CelebAHQDataset(root_dir=H.data_root,  train=False, transform=transforms.ToTensor())
+        valid_data = CelebAHQDataset(root_dir=H.data_root, train=False, transform=transforms.ToTensor())
         untranspose = True
     else:
         train_data = TensorDataset(torch.as_tensor(trX))
