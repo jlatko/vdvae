@@ -25,21 +25,21 @@ def set_up_data(H):
         H.image_channels = 3
         shift = -115.92961967
         scale = 1. / 69.37404
-    elif H.dataset == 'ffhq_256':
+    elif H.dataset == 'ffhq_256': # data (0,255)
         trX, vaX, teX = ffhq256(H.data_root)
         H.image_size = 256
         H.image_channels = 3
         shift = -112.8666757481
         scale = 1. / 69.84780273
-    elif H.dataset == 'celebahq':
+    elif H.dataset == 'celebahq': # data (0,1)
         trX, vaX, teX = celebahq(H.data_root)
         H.image_size = 256
         H.image_channels = 3
         # TODO: ?
-        shift = -112.8666757481
-        scale = 1. / 69.84780273
-        # shift = -0.4387
-        # scale = 1.0 / 0.2743
+        shift = -0.4426144146984313 # same as ffhq256 * 255
+        scale = 1.0 / 0.2743
+        shift_loss = -0.5
+        scale_loss = 2.0
     elif H.dataset == 'ffhq_1024':
         trX, vaX, teX = ffhq1024(H.data_root)
         H.image_size = 1024
@@ -75,7 +75,7 @@ def set_up_data(H):
         valid_data = ImageFolder(eval_dataset, transforms.ToTensor())
         untranspose = True
     elif H.dataset == 'celebahq':
-        train_data = CelebAHQDataset(root_dir=H.data_root,  train=False, transform=transforms.ToTensor())
+        train_data = CelebAHQDataset(root_dir=H.data_root,  train=True, transform=transforms.ToTensor())
         valid_data = CelebAHQDataset(root_dir=H.data_root, train=False, transform=transforms.ToTensor())
         untranspose = True
     else:

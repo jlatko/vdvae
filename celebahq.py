@@ -1,5 +1,5 @@
 import os
-import PIL
+from PIL import Image
 import torch
 import pandas as pd
 from torch.utils.data import Dataset
@@ -42,9 +42,9 @@ class CelebAHQDataset(Dataset):
             idx = idx.tolist()
         meta = self.metadata.iloc[idx]
         img_name = os.path.join(self.img_dir, meta.file_name)
-        X = PIL.Image.open(img_name)
+        X = Image.open(img_name)
 
-        if self.transform:
+        if self.transform :
             X = self.transform(X)
 
         # filter out meta
