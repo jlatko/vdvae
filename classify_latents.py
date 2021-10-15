@@ -8,6 +8,7 @@ from latents import get_latents, get_available_latents
 # TODO: ?
 from sklearn.model_selection import train_test_split
 from sklearn.neighbors import KNeighborsClassifier
+from sklearn.metrics import accuracy_score, f1_score
 
 def get_classification_score(col, layer_ind):
     print(layer_ind, col)
@@ -23,8 +24,12 @@ def get_classification_score(col, layer_ind):
     neigh = KNeighborsClassifier(n_neighbors=5, n_jobs=8)
 
     neigh.fit(X_train, y_train)
+    y_pred = neigh.predict(X_test)
 
-    return neigh.score(X_test, y_test)
+    return {
+        'acc': accuracy_score(y_test, y_pred),
+        'f1': f1_score(y_test, y_pred),
+    }
 
 def main():
     col = "Young"
