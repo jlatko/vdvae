@@ -25,7 +25,7 @@ def save_repr(H, ema_vae, data_valid, preprocess_fn):
                 for block_idx, block_stats in enumerate(stats):
                     for k in ["z", "kl", "qm", "qv", "pm", "pv"]:
                         stat = block_stats[k][i].cpu().numpy()
-                        stat_dict[f"{k}_{i}"] = stat
+                        stat_dict[f"{k}_{block_idx}"] = stat
 
                 np.savez(os.path.join(H.destination_dir, f"{idx}.npz"), **stat_dict)
 
