@@ -128,12 +128,11 @@ def run_test_eval(H, ema_vae, data_test, preprocess_fn, logprint):
 def main():
     H, logprint = set_up_hyperparams()
     H, data_train, data_valid_or_test, preprocess_fn = set_up_data(H)
-    N = 100
+    N = 10
     raw_xs = []
     inputs = []
     targets = []
-    for i in range(N):
-        x = data_train[i]
+    for x in DataLoader(data_train, batch_size=32, drop_last=True, pin_memory=True, shuffle=False):
         data_input, target = preprocess_fn(x)
         raw_xs.append(np.array(x[0])[np.newaxis])
         inputs.append(data_input.detach().cpu().numpy())
@@ -142,6 +141,8 @@ def main():
             print("raw", raw_xs[0].shape, raw_xs[0].dtype)
             print("input", inputs[0].shape, inputs[0].dtype)
             print("target", targets[0].shape, targets[0].dtype)
+        if i == N:
+            break
     raw_xs = np.concatenate(raw_xs)
     inputs = np.concatenate(inputs)
     targets = np.concatenate(targets)
