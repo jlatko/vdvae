@@ -132,7 +132,7 @@ def main():
     raw_xs = []
     inputs = []
     targets = []
-    for x in DataLoader(data_train, batch_size=32, drop_last=True, pin_memory=True, shuffle=False):
+    for i, x in enumerate(DataLoader(data_train, batch_size=32, drop_last=True, pin_memory=True, shuffle=False)):
         data_input, target = preprocess_fn(x)
         raw_xs.append(np.array(x[0])[np.newaxis])
         inputs.append(data_input.detach().cpu().numpy())
