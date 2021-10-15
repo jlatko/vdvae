@@ -32,6 +32,7 @@ def save_repr(H, ema_vae, data_valid, preprocess_fn):
 def add_params(parser):
     parser.add_argument('--destination_dir', type=str, default='/scratch/s193223/vdvae/latents/')
     parser.add_argument('--use_train', dest='use_train', action='store_true')
+    return parser
 
 def main():
     H, logprint = set_up_hyperparams(extra_args_fn=add_params)

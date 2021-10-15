@@ -29,8 +29,8 @@ class CelebAHQDataset(Dataset):
         self.transform = transform
         self.metadata = pd.read_csv(os.path.join(root_dir, 'metadata.csv'))
         self.split_mapping = {
-            True: [0,3],
-            False: [1,2]
+            True: [0],
+            False: [1,2,3]
         }
         self.metadata = self.metadata[self.metadata.split.isin(self.split_mapping[train])]
 
