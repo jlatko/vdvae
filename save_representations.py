@@ -19,7 +19,7 @@ def save_repr(H, ema_vae, data_valid, preprocess_fn):
             for i in range(data_input.shape[0]):
                 stat_dict = {}
                 if H.dataset == "celebahq":
-                    idx = target[i]["idx"]
+                    idx = x[1]["idx"][i].item()
                 else:
                     idx += 1
                 for block_idx, block_stats in enumerate(stats):
@@ -36,7 +36,12 @@ def add_params(parser):
 
 def main():
     H, logprint = set_up_hyperparams(extra_args_fn=add_params)
-    os.makedirs(H.destination_dir)
+
+    if os.path.exists(H.destination_dir):
+        if len(os.listdir(H.destination_dir)) > 0:
+            raise RuntimeError('Destination non empty')
+    else:
+        os.makedirs(H.destination_dir)
 
     H, data_train, data_valid_or_test, preprocess_fn = set_up_data(H)
     vae, ema_vae = load_vaes(H, logprint)
