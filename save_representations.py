@@ -14,7 +14,7 @@ def save_repr(H, ema_vae, data_valid, preprocess_fn):
     for x in tqdm(DataLoader(data_valid, batch_size=H.n_batch, drop_last=True, pin_memory=True, sampler=valid_sampler)):
         data_input, target = preprocess_fn(x)
         with torch.no_grad():
-            stats = ema_vae.forward_get_latents(data_input, get_q_mean_var=True)
+            stats = ema_vae.forward_get_latents(data_input, get_mean_var=True)
             # stats = get_cpu_stats_over_ranks(stats)
             for i in range(data_input.shape[0]):
                 stat_dict = {}
