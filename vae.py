@@ -128,9 +128,9 @@ class DecBlock(nn.Module):
         z = draw_gaussian_diag_samples(qm, qv)
         kl = gaussian_analytical_kl(qm, pm, qv, pv)
         if get_mean_var:
-            return z, x, k, qm, qv, pm, pv
+            return z, x, kl, qm, qv, pm, pv
         else:
-            return z, x, k
+            return z, x, kl
 
 
     def sample_uncond(self, x, t=None, lvs=None):
