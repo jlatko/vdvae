@@ -35,8 +35,11 @@ def set_up_data(H):
         trX, vaX, teX = celebahq(H.data_root)
         H.image_size = 256
         H.image_channels = 3
-        shift = -112.8666757481
-        scale = 1. / 69.84780273
+        # TODO: ?
+        # shift = -112.8666757481
+        # scale = 1. / 69.84780273
+        shift = -0.4387
+        scale = 1.0 / 0.2743
     elif H.dataset == 'ffhq_1024':
         trX, vaX, teX = ffhq1024(H.data_root)
         H.image_size = 1024

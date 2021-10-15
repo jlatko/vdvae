@@ -47,8 +47,6 @@ class CelebAHQDataset(Dataset):
         if self.transform:
             X = self.transform(X)
 
-        X = X.permute(1,2,0)
-
         # filter out meta
         # meta = meta[~meta.isin(['idx', 'orig_idx', 'orig_file', 'split', 'index', 'file_name'])]
         # maybe not filter out to keep track of ids while saving
