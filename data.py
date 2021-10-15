@@ -54,7 +54,7 @@ def set_up_data(H):
     else:
         raise ValueError('unknown dataset: ', H.dataset)
 
-    do_low_bit = H.dataset in ['ffhq_256']
+    do_low_bit = H.dataset in ['ffhq_256', 'celebahq']
 
     if H.test_eval:
         print('DOING TEST')

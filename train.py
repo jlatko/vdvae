@@ -101,7 +101,6 @@ def evaluate(H, ema_vae, data_valid, preprocess_fn):
 
 
 def write_images(H, ema_vae, viz_batch_original, viz_batch_processed, fname, logprint):
-    # TODO: this seems very handy
     zs = [s['z'].cuda() for s in ema_vae.forward_get_latents(viz_batch_processed)]
     batches = [viz_batch_original.numpy()]
     mb = viz_batch_processed.shape[0]
