@@ -1,4 +1,6 @@
 import os
+from zipfile import BadZipFile
+
 import numpy as np
 import pandas as pd
 from tqdm import tqdm
@@ -29,7 +31,7 @@ def get_latents(latents_dir, layer_ind, splits=(1,2,3), root_dir=CELEBAHQ_DIR, a
             latents[i] = z
             rows_found.append(row)
             i += 1
-        except (FileNotFoundError, EOFError) as e:
+        except (FileNotFoundError, EOFError, BadZipFile) as e:
             if allow_missing:
                 rows_missing.append(row)
                 pass
