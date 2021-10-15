@@ -12,7 +12,8 @@ from sklearn.neighbors import KNeighborsClassifier
 def get_classification_score(col, layer_ind):
     print(layer_ind, col)
     # TODO: split?
-    z, meta = get_latents(latents_dir="/scratch/s193223/vdvae/latents/", layer_ind=layer_ind, splits=[1])
+    # TODO: no missing
+    z, meta = get_latents(latents_dir="/scratch/s193223/vdvae/latents/", layer_ind=layer_ind, splits=[1], allow_missing=True)
     print(z.shape)
     y = np.array(meta[col] == 1)
     z = z.reshape(z.shape[0], -1)
@@ -29,7 +30,7 @@ def main():
     col = "Young"
     latent_ids = get_available_latents()
     print(latent_ids)
-    for i in latent_ids:
+    for i in reversed(latent_ids):
         score = get_classification_score(col, i)
         print(i, score)
 
