@@ -30,7 +30,7 @@ def main():
     col = "Young"
     latent_ids = get_available_latents()
     print(latent_ids)
-    for i in reversed(latent_ids):
+    for i in latent_ids:
         score = get_classification_score(col, i)
         print(i, score)
 
