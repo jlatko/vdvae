@@ -1,3 +1,5 @@
+from time import sleep
+
 import numpy as np
 import os
 import torch
@@ -39,7 +41,10 @@ def main():
 
     if os.path.exists(H.destination_dir):
         if len(os.listdir(H.destination_dir)) > 0:
-            raise RuntimeError('Destination non empty')
+            print("WARNING: destination non-empty")
+            sleep(5)
+            print("continuing")
+        #     raise RuntimeError('Destination non empty')
     else:
         os.makedirs(H.destination_dir)
 
