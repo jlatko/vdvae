@@ -117,7 +117,7 @@ class DecBlock(nn.Module):
         self.resnet.c4.weight.data *= np.sqrt(1 / n_blocks)
         self.z_fn = lambda x: self.z_proj(x)
 
-    def sample(self, x, acts):
+    def sample(self, x, acts, get_mean_var=False):
         """ Computes block output using bottom up activations and q(z).
             Will sample latents from q(z). p(z) is only used for KL-div"""
         qm, qv = self.enc(torch.cat([x, acts], dim=1)).chunk(2, dim=1)
@@ -127,7 +127,11 @@ class DecBlock(nn.Module):
         # sample z from q(z)
         z = draw_gaussian_diag_samples(qm, qv)
         kl = gaussian_analytical_kl(qm, pm, qv, pv)
-        return z, x, kl
+        if get_mean_var:
+            return z, x, k, qm, qv, pm, pv
+        else:
+            return z, x, k
+
 
     def sample_uncond(self, x, t=None, lvs=None):
         """ Computes block output without bottom up activations and skips q(z).
@@ -157,18 +161,30 @@ class DecBlock(nn.Module):
             x = x.repeat(acts.shape[0], 1, 1, 1)
         return x, acts
 
-    def forward(self, xs, activations, get_latents=False):
+    def forward(self, xs, activations, get_latents=False, get_mean_var=False):
         x, acts = self.get_inputs(xs, activations)
         if self.mixin is not None:
             # this is some upscaling stuff
             x = x + F.interpolate(xs[self.mixin][:, :x.shape[1], ...], scale_factor=self.base // self.mixin)
-        z, x, kl = self.sample(x, acts)
+        if get_mean_var:
+            z, x, kl, qm, qv, pm, pv = self.sample(x, acts, get_mean_var=True)
+        else:
+            z, x, kl = self.sample(x, acts)
         x = x + self.z_fn(z)
         x = self.resnet(x)
         xs[self.base] = x
+        stats = {"kl": kl}
+
         if get_latents:
-            return xs, dict(z=z.detach(), kl=kl)
-        return xs, dict(kl=kl)
+            stats["z"] = z.detach()
+
+        if get_mean_var:
+            stats["qm"] = qm.detach()
+            stats["qv"] = qv.detach()
+            stats["pm"] = pm.detach()
+            stats["pv"] = pv.detach()
+
+        return xs, stats
 
     def forward_uncond(self, xs, t=None, lvs=None):
         try:
@@ -204,12 +220,12 @@ class Decoder(HModule):
         self.bias = nn.Parameter(torch.zeros(1, H.width, 1, 1))
         self.final_fn = lambda x: x * self.gain + self.bias
 
-    def forward(self, activations, get_latents=False):
+    def forward(self, activations, get_latents=False, get_mean_var=False):
         """ Will use activations and sample using q(z), p(z) will be calculated for KL."""
         stats = []
         xs = {a.shape[2]: a for a in self.bias_xs}
         for block in self.dec_blocks:
-            xs, block_stats = block(xs, activations, get_latents=get_latents)
+            xs, block_stats = block(xs, activations, get_latents=get_latents, get_mean_var=get_mean_var)
             stats.append(block_stats)
         xs[self.H.image_size] = self.final_fn(xs[self.H.image_size])
         return xs[self.H.image_size], stats
@@ -256,9 +272,9 @@ class VAE(HModule):
         elbo = (distortion_per_pixel + rate_per_pixel).mean()
         return dict(elbo=elbo, distortion=distortion_per_pixel.mean(), rate=rate_per_pixel.mean())
 
-    def forward_get_latents(self, x):
+    def forward_get_latents(self, x, get_mean_var=False):
         activations = self.encoder.forward(x)
-        _, stats = self.decoder.forward(activations, get_latents=True)
+        _, stats = self.decoder.forward(activations, get_latents=True, get_mean_var=get_mean_var)
         return stats
 
     def forward_uncond_samples(self, n_batch, t=None):

@@ -5,6 +5,8 @@ import time
 import torch
 from torch.utils.data import DataLoader
 from torch.utils.data.distributed import DistributedSampler
+from tqdm import tqdm
+
 from data import set_up_data
 from utils import get_cpu_stats_over_ranks
 from train_helpers import set_up_hyperparams, load_vaes, load_opt, accumulate_stats, save_model, update_ema
@@ -89,7 +91,7 @@ def train_loop(H, data_train, data_valid, preprocess_fn, vae, ema_vae, logprint)
 def evaluate(H, ema_vae, data_valid, preprocess_fn):
     stats_valid = []
     valid_sampler = DistributedSampler(data_valid, num_replicas=H.mpi_size, rank=H.rank)
-    for x in DataLoader(data_valid, batch_size=H.n_batch, drop_last=True, pin_memory=True, sampler=valid_sampler):
+    for x in tqdm(DataLoader(data_valid, batch_size=H.n_batch, drop_last=True, pin_memory=True, sampler=valid_sampler)):
         data_input, target = preprocess_fn(x)
         stats_valid.append(eval_step(data_input, target, ema_vae))
     vals = [a['elbo'] for a in stats_valid]

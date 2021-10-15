@@ -48,6 +48,7 @@ class CelebAHQDataset(Dataset):
             X = self.transform(X)
 
         # filter out meta
-        meta = meta[~meta.isin(['idx', 'orig_idx', 'orig_file', 'split', 'index', 'file_name'])]
+        # meta = meta[~meta.isin(['idx', 'orig_idx', 'orig_file', 'split', 'index', 'file_name'])]
+        # maybe not filter out to keep track of ids while saving
 
         return X, meta.to_dict()

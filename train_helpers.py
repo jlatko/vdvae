@@ -105,10 +105,11 @@ def setup_save_dirs(H):
     H.logdir = os.path.join(H.save_dir, 'log')
 
 
-def set_up_hyperparams(s=None):
+def set_up_hyperparams(s=None, extra_args_fn=lambda x: x):
     H = Hyperparams()
     parser = argparse.ArgumentParser()
     parser = add_vae_arguments(parser)
+    parser = extra_args_fn(parser)
     parse_args_and_update_hparams(H, parser, s=s)
     setup_mpi(H)
     setup_save_dirs(H)
