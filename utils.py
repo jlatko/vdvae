@@ -1,4 +1,4 @@
-# from mpi4py import MPI
+from mpi4py import MPI
 import os
 import json
 import tempfile
@@ -39,8 +39,8 @@ def logger(log_prefix):
     txt_path = f'{log_prefix}.txt'
 
     def log(*args, pprint=False, **kwargs):
-        # if mpi_rank() != 0:
-        #     return
+        if mpi_rank() != 0:
+            return
         t = time.ctime()
         argdict = {'time': t}
         if len(args) > 0:
