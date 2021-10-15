@@ -22,11 +22,13 @@ def get_latents(latents_dir, layer_ind, splits=(1,2,3), root_dir=CELEBAHQ_DIR, a
     latents = np.zeros(shape, dtype=np.float32)
     rows_found = []
     rows_missing = []
-    for i, (_, row) in tqdm(enumerate(metadata.iterrows())):
+    i = 0
+    for _, row in tqdm(metadata.iterrows(),  total=metadata.shape[0]):
         try:
             z = np.load(os.path.join(latents_dir, f"{row.idx}.npz"))[f"z_{layer_ind}"].astype(np.float32)
             latents[i] = z
             rows_found.append(row)
+            i += 1
         except (FileNotFoundError, EOFError) as e:
             if allow_missing:
                 rows_missing.append(row)
@@ -36,4 +38,5 @@ def get_latents(latents_dir, layer_ind, splits=(1,2,3), root_dir=CELEBAHQ_DIR, a
     if len(rows_missing) > 0 and allow_missing:
         print(f"Missing {len(rows_missing)}/{len(metadata)} files")
         metadata = pd.DataFrame(rows_found)
+        latents = latents[:len(metadata)]
     return latents, metadata
