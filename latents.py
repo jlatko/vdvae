@@ -1,3 +1,4 @@
+import logging
 import os
 from zipfile import BadZipFile
 
@@ -20,7 +21,6 @@ def get_latents(latents_dir, layer_ind, splits=(1,2,3), root_dir=CELEBAHQ_DIR, a
 
     z = np.load(os.path.join(latents_dir, f"{metadata.iloc[0].idx}.npz"))[f"z_{layer_ind}"]
     shape = [len(metadata)] + list(z.shape)
-    print(shape)
     latents = np.zeros(shape, dtype=np.float32)
     rows_found = []
     rows_missing = []
@@ -39,7 +39,7 @@ def get_latents(latents_dir, layer_ind, splits=(1,2,3), root_dir=CELEBAHQ_DIR, a
             else:
                 raise e
     if len(rows_missing) > 0 and allow_missing:
-        print(f"Missing {len(rows_missing)}/{len(metadata)} files")
+        logging.warning(f"Missing {len(rows_missing)}/{len(metadata)} files")
         metadata = pd.DataFrame(rows_found)
         latents = latents[:len(metadata)]
     return latents, metadata
