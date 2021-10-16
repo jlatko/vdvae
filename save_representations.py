@@ -10,7 +10,7 @@ from tqdm import tqdm
 from data import set_up_data
 from train_helpers import set_up_hyperparams, load_vaes
 
-def save_repr(H, ema_vae, data_valid, preprocess_fn):
+def save_repr(H, ema_vae, data_valid, preprocess_fn, keys=("z", "kl", "qm", "qv", "pm", "pv")):
     valid_sampler = DistributedSampler(data_valid, num_replicas=H.mpi_size, rank=H.rank)
     idx = -1
     for x in tqdm(DataLoader(data_valid, batch_size=H.n_batch, drop_last=True, pin_memory=True, sampler=valid_sampler)):
@@ -25,8 +25,8 @@ def save_repr(H, ema_vae, data_valid, preprocess_fn):
                 else:
                     idx += 1
                 for block_idx, block_stats in enumerate(stats):
-                    for k in ["z", "kl", "qm", "qv", "pm", "pv"]:
-                        stat = block_stats[k][i].cpu().numpy()
+                    for k in keys:
+                        stat = block_stats[k][i].cpu().numpy().astype(np.float16)
                         stat_dict[f"{k}_{block_idx}"] = stat
 
                 np.savez(os.path.join(H.destination_dir, f"{idx}.npz"), **stat_dict)
@@ -34,6 +34,8 @@ def save_repr(H, ema_vae, data_valid, preprocess_fn):
 def add_params(parser):
     parser.add_argument('--destination_dir', type=str, default='/scratch/s193223/vdvae/latents/')
     parser.add_argument('--use_train', dest='use_train', action='store_true')
+    parser.add_argument('--all_keys', dest='all_keys', action='store_true')
+
     return parser
 
 def main():
@@ -54,7 +56,12 @@ def main():
         dataset = data_train
     else:
         dataset = data_valid_or_test
-    save_repr(H, ema_vae, dataset, preprocess_fn)
+
+    if H.all_keys:
+        keys = ["z", "kl", "qm", "qv", "pm", "pv"]
+    else:
+        keys = ["z"]
+    save_repr(H, ema_vae, dataset, preprocess_fn, keys=keys)
 
 
 if __name__ == "__main__":

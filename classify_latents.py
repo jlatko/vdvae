@@ -23,7 +23,7 @@ def get_classification_score(X_train, X_test, y_train, y_test):
     }
 
 def run_classifications(cols, layer_ind):
-    # TODO: split?
+    # TODO: split? kfold?
     # TODO: no missing
     z, meta = get_latents(latents_dir="/scratch/s193223/vdvae/latents/", layer_ind=layer_ind, splits=[1,2,3], allow_missing=False)
     print(z.shape)
@@ -41,6 +41,7 @@ def run_classifications(cols, layer_ind):
         score = get_classification_score(X_train, X_test, y_train, y_test)
         score["layer_ind"] = layer_ind
         scores[col] = score
+        print(col, score)
     return scores
 
 def main():
@@ -51,7 +52,6 @@ def main():
     for i in latent_ids:
         score_dict = run_classifications(cols, i)
         for col, score in score_dict.items():
-            print(col, score)
             scores[col].append(score)
 
     for col in cols:
