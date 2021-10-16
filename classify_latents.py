@@ -53,7 +53,11 @@ def run_classifications(cols, layer_ind):
     return scores
 
 def main():
-    cols = ["Young", "Male", "Bald", "Mustache", "Smiling", "Chubby", "Attractive"]
+    cols = ["Young", "Male", "Bald", "Mustache", "Smiling", "Chubby",
+            "Attractive", "Brown_Hair", "Blond_Hair", "Bushy_Eyebrows", "Blurry",
+            "Wearing_Earrings", "Heavy_Makeup", "Mouth_Slightly_Open",
+            "Narrow_Eyes", "Big_Lips", "Big_Nose", "Eyeglasses", "Wearing_Lipstick"]
+
     latent_ids = get_available_latents()
     logging.info(latent_ids)
     scores = defaultdict(list)
