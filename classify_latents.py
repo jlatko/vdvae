@@ -1,6 +1,8 @@
 import os
 from collections import defaultdict
 
+from tqdm import tqdm
+
 os.environ["MKL_NUM_THREADS"] = "1"
 os.environ["NUMEXPR_NUM_THREADS"] = "1"
 os.environ["OMP_NUM_THREADS"] = "1"
@@ -8,10 +10,12 @@ os.environ["OMP_NUM_THREADS"] = "1"
 import numpy as np
 import pandas as pd
 from latents import get_latents, get_available_latents
-# TODO: ?
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import StratifiedKFold
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.metrics import accuracy_score, f1_score
+import logging
+
+logging.basicConfig(level=logging.INFO)
 
 def get_classification_score(X_train, X_test, y_train, y_test):
     neigh = KNeighborsClassifier(n_neighbors=5, n_jobs=8)
@@ -23,33 +27,37 @@ def get_classification_score(X_train, X_test, y_train, y_test):
     }
 
 def run_classifications(cols, layer_ind):
-    # TODO: split? kfold?
-    # TODO: no missing
     z, meta = get_latents(latents_dir="/scratch/s193223/vdvae/latents/", layer_ind=layer_ind, splits=[1,2,3], allow_missing=False)
-    print(z.shape)
+    logging.debug(z.shape)
     z = z.reshape(z.shape[0], -1)
 
+    kfold = StratifiedKFold(n_splits=5, random_state=0, shuffle=True)
     scores = {}
-    mask_train = meta.split.isin([1,2])
-    X_train = z[mask_train]
-    meta_train = meta[mask_train]
-    X_test = z[~mask_train]
-    meta_test = meta[~mask_train]
     for col in cols:
-        y_train = np.array(meta_train[col] == 1)
-        y_test = np.array(meta_test[col] == 1)
-        score = get_classification_score(X_train, X_test, y_train, y_test)
+        kfold_scores = []
+        y = np.array(meta[col] == 1)
+        for train_index, test_index in kfold.split(z, y):
+            X_train, X_test = z[train_index], z[test_index]
+            y_train, y_test = y[train_index], y[test_index]
+            score = get_classification_score(X_train, X_test, y_train, y_test)
+            kfold_scores.append(score)
+        kfold_scores = pd.DataFrame(kfold_scores)
+        score = {}
+        for metric in kfold_scores.columns:
+            score[f"{metric}_avg"] = kfold_scores[metric].mean()
+            score[f"{metric}_std"] = kfold_scores[metric].std()
+        score["shape"] = z.shape
         score["layer_ind"] = layer_ind
         scores[col] = score
-        print(col, score)
+        logging.debug(f"{col}: {score}")
     return scores
 
 def main():
     cols = ["Young", "Male", "Bald", "Mustache", "Smiling", "Chubby", "Attractive"]
     latent_ids = get_available_latents()
-    print(latent_ids)
+    logging.info(latent_ids)
     scores = defaultdict(list)
-    for i in latent_ids:
+    for i in tqdm(latent_ids):
         score_dict = run_classifications(cols, i)
         for col, score in score_dict.items():
             scores[col].append(score)

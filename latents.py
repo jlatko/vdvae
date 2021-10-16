@@ -25,7 +25,8 @@ def get_latents(latents_dir, layer_ind, splits=(1,2,3), root_dir=CELEBAHQ_DIR, a
     rows_found = []
     rows_missing = []
     i = 0
-    for _, row in tqdm(metadata.iterrows(),  total=metadata.shape[0]):
+    # for _, row in tqdm(metadata.iterrows(),  total=metadata.shape[0]):
+    for _, row in metadata.iterrows():
         try:
             z = np.load(os.path.join(latents_dir, f"{row.idx}.npz"))[f"z_{layer_ind}"].astype(np.float32)
             latents[i] = z
