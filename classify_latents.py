@@ -23,6 +23,7 @@ import logging
 
 
 def get_classification_score(H, X_train, X_test, y_train, y_test):
+    # TODO: normalize??
     if "knn" in H.model:
         n = int(H.model.split("_")[1])
         model = KNeighborsClassifier(n_neighbors=n, n_jobs=H.n_jobs)

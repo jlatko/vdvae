@@ -49,6 +49,7 @@ def main():
     else:
         os.makedirs(H.destination_dir)
 
+    H, data_train, data_valid_or_test, preprocess_fn = set_up_data(H)
     latent_ids = get_available_latents(H.latents_dir)
     vae, ema_vae = load_vaes(H, logprint)
 
