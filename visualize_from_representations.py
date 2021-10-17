@@ -54,7 +54,7 @@ def main():
     vae, ema_vae = load_vaes(H, logprint)
 
     for i in tqdm(range(H.n_samples)):
-        idx = data_valid_or_test.metadata.iloc[0].idx
+        idx = data_valid_or_test.metadata.iloc[i].idx
         reconstruct_image(H, idx, ema_vae, latent_ids)
 
 

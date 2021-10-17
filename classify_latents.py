@@ -32,7 +32,7 @@ def get_classification_score(H, X_train, X_test, y_train, y_test):
     elif H.model == "logistic":
         model = LogisticRegression(n_jobs=H.n_jobs)
     elif H.model == "l1":
-        model = LogisticRegression(n_jobs=H.n_jobs, penalty="l1")
+        model = LogisticRegression(n_jobs=H.n_jobs, penalty="l1", C=0.999)
     elif H.model == "rf":
         model = RandomForestClassifier(n_jobs=H.n_jobs)
 
