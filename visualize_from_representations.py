@@ -27,7 +27,6 @@ def reconstruct_image(H, idx, ema_vae, latent_ids):
         z_dict = np.load(os.path.join(H.latents_dir, f"{idx}.npz"))
         zs = [torch.tensor(z_dict[f'z_{i}'][np.newaxis], dtype=torch.float32).cuda() for i in latent_ids]
         lv_points = np.floor(np.linspace(0, 1, H.num_variables_visualize + 2) * len(zs)).astype(int)[1:-1]
-        print(lv_points)
         for t in [0.1, 0.5, 0.8, 1]:
             batches = []
             for i in lv_points:
@@ -48,7 +47,6 @@ def interpolation(H, idx, idx2, ema_vae, latent_ids, fixed=True, all_above=False
         zs = [torch.tensor(z_dict[f'z_{i}'][np.newaxis], dtype=torch.float32).cuda() for i in latent_ids]
         zs2 = [torch.tensor(z_dict2[f'z_{i}'][np.newaxis], dtype=torch.float32).cuda() for i in latent_ids]
         lv_points = np.floor(np.linspace(0, 1, H.num_variables_visualize + 2) * len(zs)).astype(int)[1:-1]
-        print(lv_points)
         batches = []
         for i in lv_points:
             zs_current = copy(zs)
@@ -74,6 +72,24 @@ def interpolation(H, idx, idx2, ema_vae, latent_ids, fixed=True, all_above=False
         fname = os.path.join(H.destination_dir, f"interpolation_{name_key}{idx}.png")
         imageio.imwrite(fname, im)
 
+
+def swap(H, idx, idx2, ema_vae, latent_ids):
+    with torch.no_grad():
+        z_dict = np.load(os.path.join(H.latents_dir, f"{idx}.npz"))
+        z_dict2 = np.load(os.path.join(H.latents_dir, f"{idx2}.npz"))
+        zs = [torch.tensor(z_dict[f'z_{i}'][np.newaxis], dtype=torch.float32).cuda() for i in latent_ids]
+        zs2 = [torch.tensor(z_dict2[f'z_{i}'][np.newaxis], dtype=torch.float32).cuda() for i in latent_ids]
+        lv_points = np.floor(np.linspace(0, 1, H.num_variables_visualize + 2) * len(zs)).astype(int)[1:-1]
+        im = np.zeros(shape=(H.num_variables_visualize * 256, H.num_variables_visualize * 256, 3))
+        for i in range(H.num_variables_visualize):
+            for j in range(H.num_variables_visualize):
+                zs_current = copy(zs)
+                zs_current[lv_points[i]:lv_points[j]] = zs2[lv_points[i]:lv_points[j]]
+                im[i*256 : (i+1)*256, j*256 : (j+1)*256] = ema_vae.forward_samples_set_latents(1, zs_current, t=0.1)
+
+        fname = os.path.join(H.destination_dir, f"swap_{idx}.png")
+        imageio.imwrite(fname, im)
+
 def main():
     H, logprint = set_up_hyperparams(extra_args_fn=add_params)
 
@@ -93,6 +109,7 @@ def main():
     for i in tqdm(range(H.n_samples)):
         idx = data_valid_or_test.metadata.iloc[i].idx
         idx2 = data_valid_or_test.metadata.iloc[i+1].idx
+        print("Layer ids: ", np.floor(np.linspace(0, 1, H.num_variables_visualize + 2) * 65).astype(int)[1:-1])
         interpolation(H, idx, idx2, ema_vae, latent_ids, fixed=False, all_above=False)
         interpolation(H, idx, idx2, ema_vae, latent_ids, fixed=False, all_above=True)
         interpolation(H, idx, idx2, ema_vae, latent_ids, fixed=True, all_above=False)
