@@ -16,8 +16,7 @@ from train_helpers import set_up_hyperparams, load_vaes
 def add_params(parser):
     parser.add_argument('--latents_dir', type=str, default='/scratch/s193223/vdvae/latents/')
     parser.add_argument('--n_samples', type=int, default=10)
-    parser.add_argument('--destination_dir', type=int, default='./visualizations/')
-    parser.add_argument('--use_train', dest='use_train', action='store_true')
+    parser.add_argument('--destination_dir', type=str, default='./visualizations/')
     return parser
 
 
