@@ -30,9 +30,11 @@ def get_classification_score(H, X_train, X_test, y_train, y_test):
     elif H.model == "svc":
         model = SVC(n_jobs=H.n_jobs)
     elif H.model == "logistic":
-        model = LogisticRegression(n_jobs=H.n_jobs)
+        model = LogisticRegression(n_jobs=H.n_jobs, solver="saga")
     elif H.model == "l1":
-        model = LogisticRegression(n_jobs=H.n_jobs, penalty="l1", C=0.999)
+        model = LogisticRegression(n_jobs=H.n_jobs, penalty="l1", C=0.999, solver="saga")
+    elif H.model == "l2":
+        model = LogisticRegression(n_jobs=H.n_jobs, penalty="l2", C=0.999, solver="saga")
     elif H.model == "rf":
         model = RandomForestClassifier(n_jobs=H.n_jobs)
 
