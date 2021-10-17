@@ -41,7 +41,7 @@ def reconstruct_image(H, idx, ema_vae, latent_ids):
             imageio.imwrite(fname, im)
 
 
-def interpolation(H, idx, idx2, ema_vae, latent_ids, fixed=True):
+def interpolation(H, idx, idx2, ema_vae, latent_ids, fixed=True, all_above=False):
     with torch.no_grad():
         z_dict = np.load(os.path.join(H.latents_dir, f"{idx}.npz"))
         z_dict2 = np.load(os.path.join(H.latents_dir, f"{idx2}.npz"))
@@ -53,7 +53,10 @@ def interpolation(H, idx, idx2, ema_vae, latent_ids, fixed=True):
         for i in lv_points:
             zs_current = copy(zs)
             for a in np.linspace(0, 1, H.n_steps + 2)[1:-1]:
-                zs_current[i] = (1-a) * zs[i] + a * zs2[i]
+                if all_above:
+                    for j in range(i):
+                        zs_current[j] = (1-a) * zs[j] + a * zs2[j]
+                zs_current[i] = (1 - a) * zs[i] + a * zs2[i]
                 if fixed:
                     batches.append(ema_vae.forward_samples_set_latents(1, zs_current, t=0.1))
                 else:
@@ -63,7 +66,11 @@ def interpolation(H, idx, idx2, ema_vae, latent_ids, fixed=True):
         im = np.concatenate(batches, axis=0).reshape((n_rows,  H.n_steps, *batches[0].shape[1:])).transpose(
             [0, 2, 1, 3, 4]).reshape([n_rows * batches[0].shape[1], batches[0].shape[2] * H.n_steps, 3])
 
-        name_key = "fixed_" if fixed else ""
+        name_key = ""
+        if fixed:
+            name_key += "fixed_"
+        if all_above:
+            name_key += "above_"
         fname = os.path.join(H.destination_dir, f"interpolation_{name_key}{idx}.png")
         imageio.imwrite(fname, im)
 
@@ -86,7 +93,10 @@ def main():
     for i in tqdm(range(H.n_samples)):
         idx = data_valid_or_test.metadata.iloc[i].idx
         idx2 = data_valid_or_test.metadata.iloc[i+1].idx
-        interpolation(H, idx, idx2, ema_vae, latent_ids)
+        interpolation(H, idx, idx2, ema_vae, latent_ids, fixed=False, all_above=False)
+        interpolation(H, idx, idx2, ema_vae, latent_ids, fixed=False, all_above=True)
+        interpolation(H, idx, idx2, ema_vae, latent_ids, fixed=True, all_above=False)
+        interpolation(H, idx, idx2, ema_vae, latent_ids, fixed=True, all_above=True)
         reconstruct_image(H, idx, ema_vae, latent_ids)
 
 
