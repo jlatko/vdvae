@@ -110,6 +110,7 @@ def main():
         idx = data_valid_or_test.metadata.iloc[i].idx
         idx2 = data_valid_or_test.metadata.iloc[i+1].idx
         print("Layer ids: ", np.floor(np.linspace(0, 1, H.num_variables_visualize + 2) * 65).astype(int)[1:-1])
+        swap(H, idx, idx2, ema_vae, latent_ids)
         interpolation(H, idx, idx2, ema_vae, latent_ids, fixed=False, all_above=False)
         interpolation(H, idx, idx2, ema_vae, latent_ids, fixed=False, all_above=True)
         interpolation(H, idx, idx2, ema_vae, latent_ids, fixed=True, all_above=False)
