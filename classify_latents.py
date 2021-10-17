@@ -1,5 +1,10 @@
 import argparse
 import os
+
+os.environ["MKL_NUM_THREADS"] = "1"
+os.environ["NUMEXPR_NUM_THREADS"] = "1"
+os.environ["OMP_NUM_THREADS"] = "1"
+
 from collections import defaultdict
 
 from sklearn.ensemble import RandomForestClassifier
@@ -8,10 +13,6 @@ from sklearn.svm import SVC
 from tqdm import tqdm
 
 from hps import Hyperparams
-
-os.environ["MKL_NUM_THREADS"] = "1"
-os.environ["NUMEXPR_NUM_THREADS"] = "1"
-os.environ["OMP_NUM_THREADS"] = "1"
 
 import numpy as np
 import pandas as pd

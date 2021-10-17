@@ -82,8 +82,9 @@ def swap(H, idx, idx2, ema_vae, latent_ids):
         lv_points = np.floor(np.linspace(0, 1, H.num_variables_visualize + 2) * len(zs)).astype(int)[1:-1]
         im = np.zeros(shape=(H.num_variables_visualize * 256, H.num_variables_visualize * 256, 3))
         for i in range(H.num_variables_visualize):
-            for j in range(H.num_variables_visualize):
+            for j in range(j, H.num_variables_visualize):
                 zs_current = copy(zs)
+                print((i,j), (lv_points[i], lv_points[j]))
                 zs_current[lv_points[i]:lv_points[j]] = zs2[lv_points[i]:lv_points[j]]
                 im[i*256 : (i+1)*256, j*256 : (j+1)*256] = ema_vae.forward_samples_set_latents(1, zs_current, t=0.1)
 
