@@ -30,11 +30,11 @@ def get_classification_score(H, X_train, X_test, y_train, y_test):
     elif H.model == "svc":
         model = SVC(n_jobs=H.n_jobs)
     elif H.model == "logistic":
-        model = LogisticRegression(n_jobs=H.n_jobs, solver="saga")
+        model = LogisticRegression(n_jobs=H.n_jobs, solver="saga", max_iter=500)
     elif H.model == "l1":
-        model = LogisticRegression(n_jobs=H.n_jobs, penalty="l1", C=0.999, solver="saga")
+        model = LogisticRegression(n_jobs=H.n_jobs, penalty="l1", C=0.999, solver="saga", max_iter=500)
     elif H.model == "l2":
-        model = LogisticRegression(n_jobs=H.n_jobs, penalty="l2", C=0.999, solver="saga")
+        model = LogisticRegression(n_jobs=H.n_jobs, penalty="l2", C=0.999, solver="saga", max_iter=500)
     elif H.model == "rf":
         model = RandomForestClassifier(n_jobs=H.n_jobs)
 
@@ -104,7 +104,7 @@ def setup(H):
         raise ValueError(f"Unknown keys set {H.keys_set}")
 
     if H.layer_ids_set == "small":
-        latent_ids = [0,1,2,3,5,10,15,20,30,40,50,60]
+        latent_ids = [0,1,2,3,5,10,15,20,30,40,50]
     elif H.layer_ids_set == "mid":
         latent_ids = list(range(11)) + list(np.arange(12, 21, 2)) + list(np.arange(21, 42, 3)) + [43, 48, 53, 58, 63]
     elif H.layer_ids_set == "full":

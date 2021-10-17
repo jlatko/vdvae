@@ -1,3 +1,4 @@
+from copy import copy
 from time import sleep
 
 import numpy as np
@@ -16,6 +17,7 @@ from train_helpers import set_up_hyperparams, load_vaes
 def add_params(parser):
     parser.add_argument('--latents_dir', type=str, default='/scratch/s193223/vdvae/latents/')
     parser.add_argument('--n_samples', type=int, default=10)
+    parser.add_argument('--n_steps', type=int, default=7)
     parser.add_argument('--destination_dir', type=str, default='./visualizations/')
     return parser
 
@@ -39,6 +41,27 @@ def reconstruct_image(H, idx, ema_vae, latent_ids):
             imageio.imwrite(fname, im)
 
 
+def random_walk(H, idx, idx2, ema_vae, latent_ids):
+    with torch.no_grad():
+        z_dict = np.load(os.path.join(H.latents_dir, f"{idx}.npz"))
+        z_dict2 = np.load(os.path.join(H.latents_dir, f"{idx2}.npz"))
+        zs = [torch.tensor(z_dict[f'z_{i}'][np.newaxis], dtype=torch.float32).cuda() for i in latent_ids]
+        zs2 = [torch.tensor(z_dict2[f'z_{i}'][np.newaxis], dtype=torch.float32).cuda() for i in latent_ids]
+        lv_points = np.floor(np.linspace(0, 1, H.num_variables_visualize + 2) * len(zs)).astype(int)[1:-1]
+        print(lv_points)
+        batches = []
+        for i in lv_points:
+            for a in np.linspace(0, 1, H.n_steps + 2)[1:-1]:
+                zs_current = copy(zs)
+                zs_current[i] = (1-a) * zs[i] + a * zs2[i]
+                batches.append(ema_vae.forward_samples_set_latents(1, zs_current, t=0.1))
+        n_rows = len(lv_points)
+        im = np.concatenate(batches, axis=0).reshape((n_rows,  H.n_steps, *batches[0].shape[1:])).transpose(
+            [0, 2, 1, 3, 4]).reshape([n_rows * batches[0].shape[1], batches[0].shape[2] * H.n_steps, 3])
+
+        fname = os.path.join(H.destination_dir, f"walk_fixed_{idx}.png")
+        imageio.imwrite(fname, im)
+
 def main():
     H, logprint = set_up_hyperparams(extra_args_fn=add_params)
 
@@ -57,6 +80,8 @@ def main():
 
     for i in tqdm(range(H.n_samples)):
         idx = data_valid_or_test.metadata.iloc[i].idx
+        idx2 = data_valid_or_test.metadata.iloc[i+1].idx
+        random_walk(H, idx, idx2, ema_vae, latent_ids)
         reconstruct_image(H, idx, ema_vae, latent_ids)
 
 
