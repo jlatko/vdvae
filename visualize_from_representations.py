@@ -30,7 +30,7 @@ def reconstruct_image(H, idx, ema_vae, latent_ids):
             batches = []
             for i in lv_points:
                 # create reconstructions using i first latents and low temperature (0.1)
-                batches.append(ema_vae.forward_samples_set_latents(1, zs[:i], t=0.1))
+                batches.append(ema_vae.forward_samples_set_latents(1, zs[:i], t=t))
             n_rows = len(batches)
             im = np.concatenate(batches, axis=0).reshape((n_rows, 1, *batches[0].shape[1:])).transpose(
                 [0, 2, 1, 3, 4]).reshape([n_rows * batches[0].shape[1], batches[0].shape[2], 3])
