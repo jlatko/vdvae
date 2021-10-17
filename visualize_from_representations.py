@@ -41,7 +41,7 @@ def reconstruct_image(H, idx, ema_vae, latent_ids):
             imageio.imwrite(fname, im)
 
 
-def random_walk(H, idx, idx2, ema_vae, latent_ids):
+def interpolation(H, idx, idx2, ema_vae, latent_ids, fixed=True):
     with torch.no_grad():
         z_dict = np.load(os.path.join(H.latents_dir, f"{idx}.npz"))
         z_dict2 = np.load(os.path.join(H.latents_dir, f"{idx2}.npz"))
@@ -51,15 +51,20 @@ def random_walk(H, idx, idx2, ema_vae, latent_ids):
         print(lv_points)
         batches = []
         for i in lv_points:
+            zs_current = copy(zs)
             for a in np.linspace(0, 1, H.n_steps + 2)[1:-1]:
-                zs_current = copy(zs)
                 zs_current[i] = (1-a) * zs[i] + a * zs2[i]
-                batches.append(ema_vae.forward_samples_set_latents(1, zs_current, t=0.1))
+                if fixed:
+                    batches.append(ema_vae.forward_samples_set_latents(1, zs_current, t=0.1))
+                else:
+                    batches.append(ema_vae.forward_samples_set_latents(1, zs_current[:i+1], t=0.1))
+
         n_rows = len(lv_points)
         im = np.concatenate(batches, axis=0).reshape((n_rows,  H.n_steps, *batches[0].shape[1:])).transpose(
             [0, 2, 1, 3, 4]).reshape([n_rows * batches[0].shape[1], batches[0].shape[2] * H.n_steps, 3])
 
-        fname = os.path.join(H.destination_dir, f"walk_fixed_{idx}.png")
+        name_key = "fixed_" if fixed else ""
+        fname = os.path.join(H.destination_dir, f"interpolation_{name_key}{idx}.png")
         imageio.imwrite(fname, im)
 
 def main():
@@ -81,7 +86,7 @@ def main():
     for i in tqdm(range(H.n_samples)):
         idx = data_valid_or_test.metadata.iloc[i].idx
         idx2 = data_valid_or_test.metadata.iloc[i+1].idx
-        random_walk(H, idx, idx2, ema_vae, latent_ids)
+        interpolation(H, idx, idx2, ema_vae, latent_ids)
         reconstruct_image(H, idx, ema_vae, latent_ids)
 
 
