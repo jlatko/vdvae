@@ -53,6 +53,10 @@ def main():
     latent_ids = get_available_latents(H.latents_dir)
     vae, ema_vae = load_vaes(H, logprint)
 
+    for i in tqdm(range(H.n_samples)):
+        idx = data_valid_or_test.metadata.iloc[0].idx
+        reconstruct_image(H, idx, ema_vae, latent_ids)
+
 
 if __name__ == "__main__":
     main()
