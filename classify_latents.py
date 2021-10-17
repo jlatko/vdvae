@@ -91,7 +91,7 @@ def parse_args(s=None):
 
 def setup(H):
     if H.keys_set == "small":
-        cols = ["Young", "Male",  "Blurry"]
+        cols = ["Young", "Male",  "Smiling", "Wearing_Earrings", "Brown_Hair"]
     elif H.keys_set == "big":
         cols = ["Young", "Male", "Bald", "Mustache", "Smiling", "Chubby",
                 "Attractive", "Brown_Hair", "Blond_Hair", "Bushy_Eyebrows", "Blurry",
