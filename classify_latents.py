@@ -56,7 +56,11 @@ def get_classification_score(H, X_train, X_test, y_train, y_test):
 def run_classifications(H, cols, layer_ind):
     z, meta = get_latents(latents_dir="/scratch/s193223/vdvae/latents/", layer_ind=layer_ind, splits=[1,2,3], allow_missing=False)
     logging.debug(z.shape)
+
+    resolution = z.shape[-2]
+    wandb.log({"resolution": resolution})
     z = z.reshape(z.shape[0], -1)
+    wandb.log({"size": z.shape[1]})
 
     kfold = StratifiedKFold(n_splits=5, random_state=0, shuffle=True)
     scores = {}
