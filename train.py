@@ -76,13 +76,13 @@ def train_loop(H, data_train, data_valid, preprocess_fn, vae, ema_vae, logprint)
                 accumulated_stats['epoch'] = epoch
                 accumulated_stats['batch'] = iterate
                 accumulated_stats['lr'] = scheduler.get_last_lr()[0]
-                wandb.log(accumulated_stats)
+                wandb.log(accumulated_stats, step=iterate)
 
             if iterate % H.iters_per_print == 0 or iters_since_starting in early_evals:
                 logprint(model=H.desc, type='train_loss', lr=scheduler.get_last_lr()[0], epoch=epoch, step=iterate, **accumulate_stats(stats, H.iters_per_print))
 
             if iterate % H.iters_per_images == 0 or (iters_since_starting in early_evals and H.dataset != 'ffhq_1024') and H.rank == 0:
-                write_images(H, ema_vae, viz_batch_original, viz_batch_processed, f'{H.save_dir}/samples-{iterate}.png', logprint)
+                write_images(H, ema_vae, viz_batch_original, viz_batch_processed, iterate, logprint)
 
             iterate += 1
             iters_since_starting += 1
@@ -100,7 +100,7 @@ def train_loop(H, data_train, data_valid, preprocess_fn, vae, ema_vae, logprint)
             valid_stats = evaluate(H, ema_vae, data_valid, preprocess_fn)
             logprint(model=H.desc, type='eval_loss', epoch=epoch, step=iterate, **valid_stats)
             valid_stats['epoch'] = epoch
-            wandb.log(valid_stats)
+            wandb.log(valid_stats, step=iterate)
 
 
 def evaluate(H, ema_vae, data_valid, preprocess_fn):
@@ -115,7 +115,7 @@ def evaluate(H, ema_vae, data_valid, preprocess_fn):
     return stats
 
 
-def write_images(H, ema_vae, viz_batch_original, viz_batch_processed, fname, logprint):
+def write_images(H, ema_vae, viz_batch_original, viz_batch_processed, iterate, logprint):
     zs = [s['z'].cuda() for s in ema_vae.forward_get_latents(viz_batch_processed)]
     batches = [viz_batch_original.numpy()]
     mb = viz_batch_processed.shape[0]
@@ -127,14 +127,15 @@ def write_images(H, ema_vae, viz_batch_original, viz_batch_processed, fname, log
         batches.append(ema_vae.forward_uncond_samples(mb, t=t))
     n_rows = len(batches)
     im = np.concatenate(batches, axis=0).reshape((n_rows, mb, *viz_batch_processed.shape[1:])).transpose([0, 2, 1, 3, 4]).reshape([n_rows * viz_batch_processed.shape[1], mb * viz_batch_processed.shape[2], 3])
-    logprint(f'printing samples to {fname}')
+    logprint(f'printing samples for {iterate}')
+    fname = f'{H.save_dir}/samples-{iterate}.png'
     imageio.imwrite(fname, im)
 
     images = wandb.Image(
         im,
-        caption=fname,
+        caption=f"samples-{iterate}",
     )
-    wandb.log({"samples": images})
+    wandb.log({"samples": images}, step=iterate)
 
 
 def run_test_eval(H, ema_vae, data_test, preprocess_fn, logprint):
@@ -150,7 +151,11 @@ def main():
     H, logprint = set_up_hyperparams()
     H, data_train, data_valid_or_test, preprocess_fn = set_up_data(H)
     vae, ema_vae = load_vaes(H, logprint)
+    H.save_dir = wandb.run.dir # ???
     wandb.config.update(H)
+    wandb.save('*.png')
+    wandb.save('*.th')
+    wandb.save('*.jsonl')
     if H.test_eval:
         run_test_eval(H, ema_vae, data_valid_or_test, preprocess_fn, logprint)
     else:

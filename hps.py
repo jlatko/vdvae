@@ -151,7 +151,7 @@ def add_vae_arguments(parser):
 
     parser.add_argument('--temperature', type=float, default=1.0)
 
-    parser.add_argument('--iters_per_ckpt', type=int, default=25000)
+    parser.add_argument('--iters_per_ckpt', type=int, default=50000)
     parser.add_argument('--iters_per_print', type=int, default=1000)
     parser.add_argument('--iters_per_save', type=int, default=10000)
     parser.add_argument('--iters_per_images', type=int, default=10000)
