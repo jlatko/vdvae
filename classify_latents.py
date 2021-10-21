@@ -58,9 +58,9 @@ def run_classifications(H, cols, layer_ind):
     logging.debug(z.shape)
 
     resolution = z.shape[-2]
-    wandb.log({"resolution": resolution})
+    wandb.log({"resolution": resolution}, step=layer_ind)
     z = z.reshape(z.shape[0], -1)
-    wandb.log({"size": z.shape[1]})
+    wandb.log({"size": z.shape[1]}, step=layer_ind)
 
     kfold = StratifiedKFold(n_splits=5, random_state=0, shuffle=True)
     scores = {}
