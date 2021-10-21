@@ -95,6 +95,7 @@ def parse_args(s=None):
     H = Hyperparams()
     parser = argparse.ArgumentParser()
 
+    parser.add_argument('--run_name', type=str, default=None)
     parser.add_argument('--latents_dir', type=str, default="/scratch/s193223/vdvae/latents/")
     parser.add_argument('--keys_set', type=str, default='small')
     parser.add_argument('--layer_ids_set', type=str, default='small')
