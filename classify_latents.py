@@ -22,6 +22,8 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.metrics import accuracy_score, f1_score, roc_auc_score
 import logging
 
+import wandb
+wandb.init(project='vdvae_analysis', entity='johnnysummer')
 
 def get_classification_score(H, X_train, X_test, y_train, y_test):
     # TODO: normalize??
@@ -71,6 +73,12 @@ def run_classifications(H, cols, layer_ind):
         for metric in kfold_scores.columns:
             score[f"{metric}_avg"] = kfold_scores[metric].mean()
             score[f"{metric}_std"] = kfold_scores[metric].std()
+
+        wandb.log({
+
+            score.items()
+        }, step=layer_ind)
+
         score["shape"] = z.shape
         score["layer_ind"] = layer_ind
         score["frequency"] = y.sum() / len(y)
@@ -120,10 +128,16 @@ def setup(H):
 def main():
     H = parse_args()
     cols, latent_ids = setup(H)
+    wandb.config.update(H)
+    wandb.config.update({"cols": cols, "latent_ids": latent_ids})
+    path = wandb.run.dir
 
-    path = f"outputs/{H.model}_{H.run_name}"
-    if not os.path.exists(path):
-        os.makedirs(path)
+    wandb.save("*.csv")
+
+    # no wandb
+    # path = f"outputs/{H.model}_{H.run_name}"
+    # if not os.path.exists(path):
+    #     os.makedirs(path)
 
     logging.info(cols)
     logging.info(latent_ids)
