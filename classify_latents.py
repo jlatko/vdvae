@@ -53,8 +53,8 @@ def get_classification_score(H, X_train, X_test, y_train, y_test):
         'roc_auc_score': roc_auc_score(y_test, y_pred),
     }
 
-def run_classifications(H, cols, layer_ind, latents_dir):
-    z, meta = get_latents(latents_dir=latents_dir, layer_ind=layer_ind, splits=[1,2,3], allow_missing=False)
+def run_classifications(H, cols, layer_ind, latents_dir, allow_nan=False):
+    z, meta = get_latents(latents_dir=latents_dir, layer_ind=layer_ind, splits=[1,2,3], allow_missing=False, allow_nan=allow_nan)
     logging.debug(z.shape)
 
     resolution = z.shape[-2]
@@ -102,6 +102,7 @@ def parse_args(s=None):
     parser.add_argument('--log_level', type=str, default='INFO')
     parser.add_argument('--model', type=str, default='knn_11')
     parser.add_argument('--n_jobs', type=int, default=8)
+    parser.add_argument('--allow_nan', dest='allow_nan', action='store_true')
 
     H.update(parser.parse_args(s).__dict__)
     return H
@@ -201,7 +202,7 @@ def main():
 
     scores = defaultdict(list)
     for i in tqdm(latent_ids):
-        score_dict = run_classifications(H, cols, i, latents_dir=H.latents_dir)
+        score_dict = run_classifications(H, cols, i, latents_dir=H.latents_dir, allow_nan=H.allow_nan)
         for col, score in score_dict.items():
             scores[col].append(score)
 

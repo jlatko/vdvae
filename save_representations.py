@@ -27,6 +27,8 @@ def save_repr(H, ema_vae, data_valid, preprocess_fn, keys=("z", "kl", "qm", "qv"
                 for block_idx, block_stats in enumerate(stats):
                     for k in keys:
                         stat = block_stats[k][i].cpu().numpy().astype(np.float16)
+                        if not np.isfinite(stat).all():
+                            print(f"WARNING: {idx}: {k}_{block_idx} contains NaN or inf")
                         stat_dict[f"{k}_{block_idx}"] = stat
 
                 np.savez(os.path.join(H.destination_dir, f"{idx}.npz"), **stat_dict)
@@ -34,7 +36,7 @@ def save_repr(H, ema_vae, data_valid, preprocess_fn, keys=("z", "kl", "qm", "qv"
 def add_params(parser):
     parser.add_argument('--destination_dir', type=str, default='/scratch/s193223/vdvae/latents/')
     parser.add_argument('--use_train', dest='use_train', action='store_true')
-    parser.add_argument('--all_keys', dest='all_keys', action='store_true')
+    parser.add_argument('--keys_mode', type=str, default='z')
 
     return parser
 
@@ -57,10 +59,8 @@ def main():
     else:
         dataset = data_valid_or_test
 
-    if H.all_keys:
-        keys = ["z", "kl", "qm", "qv", "pm", "pv"]
-    else:
-        keys = ["z"]
+    keys = H.keys_mode.split(',')
+    assert len(set(keys) - {"z", "kl", "qm", "qv", "pm", "pv"}) == 0
     save_repr(H, ema_vae, dataset, preprocess_fn, keys=keys)
 
 
