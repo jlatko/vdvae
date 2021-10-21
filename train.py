@@ -151,6 +151,9 @@ def main():
     H, logprint = set_up_hyperparams()
     H, data_train, data_valid_or_test, preprocess_fn = set_up_data(H)
     vae, ema_vae = load_vaes(H, logprint)
+    if H.run_name is not None:
+        wandb.run.name = H.run_name
+        wandb.run.save()
     H.save_dir = wandb.run.dir # ???
     wandb.config.update(H)
     wandb.save('*.png')

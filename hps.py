@@ -161,4 +161,6 @@ def add_vae_arguments(parser):
     parser.add_argument('--num_images_visualize', type=int, default=8)
     parser.add_argument('--num_variables_visualize', type=int, default=6)
     parser.add_argument('--num_temperatures_visualize', type=int, default=3)
+
+    parser.add_argument('--run_name', type=str, default=None)
     return parser

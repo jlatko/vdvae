@@ -99,7 +99,6 @@ def parse_args(s=None):
     parser.add_argument('--keys_set', type=str, default='small')
     parser.add_argument('--layer_ids_set', type=str, default='small')
     parser.add_argument('--log_level', type=str, default='INFO')
-    parser.add_argument('--run_name', type=str, default='')
     parser.add_argument('--model', type=str, default='knn_11')
     parser.add_argument('--n_jobs', type=int, default=8)
 
@@ -111,7 +110,7 @@ def setup(H):
         cols = ["Young", "Male",  "Smiling", "Wearing_Earrings", "Brown_Hair"]
     elif H.keys_set == "big":
         cols = ["Young", "Male", "Bald", "Mustache", "Smiling", "Chubby",
-                "Attractive", "Brown_Hair", "Blond_Hair", "Bushy_Eyebrows", "Blurry",
+                "Attractive", "Brown_Hair", "Blond_Hair", "Bushy_Eyebrows",
                 "Wearing_Earrings", "Heavy_Makeup", "Mouth_Slightly_Open",
                 "Narrow_Eyes", "Big_Lips", "Big_Nose", "Eyeglasses", "Wearing_Lipstick"]
     else:
@@ -133,6 +132,10 @@ def setup(H):
 def main():
     H = parse_args()
     cols, latent_ids = setup(H)
+
+    wandb.run.name = H.run_name if H.run_name else f"{H.model}_{H.keys_set}_{H.layer_ids_set}"
+    wandb.run.save()
+
     wandb.config.update(H)
     wandb.config.update({"cols": cols, "latent_ids": latent_ids})
     path = wandb.run.dir
@@ -140,7 +143,7 @@ def main():
     wandb.save("*.csv")
 
     # no wandb
-    # path = f"outputs/{H.model}_{H.run_name}"
+    # path = f"outputs/"
     # if not os.path.exists(path):
     #     os.makedirs(path)
 
