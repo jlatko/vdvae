@@ -75,8 +75,9 @@ def run_classifications(H, cols, layer_ind):
             score[f"{metric}_std"] = kfold_scores[metric].std()
 
         wandb.log({
-
-            score.items()
+            f"{col}_{k}": v
+            for k, v
+            in score.items()
         }, step=layer_ind)
 
         score["shape"] = z.shape
