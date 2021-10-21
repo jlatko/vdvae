@@ -119,7 +119,7 @@ def setup(H):
                 "Narrow_Eyes", "Bushy_Eyebrows",
                 "Oval_Face", "Big_Lips", "Big_Nose", "Pointy_Nose",
                 "Eyeglasses",
-                "Heavy_Makeup", "Pale_Skin"
+                "Heavy_Makeup", "Pale_Skin",
                 "Wearing_Hat", "Wearing_Earrings", "Wearing_Lipstick"]
     elif H.keys_set == "full":
         cols = ['5_o_Clock_Shadow',
