@@ -30,7 +30,7 @@ def get_latents(latents_dir, layer_ind, splits=(1,2,3), root_dir=CELEBAHQ_DIR, a
         try:
             z = np.load(os.path.join(latents_dir, f"{row.idx}.npz"))[f"z_{layer_ind}"].astype(np.float32)
             if not np.isfinite(z).all():
-                logging.WARNING(f"{row.idx}: z_{layer_ind} contains NaN or inf")
+                logging.warning(f"{row.idx}: z_{layer_ind} contains NaN or inf")
                 if allow_nan:
                     z = np.nan_to_num(z)
                 else:
