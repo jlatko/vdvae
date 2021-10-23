@@ -156,6 +156,7 @@ def main():
         wandb.run.save()
     H.save_dir = wandb.run.dir # ???
     wandb.config.update(H)
+    wandb.config.update({"machine": os.uname()[1]})
     wandb.save('*.png')
     wandb.save('*.th')
     wandb.save('*.jsonl')
