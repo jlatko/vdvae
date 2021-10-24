@@ -8,8 +8,7 @@ os.environ["OMP_NUM_THREADS"] = "1"
 
 from collections import defaultdict
 
-import torch
-if torch.cuda.is_available():
+if os.environ["CUDA_VISIBLE_DEVICES"]:
     from cuml.neighbors import KNeighborsClassifier
     from cuml.ensemble import RandomForestClassifier
     from cuml import LogisticRegression
