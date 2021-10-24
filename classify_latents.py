@@ -1,20 +1,26 @@
 import argparse
 import os
 
+
 os.environ["MKL_NUM_THREADS"] = "1"
 os.environ["NUMEXPR_NUM_THREADS"] = "1"
 os.environ["OMP_NUM_THREADS"] = "1"
 
 from collections import defaultdict
 
-# from sklearn.ensemble import RandomForestClassifier
-# from sklearn.linear_model import LogisticRegression
-# from sklearn.neighbors import KNeighborsClassifier
-from cuml.neighbors import KNeighborsClassifier
-from cuml.ensemble import RandomForestClassifier
-from cuml import LogisticRegression
+import torch
+if torch.cuda.is_available():
+    from cuml.neighbors import KNeighborsClassifier
+    from cuml.ensemble import RandomForestClassifier
+    from cuml import LogisticRegression
+    from cuml.svm import SVC
+else:
+    from sklearn.ensemble import RandomForestClassifier
+    from sklearn.linear_model import LogisticRegression
+    from sklearn.neighbors import KNeighborsClassifier
+    from sklearn.svm import SVC
 
-from cuml.svm import SVC
+
 from tqdm import tqdm
 
 from hps import Hyperparams
@@ -57,12 +63,12 @@ def get_classification_score(H, X_train, X_test, y_train, y_test):
         'roc_auc_score': roc_auc_score(y_test, y_pred),
     }
 
-def run_classifications(H, cols, layer_ind, latents_dir, allow_nan=False):
-    z, meta = get_latents(latents_dir=latents_dir, layer_ind=layer_ind, splits=[1,2,3], allow_missing=False, allow_nan=allow_nan)
+def run_classifications(H, cols, layer_ind, latents_dir, handle_nan=False):
+    z, meta = get_latents(latents_dir=latents_dir, layer_ind=layer_ind, splits=[1,2,3], allow_missing=False, handle_nan=handle_nan)
     logging.debug(z.shape)
 
     resolution = z.shape[-2]
-    wandb.log({"resolution": resolution}, step=layer_ind)
+    wandb.log({"resolution": resolution}, step=layer_ind)`
     z = z.reshape(z.shape[0], -1)
     wandb.log({"size": z.shape[1]}, step=layer_ind)
 
@@ -106,7 +112,8 @@ def parse_args(s=None):
     parser.add_argument('--log_level', type=str, default='INFO')
     parser.add_argument('--model', type=str, default='knn_11')
     parser.add_argument('--n_jobs', type=int, default=8)
-    parser.add_argument('--allow_nan', dest='allow_nan', action='store_true')
+    parser.add_argument('--handle_nan', type=str, default=None)
+
 
     H.update(parser.parse_args(s).__dict__)
     return H
@@ -206,7 +213,7 @@ def main():
 
     scores = defaultdict(list)
     for i in tqdm(latent_ids):
-        score_dict = run_classifications(H, cols, i, latents_dir=H.latents_dir, allow_nan=H.allow_nan)
+        score_dict = run_classifications(H, cols, i, latents_dir=H.latents_dir, handle_nan=H.handle_nan)
         for col, score in score_dict.items():
             scores[col].append(score)
 

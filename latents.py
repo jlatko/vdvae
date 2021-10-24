@@ -15,7 +15,7 @@ def get_available_latents(latents_dir="/scratch/s193223/vdvae/latents/"):
     latent_ids = list(sorted(set(int(k.split("_")[1]) for k in keys)))
     return latent_ids
 
-def get_latents(latents_dir, layer_ind, splits=(1,2,3), root_dir=CELEBAHQ_DIR, allow_missing=False, allow_nan=False):
+def get_latents(latents_dir, layer_ind, splits=(1,2,3), root_dir=CELEBAHQ_DIR, allow_missing=False, handle_nan=None):
     metadata = pd.read_csv(os.path.join(root_dir, 'metadata.csv'))
     metadata = metadata[metadata.split.isin(splits)]
 
@@ -30,9 +30,13 @@ def get_latents(latents_dir, layer_ind, splits=(1,2,3), root_dir=CELEBAHQ_DIR, a
         try:
             z = np.load(os.path.join(latents_dir, f"{row.idx}.npz"))[f"z_{layer_ind}"].astype(np.float32)
             if not np.isfinite(z).all():
-                logging.warning(f"{row.idx}: z_{layer_ind} contains NaN or inf")
-                if allow_nan:
+                if handle_nan == "to_num":
+                    logging.warning(f"{row.idx}: z_{layer_ind} contains NaN or inf. Converting to num.")
                     z = np.nan_to_num(z)
+                if handle_nan == "skip":
+                    logging.warning(f"{row.idx}: z_{layer_ind} contains NaN or inf. Skipping.")
+                    rows_missing.append(row)
+                    continue
                 else:
                     raise ValueError(f"{row.idx}: z_{layer_ind} contains NaN or inf")
             latents[i] = z
@@ -41,11 +45,10 @@ def get_latents(latents_dir, layer_ind, splits=(1,2,3), root_dir=CELEBAHQ_DIR, a
         except (FileNotFoundError, EOFError, BadZipFile) as e:
             if allow_missing:
                 rows_missing.append(row)
-                pass
             else:
                 raise e
-    if len(rows_missing) > 0 and allow_missing:
-        logging.warning(f"Missing {len(rows_missing)}/{len(metadata)} files")
+    if len(rows_missing) > 0:
+        logging.warning(f"Missing/incorrect {len(rows_missing)}/{len(metadata)} files")
         metadata = pd.DataFrame(rows_found)
         latents = latents[:len(metadata)]
     return latents, metadata
