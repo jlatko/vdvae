@@ -39,10 +39,12 @@ def attribute_manipulation(H, idx, attributes, ema_vae, latent_ids, lv_points, f
                 # get direction
                 means_dict = np.load(os.path.join(H.attr_means_dir, f"{i}.npz"))
                 direction = means_dict[f"{attr}_neg"] - means_dict[f"{attr}_pos"]
+                print(i, direction.std(), torch.std(zs[i]).item())
                 print(i, direction.std())
+                wandb.log({f"std_{attr}_{idx}": direction.std(), "i": i})
                 direction = torch.tensor(direction[np.newaxis], dtype=torch.float32).cuda()
 
-                for a in np.linspace(-1, 1, H.n_steps):
+                for a in np.linspace(-10, 10, H.n_steps):
                     zs_current[i] = zs[i] + a * direction
                     if fixed:
                         batches.append(ema_vae.forward_samples_set_latents(1, zs_current, t=0.1))
@@ -83,7 +85,7 @@ def main():
     for i in tqdm(range(H.n_samples)):
         idx = data_valid_or_test.metadata.iloc[i].idx
         attribute_manipulation(H, idx, attributes, ema_vae, latent_ids, lv_points, fixed=False)
-        attribute_manipulation(H, idx, attributes, ema_vae, latent_ids, lv_points, fixed=True)
+        # attribute_manipulation(H, idx, attributes, ema_vae, latent_ids, lv_points, fixed=True)
 
 
 if __name__ == "__main__":
