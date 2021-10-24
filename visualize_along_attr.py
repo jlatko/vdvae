@@ -28,9 +28,8 @@ def add_params(parser):
 def attribute_manipulation(H, idx, attributes, ema_vae, latent_ids, lv_points, fixed=True):
     with torch.no_grad():
         z_dict = np.load(os.path.join(H.latents_dir, f"{idx}.npz"))
-
-
         zs = [torch.tensor(z_dict[f'z_{i}'][np.newaxis], dtype=torch.float32).cuda() for i in latent_ids]
+
         for attr in attributes:
             batches = []
             for i in lv_points:
@@ -76,10 +75,9 @@ def main():
     latent_ids = get_available_latents(H.latents_dir)
     vae, ema_vae = load_vaes(H, logprint)
 
-    print("Layer ids: ", np.floor(np.linspace(0, 1, H.num_variables_visualize + 2) * 65).astype(int)[1:-1])
     attributes = ["Young", "Male", "Smiling", "Wearing_Earrings", "Brown_Hair", "Blond_Hair", "Attractive"]
-    lv_points = np.floor(np.linspace(0, 1, H.num_variables_visualize + 2) * len(zs)).astype(int)[1:-1]
-
+    lv_points = np.floor(np.linspace(0, 1, H.num_variables_visualize + 2) * len(latent_ids)).astype(int)[1:-1]
+    print(lv_points)
     for i in tqdm(range(H.n_samples)):
         idx = data_valid_or_test.metadata.iloc[i].idx
         attribute_manipulation(H, idx, attributes, ema_vae, latent_ids, lv_points, fixed=False)
