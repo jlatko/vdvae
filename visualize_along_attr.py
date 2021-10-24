@@ -44,9 +44,10 @@ def attribute_manipulation(H, idx, attributes, ema_vae, latent_ids, lv_points, f
                 wandb.log({f"std_{attr}_{idx}": direction.std(), "i": i})
                 direction = torch.tensor(direction[np.newaxis], dtype=torch.float32).cuda()
                 # norm
-                dim = [1,2,3] # TODO: consider different norm [1]? [2,3]?
-                norm = torch.norm(direction, p=2, dim=dim, keepdim=True)
-                direction = direction.div(norm.expand_as(direction))
+                # dim = [1,2,3] # TODO: consider different norm [1]? [2,3]?
+                # norm = torch.norm(direction, p=2, dim=dim, keepdim=True)
+                # direction = direction.div(norm.expand_as(direction))
+                direction = direction.div(direction.std())
                 # direction = F.normalize(direction, p=2)
 
                 if normalize:
