@@ -13,7 +13,9 @@ from data import set_up_data
 from latents import get_available_latents
 from train_helpers import set_up_hyperparams, load_vaes
 import wandb
+
 wandb.init(project='vdvae_analysis', entity='johnnysummer', dir="/scratch/s193223/wandb/")
+wandb.config.update({"script": "vis_attr"})
 
 
 def add_params(parser):
@@ -40,7 +42,7 @@ def attribute_manipulation(H, idx, attributes, ema_vae, latent_ids, lv_points, f
                 print(i, direction.shape)
                 direction = torch.tensor(direction[np.newaxis], dtype=torch.float32).cuda()
 
-                for a in np.linspace(-1, 1, H.n_steps + 2):
+                for a in np.linspace(-1, 1, H.n_steps):
                     zs_current[i] = zs[i] + a * direction
                     if fixed:
                         batches.append(ema_vae.forward_samples_set_latents(1, zs_current, t=0.1))
