@@ -25,13 +25,12 @@ def add_params(parser):
     return parser
 
 
-def attribute_manipulation(H, idx, attributes, ema_vae, latent_ids, fixed=True):
+def attribute_manipulation(H, idx, attributes, ema_vae, latent_ids, lv_points, fixed=True):
     with torch.no_grad():
         z_dict = np.load(os.path.join(H.latents_dir, f"{idx}.npz"))
 
 
         zs = [torch.tensor(z_dict[f'z_{i}'][np.newaxis], dtype=torch.float32).cuda() for i in latent_ids]
-        lv_points = np.floor(np.linspace(0, 1, H.num_variables_visualize + 2) * len(zs)).astype(int)[1:-1]
         for attr in attributes:
             batches = []
             for i in lv_points:
@@ -39,7 +38,8 @@ def attribute_manipulation(H, idx, attributes, ema_vae, latent_ids, fixed=True):
                 # get direction
                 means_dict = np.load(os.path.join(H.attr_means_dir, f"{i}.npz"))
                 direction = means_dict[f"{attr}_neg"] - means_dict[f"{attr}_pos"]
-                direction = direction.cuda()
+                print(i, direction.shape)
+                direction = torch.tensor(direction[np.newaxis], dtype=torch.float32).cuda()
 
                 for a in np.linspace(-1, 1, H.n_steps + 2):
                     zs_current[i] = zs[i] + a * direction
@@ -78,10 +78,12 @@ def main():
 
     print("Layer ids: ", np.floor(np.linspace(0, 1, H.num_variables_visualize + 2) * 65).astype(int)[1:-1])
     attributes = ["Young", "Male", "Smiling", "Wearing_Earrings", "Brown_Hair", "Blond_Hair", "Attractive"]
+    lv_points = np.floor(np.linspace(0, 1, H.num_variables_visualize + 2) * len(zs)).astype(int)[1:-1]
+
     for i in tqdm(range(H.n_samples)):
         idx = data_valid_or_test.metadata.iloc[i].idx
-        attribute_manipulation(H, idx, attributes, ema_vae, latent_ids, fixed=False)
-        attribute_manipulation(H, idx, attributes, ema_vae, latent_ids, fixed=True)
+        attribute_manipulation(H, idx, attributes, ema_vae, latent_ids, lv_points, fixed=False)
+        attribute_manipulation(H, idx, attributes, ema_vae, latent_ids, lv_points, fixed=True)
 
 
 if __name__ == "__main__":
