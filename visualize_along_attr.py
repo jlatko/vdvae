@@ -71,7 +71,7 @@ def attribute_manipulation(H, idx, attributes, ema_vae, latent_ids, lv_points, f
             fname = os.path.join(H.destination_dir, f"{attr}_{name_key}{idx}.png")
             imageio.imwrite(fname, im)
 
-            wandb.log({f"{attr}_{name_key}}": wandb.Image(im, caption=f"{attr}_{name_key}{idx}")})
+            wandb.log({f"{attr}_{name_key}": wandb.Image(im, caption=f"{attr}_{name_key}{idx}")})
 
 def main():
     H, logprint = set_up_hyperparams(extra_args_fn=add_params)
