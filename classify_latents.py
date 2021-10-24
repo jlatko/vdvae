@@ -68,7 +68,7 @@ def run_classifications(H, cols, layer_ind, latents_dir, handle_nan=False):
     logging.debug(z.shape)
 
     resolution = z.shape[-2]
-    wandb.log({"resolution": resolution}, step=layer_ind)`
+    wandb.log({"resolution": resolution}, step=layer_ind)
     z = z.reshape(z.shape[0], -1)
     wandb.log({"size": z.shape[1]}, step=layer_ind)
 
