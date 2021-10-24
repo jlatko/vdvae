@@ -13,7 +13,7 @@ from utils import get_cpu_stats_over_ranks
 from train_helpers import set_up_hyperparams, load_vaes, load_opt, accumulate_stats, save_model, update_ema
 
 import wandb
-wandb.init(project='vdvae', entity='johnnysummer')
+wandb.init(project='vdvae', entity='johnnysummer', dir="/scratch/s193223/wandb/")
 
 
 def training_step(H, data_input, target, vae, ema_vae, optimizer, iterate):

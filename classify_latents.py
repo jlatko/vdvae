@@ -23,7 +23,7 @@ from sklearn.metrics import accuracy_score, f1_score, roc_auc_score
 import logging
 
 import wandb
-wandb.init(project='vdvae_analysis', entity='johnnysummer')
+wandb.init(project='vdvae_analysis', entity='johnnysummer', dir="/scratch/s193223/wandb/")
 
 def get_classification_score(H, X_train, X_test, y_train, y_test):
     # TODO: normalize??
