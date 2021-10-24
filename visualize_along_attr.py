@@ -39,6 +39,7 @@ def attribute_manipulation(H, idx, attributes, ema_vae, latent_ids, fixed=True):
                 # get direction
                 means_dict = np.load(os.path.join(H.attr_means_dir, f"{i}.npz"))
                 direction = means_dict[f"{attr}_neg"] - means_dict[f"{attr}_pos"]
+                direction = direction.cuda()
 
                 for a in np.linspace(-1, 1, H.n_steps + 2):
                     zs_current[i] = zs[i] + a * direction
