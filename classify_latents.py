@@ -7,9 +7,14 @@ os.environ["OMP_NUM_THREADS"] = "1"
 
 from collections import defaultdict
 
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.linear_model import LogisticRegression
-from sklearn.svm import SVC
+# from sklearn.ensemble import RandomForestClassifier
+# from sklearn.linear_model import LogisticRegression
+# from sklearn.neighbors import KNeighborsClassifier
+from cuml.neighbors import KNeighborsClassifier
+from cuml.ensemble import RandomForestClassifier
+from cuml import LogisticRegression
+
+from cuml.svm import SVC
 from tqdm import tqdm
 
 from hps import Hyperparams
@@ -18,7 +23,6 @@ import numpy as np
 import pandas as pd
 from latents import get_latents, get_available_latents
 from sklearn.model_selection import StratifiedKFold
-from sklearn.neighbors import KNeighborsClassifier
 from sklearn.metrics import accuracy_score, f1_score, roc_auc_score
 import logging
 
@@ -33,11 +37,11 @@ def get_classification_score(H, X_train, X_test, y_train, y_test):
     elif H.model == "svc":
         model = SVC(n_jobs=H.n_jobs)
     elif H.model == "logistic":
-        model = LogisticRegression(n_jobs=H.n_jobs, solver="saga", max_iter=500)
+        model = LogisticRegression(n_jobs=H.n_jobs)
     elif H.model == "l1":
-        model = LogisticRegression(n_jobs=H.n_jobs, penalty="l1", C=0.999, solver="saga", max_iter=500)
+        model = LogisticRegression(n_jobs=H.n_jobs, penalty="l1", C=0.999)
     elif H.model == "l2":
-        model = LogisticRegression(n_jobs=H.n_jobs, penalty="l2", C=0.999, solver="saga", max_iter=500)
+        model = LogisticRegression(n_jobs=H.n_jobs, penalty="l2", C=0.999)
     elif H.model == "rf":
         model = RandomForestClassifier(n_jobs=H.n_jobs)
 
