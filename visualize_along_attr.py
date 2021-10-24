@@ -39,7 +39,7 @@ def attribute_manipulation(H, idx, attributes, ema_vae, latent_ids, lv_points, f
                 # get direction
                 means_dict = np.load(os.path.join(H.attr_means_dir, f"{i}.npz"))
                 direction = means_dict[f"{attr}_neg"] - means_dict[f"{attr}_pos"]
-                print(i, direction.shape)
+                print(i, direction.std())
                 direction = torch.tensor(direction[np.newaxis], dtype=torch.float32).cuda()
 
                 for a in np.linspace(-1, 1, H.n_steps):
@@ -78,7 +78,7 @@ def main():
     vae, ema_vae = load_vaes(H, logprint)
 
     attributes = ["Young", "Male", "Smiling", "Wearing_Earrings", "Brown_Hair", "Blond_Hair", "Attractive"]
-    lv_points = np.floor(np.linspace(0, 1, H.num_variables_visualize + 2) * len(latent_ids)).astype(int)[1:-1]
+    lv_points = [0,1,2,3,4,5,6,7,20,21,40, 41, 43, 51 ]
     print(lv_points)
     for i in tqdm(range(H.n_samples)):
         idx = data_valid_or_test.metadata.iloc[i].idx
