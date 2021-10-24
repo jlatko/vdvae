@@ -24,7 +24,7 @@ def add_params(parser):
     parser.add_argument('--latents_dir', type=str, default='/scratch/s193223/vdvae/latents/')
     parser.add_argument('--attr_means_dir', type=str, default='/scratch/s193223/vdvae/attr_means/')
     parser.add_argument('--n_samples', type=int, default=10)
-    parser.add_argument('--n_steps', type=int, default=7)
+    parser.add_argument('--n_steps', type=int, default=10)
     parser.add_argument('--destination_dir', type=str, default='./visualizations/')
     return parser
 
@@ -34,7 +34,7 @@ def attribute_manipulation(H, idx, attributes, ema_vae, latent_ids, lv_points, f
         z_dict = np.load(os.path.join(H.latents_dir, f"{idx}.npz"))
         zs = [torch.tensor(z_dict[f'z_{i}'][np.newaxis], dtype=torch.float32).cuda() for i in latent_ids]
 
-        for attr in attributes:
+        for attr in tqdm(attributes):
             batches = []
             for i in lv_points:
                 zs_current = copy(zs)
@@ -44,10 +44,11 @@ def attribute_manipulation(H, idx, attributes, ema_vae, latent_ids, lv_points, f
                 wandb.log({f"std_{attr}_{idx}": direction.std(), "i": i})
                 direction = torch.tensor(direction[np.newaxis], dtype=torch.float32).cuda()
                 # norm
-                # dim = [1,2,3] # TODO: consider different norm [1]? [2,3]?
-                # norm = torch.norm(direction, p=2, dim=dim, keepdim=True)
-                # direction = direction.div(norm.expand_as(direction))
-                direction = direction.div(direction.std())
+                dim = [1] # TODO: consider different norm [1]? [2,3]?
+                norm = torch.norm(direction, p=2, dim=dim, keepdim=True)
+                direction = direction.div(norm.expand_as(direction))
+                # print(direction)
+                # direction = direction.div(direction.std())
                 # direction = F.normalize(direction, p=2)
 
                 if normalize:
@@ -94,7 +95,7 @@ def main():
     attributes = ["Young", "Male", "Smiling", "Wearing_Earrings", "Brown_Hair", "Blond_Hair", "Attractive"]
     lv_points = [0,1,2,3,4,5,6,7,20,21,40, 41, 43, 51 ]
     print(lv_points)
-    for i in tqdm(range(H.n_samples)):
+    for i in range(H.n_samples):
         idx = data_valid_or_test.metadata.iloc[i].idx
         attribute_manipulation(H, idx, attributes, ema_vae, latent_ids, lv_points, fixed=False)
         attribute_manipulation(H, idx, attributes, ema_vae, latent_ids, lv_points, fixed=False, temp=0.2)
