@@ -75,7 +75,7 @@ def attribute_manipulation(H, idx, attributes, ema_vae, latent_ids, lv_points, f
                     batches.append(img)
             n_rows = len(lv_points)
             #TODO: consider downsampling
-            im = np.concatenate(batches, axis=0).reshape((n_rows,  H.n_steps, height, width)).transpose(
+            im = np.concatenate(batches, axis=0).reshape((n_rows,  H.n_steps, height, width, 3)).transpose(
                 [0, 2, 1, 3, 4]).reshape([n_rows * height, width * H.n_steps, 3])
 
             name_key = f"t{str(temp).replace('.','_')}_"
