@@ -51,19 +51,19 @@ def get_classification_score(H, X_train, X_test, y_train, y_test, cuda=False):
     elif H.model == "logistic":
         if cuda:
             # model = cuLogisticRegression(n_jobs=H.n_jobs)
-            model = cuMBSGDClassifier(loss="log", penalty="none", C=0.999)
+            model = cuMBSGDClassifier(loss="log", penalty="none")
         else:
             model = LogisticRegression(n_jobs=H.n_jobs, solver="saga", max_iter=500)
     elif H.model == "l1":
         if cuda:
             # model = cuLogisticRegression(n_jobs=H.n_jobs, penalty="l1", C=0.999)
-            model = cuMBSGDClassifier(loss="log", penalty="l1", C=0.999)
+            model = cuMBSGDClassifier(loss="log", penalty="l1", alpha=0.0001)
         else:
             model = LogisticRegression(n_jobs=H.n_jobs, penalty="l1", C=0.999, solver="saga", max_iter=500)
     elif H.model == "l2":
         if cuda:
             # model = cuLogisticRegression(n_jobs=H.n_jobs, penalty="l2", C=0.999)
-            model = cuMBSGDClassifier(loss="log", penalty="l2", C=0.999)
+            model = cuMBSGDClassifier(loss="log", penalty="l2", alpha=0.0001)
         else:
             model = LogisticRegression(n_jobs=H.n_jobs, penalty="l2", C=0.999, solver="saga", max_iter=500)
     elif H.model == "rf":
@@ -237,7 +237,7 @@ def main():
 
     # scores = defaultdict(list)
     use_cuda = len(os.environ["CUDA_VISIBLE_DEVICES"]) > 0
-    for it, i in tqdm(enumerate(latent_ids)):
+    for it, i in enumerate(tqdm(latent_ids)):
         try:
             score_dict = run_classifications(H, cols, i, latents_dir=H.latents_dir, handle_nan=H.handle_nan, cuda=use_cuda)
         except Exception as e:
