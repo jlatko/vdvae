@@ -9,15 +9,15 @@ os.environ["OMP_NUM_THREADS"] = "1"
 from collections import defaultdict
 
 if os.environ["CUDA_VISIBLE_DEVICES"]:
-    from cuml.neighbors import KNeighborsClassifier
-    from cuml.ensemble import RandomForestClassifier
-    from cuml import LogisticRegression
-    from cuml.svm import SVC
-else:
-    from sklearn.ensemble import RandomForestClassifier
-    from sklearn.linear_model import LogisticRegression
-    from sklearn.neighbors import KNeighborsClassifier
-    from sklearn.svm import SVC
+    from cuml.neighbors import KNeighborsClassifier as cuKNeighborsClassifier
+    from cuml.ensemble import RandomForestClassifier as cuRandomForestClassifier
+    from cuml import LogisticRegression as cuLogisticRegression
+    from cuml.svm import SVC as cuSVC
+
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.linear_model import LogisticRegression
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.svm import SVC
 
 
 from tqdm import tqdm
@@ -34,21 +34,39 @@ import logging
 import wandb
 wandb.init(project='vdvae_analysis', entity='johnnysummer', dir="/scratch/s193223/wandb/")
 
-def get_classification_score(H, X_train, X_test, y_train, y_test):
+def get_classification_score(H, X_train, X_test, y_train, y_test, cuda=False):
     # TODO: normalize??
     if "knn" in H.model:
         n = int(H.model.split("_")[1])
-        model = KNeighborsClassifier(n_neighbors=n, n_jobs=H.n_jobs)
+        if cuda:
+            model = cuKNeighborsClassifier(n_neighbors=n, n_jobs=H.n_jobs)
+        else:
+            model = KNeighborsClassifier(n_neighbors=n, n_jobs=H.n_jobs)
     elif H.model == "svc":
-        model = SVC(n_jobs=H.n_jobs)
+        if cuda:
+            model = cuSVC(n_jobs=H.n_jobs)
+        else:
+            model = SVC(n_jobs=H.n_jobs)
     elif H.model == "logistic":
-        model = LogisticRegression(n_jobs=H.n_jobs)
+        if cuda:
+            model = cuLogisticRegression(n_jobs=H.n_jobs)
+        else:
+            model = LogisticRegression(n_jobs=H.n_jobs)
     elif H.model == "l1":
-        model = LogisticRegression(n_jobs=H.n_jobs, penalty="l1", C=0.999)
+        if cuda:
+            model = cuLogisticRegression(n_jobs=H.n_jobs, penalty="l1", C=0.999)
+        else:
+            model = LogisticRegression(n_jobs=H.n_jobs, penalty="l1", C=0.999)
     elif H.model == "l2":
-        model = LogisticRegression(n_jobs=H.n_jobs, penalty="l2", C=0.999)
+        if cuda:
+            model = cuLogisticRegression(n_jobs=H.n_jobs, penalty="l2", C=0.999)
+        else:
+            model = LogisticRegression(n_jobs=H.n_jobs, penalty="l2", C=0.999)
     elif H.model == "rf":
-        model = RandomForestClassifier(n_jobs=H.n_jobs)
+        if cuda:
+            model = cuRandomForestClassifier(n_jobs=H.n_jobs)
+        else:
+            model = RandomForestClassifier(n_jobs=H.n_jobs)
 
     else:
         raise ValueError("unknown model")
@@ -62,7 +80,7 @@ def get_classification_score(H, X_train, X_test, y_train, y_test):
         'roc_auc_score': roc_auc_score(y_test, y_pred),
     }
 
-def run_classifications(H, cols, layer_ind, latents_dir, handle_nan=False):
+def run_classifications(H, cols, layer_ind, latents_dir, handle_nan=False, cuda=False):
     z, meta = get_latents(latents_dir=latents_dir, layer_ind=layer_ind, splits=[1,2,3], allow_missing=False, handle_nan=handle_nan)
     logging.debug(z.shape)
 
@@ -70,6 +88,7 @@ def run_classifications(H, cols, layer_ind, latents_dir, handle_nan=False):
     wandb.log({"resolution": resolution}, step=layer_ind)
     z = z.reshape(z.shape[0], -1)
     wandb.log({"size": z.shape[1]}, step=layer_ind)
+    # TODO: ? move to gpu? X_cudf = cudf.DataFrame(X)
 
     kfold = StratifiedKFold(n_splits=5, random_state=0, shuffle=True)
     scores = {}
@@ -79,7 +98,7 @@ def run_classifications(H, cols, layer_ind, latents_dir, handle_nan=False):
         for train_index, test_index in kfold.split(z, y):
             X_train, X_test = z[train_index], z[test_index]
             y_train, y_test = y[train_index], y[test_index]
-            score = get_classification_score(H, X_train, X_test, y_train, y_test)
+            score = get_classification_score(H, X_train, X_test, y_train, y_test, cuda=cuda)
             kfold_scores.append(score)
         kfold_scores = pd.DataFrame(kfold_scores)
         score = {}
@@ -180,6 +199,8 @@ def setup(H):
         latent_ids = [0,1,2,3,5,10,15,20,30,40,50]
     elif H.layer_ids_set == "mid":
         latent_ids = list(range(11)) + list(np.arange(12, 21, 2)) + list(np.arange(21, 42, 3)) + [43, 48, 53, 58, 63]
+    elif H.layer_ids_set == "mid_cuda":
+        latent_ids = list(np.arange(0, 42, 1)) + [48, 53, 58] # layer 43/44 is too large for cuKNeighborsClassifier (doesn't fit gpu)
     elif H.layer_ids_set == "full":
         latent_ids = get_available_latents()
     else:
@@ -210,15 +231,41 @@ def main():
     logging.info(cols)
     logging.info(latent_ids)
 
-    scores = defaultdict(list)
-    for i in tqdm(latent_ids):
-        score_dict = run_classifications(H, cols, i, latents_dir=H.latents_dir, handle_nan=H.handle_nan)
-        for col, score in score_dict.items():
-            scores[col].append(score)
+    # scores = defaultdict(list)
+    use_cuda = len(os.environ["CUDA_VISIBLE_DEVICES"]) > 0
+    for it, i in tqdm(enumerate(latent_ids)):
+        try:
+            score_dict = run_classifications(H, cols, i, latents_dir=H.latents_dir, handle_nan=H.handle_nan, cuda=use_cuda)
+        except Exception as e:
+            if use_cuda == True:
+                logging.warning(f"While running on GPU caught {e}")
+                logging.warning("trying without CUDA")
+                use_cuda = False
+                score_dict = run_classifications(H, cols, i, latents_dir=H.latents_dir, handle_nan=H.handle_nan,
+                                                 cuda=use_cuda)
+            else:
+                raise e
 
-    for col in cols:
-        df = pd.DataFrame(scores[col])
-        df.to_csv(os.path.join(path, f"{col}.csv"), index=False)
+
+        if it == 0:
+            score_keys = list(score_dict[cols[0]].keys())
+
+        for col in cols:
+            fpath = os.path.join(path, f"{col}.csv")
+            if it == 0:
+                with open(fpath, "w") as fh:
+                    fh.write(",".join(score_keys))
+
+            results = [score_dict[col][k] for k in score_keys]
+            with open(fpath, "a") as fh:
+                fh.write(",".join(results))
+
+        # for col, score in score_dict.items():
+        #     scores[col].append(score)
+    #
+    # for col in cols:
+    #     df = pd.DataFrame(scores[col])
+    #     df.to_csv(os.path.join(path, f"{col}.csv"), index=False)
 
 
 if __name__ == "__main__":

@@ -27,11 +27,14 @@ def update_ema(vae, ema_vae, ema_rate):
 
 
 def save_model(path, vae, ema_vae, optimizer, H):
+    print("Saving to path: ", path)
     torch.save(vae.state_dict(), f'{path}-model.th')
     torch.save(ema_vae.state_dict(), f'{path}-model-ema.th')
     torch.save(optimizer.state_dict(), f'{path}-opt.th')
     from_log = os.path.join(H.save_dir, 'log.jsonl')
+    print("Copying: ", from_log)
     to_log = f'{os.path.dirname(path)}/{os.path.basename(path)}-log.jsonl'
+    print("To: ", to_log)
     subprocess.check_output(['cp', from_log, to_log])
 
 
@@ -105,7 +108,7 @@ def setup_save_dirs(H):
     H.logdir = os.path.join(H.save_dir, 'log')
 
 
-def set_up_hyperparams(s=None, extra_args_fn=lambda x: x):
+def set_up_hyperparams(s=None, extra_args_fn=lambda x: x, dir=None):
     H = Hyperparams()
     parser = argparse.ArgumentParser()
     parser = add_vae_arguments(parser)
@@ -113,6 +116,9 @@ def set_up_hyperparams(s=None, extra_args_fn=lambda x: x):
     parse_args_and_update_hparams(H, parser, s=s)
     setup_mpi(H)
     setup_save_dirs(H)
+    if dir is not None:
+        print(f"Overriding H.logdir {H.logdir} with {dir}")
+        H.logdir = dir
     logprint = logger(H.logdir)
     for i, k in enumerate(sorted(H)):
         logprint(type='hparam', key=k, value=H[k])
