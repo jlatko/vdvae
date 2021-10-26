@@ -260,7 +260,7 @@ def main():
                 with open(fpath, "w") as fh:
                     fh.write(",".join(score_keys))
 
-            results = [score_dict[col][k] for k in score_keys]
+            results = [str(score_dict[col][k]) for k in score_keys]
             with open(fpath, "a") as fh:
                 fh.write(",".join(results))
 
