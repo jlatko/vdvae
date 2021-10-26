@@ -22,7 +22,6 @@ wandb.config.update({"script": "vis_attr"})
 
 
 def add_params(parser):
-    parser.add_argument('--run_name', type=str, default=None)
     parser.add_argument('--latents_dir', type=str, default='/scratch/s193223/vdvae/latents/')
     parser.add_argument('--attr_means_dir', type=str, default='/scratch/s193223/vdvae/attr_means/')
     parser.add_argument('--n_samples', type=int, default=1)
