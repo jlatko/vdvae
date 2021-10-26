@@ -4,7 +4,7 @@ from time import sleep
 import numpy as np
 import os
 import torch
-import torch.nn.functional as F
+from PIL import Image
 from torch.utils.data import DataLoader
 from torch.utils.data.distributed import DistributedSampler
 from tqdm import tqdm
@@ -15,6 +15,7 @@ from latents import get_available_latents
 from train_helpers import set_up_hyperparams, load_vaes
 import wandb
 
+import torch.nn.functional as F
 
 wandb.init(project='vae_visualizations', entity='johnnysummer', dir="/scratch/s193223/wandb/")
 wandb.config.update({"script": "vis_attr"})
@@ -28,11 +29,18 @@ def add_params(parser):
     parser.add_argument('--destination_dir', type=str, default='./visualizations/')
     return parser
 
+def resize(img, size):
+    img = Image.fromarray(img.squeeze().transpose([2,0,1]))
+    img = img.resize(size=size)
+    img = np.array(img).astype(np.uint8).transpose([1,2,0])[np.newaxis]
+    return img
 
 def attribute_manipulation(H, idx, attributes, ema_vae, latent_ids, lv_points, fixed=True, temp=0.1, normalize=True):
     with torch.no_grad():
         z_dict = np.load(os.path.join(H.latents_dir, f"{idx}.npz"))
         zs = [torch.tensor(z_dict[f'z_{i}'][np.newaxis], dtype=torch.float32).cuda() for i in latent_ids]
+        height = 64
+        width = 64
 
         for attr in tqdm(attributes):
             batches = []
@@ -58,14 +66,16 @@ def attribute_manipulation(H, idx, attributes, ema_vae, latent_ids, lv_points, f
                 for a in np.linspace(-scale, scale, H.n_steps):
                     zs_current[i] = zs[i] + a * direction
                     if fixed:
-                        batches.append(ema_vae.forward_samples_set_latents(1, zs_current, t=temp))
+                        img = ema_vae.forward_samples_set_latents(1, zs_current, t=temp)
                     else:
-                        batches.append(ema_vae.forward_samples_set_latents(1, zs_current[:i+1], t=temp))
+                        img = ema_vae.forward_samples_set_latents(1, zs_current[:i+1], t=temp)
 
+                    out = resize(img, size=(height, width))
+                    batches.append(img)
             n_rows = len(lv_points)
             #TODO: consider downsampling
-            im = np.concatenate(batches, axis=0).reshape((n_rows,  H.n_steps, *batches[0].shape[1:])).transpose(
-                [0, 2, 1, 3, 4]).reshape([n_rows * batches[0].shape[1], batches[0].shape[2] * H.n_steps, 3])
+            im = np.concatenate(batches, axis=0).reshape((n_rows,  H.n_steps, height, width)).transpose(
+                [0, 2, 1, 3, 4]).reshape([n_rows * height, width * H.n_steps, 3])
 
             name_key = f"t{str(temp).replace('.','_')}_"
             if fixed:
