@@ -70,7 +70,7 @@ def attribute_manipulation(H, idx, attributes, ema_vae, latent_ids, lv_points, f
                     else:
                         img = ema_vae.forward_samples_set_latents(1, zs_current[:i+1], t=temp)
 
-                    out = resize(img, size=(height, width))
+                    img = resize(img, size=(height, width))
                     batches.append(img)
             n_rows = len(lv_points)
             #TODO: consider downsampling
