@@ -102,7 +102,7 @@ def main():
     attributes = ["Young", "Male", "Smiling", "Wearing_Earrings", "Brown_Hair", "Blond_Hair", "Attractive"]
     lv_points = [0,1,2,3,4,5,6,7,20,21,40, 41, 43, 51, 60]
 
-    wandb.config.update({"attributes": attributes, "latent_ids": latent_ids, "lv_points": lv_points, "script": "visualize_along_attr"})
+    wandb.config.update({"attributes": attributes, "latent_ids": latent_ids, "lv_points": lv_points})
     print(lv_points)
     for i in range(H.n_samples):
         idx = data_valid_or_test.metadata.iloc[i].idx
