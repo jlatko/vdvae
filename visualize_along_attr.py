@@ -29,9 +29,9 @@ def add_params(parser):
     return parser
 
 def resize(img, size):
-    img = Image.fromarray(img.squeeze().transpose([2,0,1]))
+    img = Image.fromarray(img.squeeze())
     img = img.resize(size=size)
-    img = np.array(img).astype(np.uint8).transpose([1,2,0])[np.newaxis]
+    img = np.array(img)[np.newaxis]
     return img
 
 def attribute_manipulation(H, idx, attributes, ema_vae, latent_ids, lv_points, fixed=True, temp=0.1, normalize=True):
