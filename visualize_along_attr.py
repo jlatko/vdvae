@@ -22,11 +22,11 @@ wandb.config.update({"script": "vis_attr"})
 
 
 def add_params(parser):
+    parser.add_argument('--run_name', type=str, default=None)
     parser.add_argument('--latents_dir', type=str, default='/scratch/s193223/vdvae/latents/')
     parser.add_argument('--attr_means_dir', type=str, default='/scratch/s193223/vdvae/attr_means/')
     parser.add_argument('--n_samples', type=int, default=1)
     parser.add_argument('--n_steps', type=int, default=15)
-    parser.add_argument('--destination_dir', type=str, default='./visualizations/')
     return parser
 
 def resize(img, size):
@@ -83,7 +83,7 @@ def attribute_manipulation(H, idx, attributes, ema_vae, latent_ids, lv_points, f
             if fixed:
                 name_key += "fixed_"
 
-            fname = os.path.join(H.destination_dir, f"{attr}_{name_key}{idx}.png")
+            fname = os.path.join(wandb.run.dir, f"{attr}_{name_key}{idx}.png")
             imageio.imwrite(fname, im)
 
             wandb.log({f"{attr}_{name_key}": wandb.Image(im, caption=f"{attr}_{name_key}{idx}")})
@@ -91,21 +91,19 @@ def attribute_manipulation(H, idx, attributes, ema_vae, latent_ids, lv_points, f
 def main():
     H, logprint = set_up_hyperparams(extra_args_fn=add_params)
 
-    if os.path.exists(H.destination_dir):
-        if len(os.listdir(H.destination_dir)) > 0:
-            print("WARNING: destination non-empty")
-            sleep(5)
-            print("continuing")
-        #     raise RuntimeError('Destination non empty')
-    else:
-        os.makedirs(H.destination_dir)
 
     H, data_train, data_valid_or_test, preprocess_fn = set_up_data(H)
     latent_ids = get_available_latents(H.latents_dir)
     vae, ema_vae = load_vaes(H, logprint)
 
+    if H.run_name:
+        print(wandb.run.name)
+        wandb.run.name = H.run_name + '-' + wandb.run.name.split('-')[-1]
+
     attributes = ["Young", "Male", "Smiling", "Wearing_Earrings", "Brown_Hair", "Blond_Hair", "Attractive"]
     lv_points = [0,1,2,3,4,5,6,7,20,21,40, 41, 43, 51, 60]
+
+    wandb.config.update({"attributes": attributes, "latent_ids": latent_ids, "lv_points": lv_points, "script": "visualize_along_attr"})
     print(lv_points)
     for i in range(H.n_samples):
         idx = data_valid_or_test.metadata.iloc[i].idx
