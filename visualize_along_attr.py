@@ -24,8 +24,8 @@ wandb.config.update({"script": "vis_attr"})
 def add_params(parser):
     parser.add_argument('--latents_dir', type=str, default='/scratch/s193223/vdvae/latents/')
     parser.add_argument('--attr_means_dir', type=str, default='/scratch/s193223/vdvae/attr_means/')
-    parser.add_argument('--n_samples', type=int, default=10)
-    parser.add_argument('--n_steps', type=int, default=10)
+    parser.add_argument('--n_samples', type=int, default=1)
+    parser.add_argument('--n_steps', type=int, default=15)
     parser.add_argument('--destination_dir', type=str, default='./visualizations/')
     return parser
 
@@ -60,9 +60,11 @@ def attribute_manipulation(H, idx, attributes, ema_vae, latent_ids, lv_points, f
                 # direction = F.normalize(direction, p=2)
 
                 if normalize:
-                    scale = 1
+                    scale = 2
                 else:
                     scale = 10
+
+
                 for a in np.linspace(-scale, scale, H.n_steps):
                     zs_current[i] = zs[i] + a * direction
                     if fixed:
@@ -103,7 +105,7 @@ def main():
     vae, ema_vae = load_vaes(H, logprint)
 
     attributes = ["Young", "Male", "Smiling", "Wearing_Earrings", "Brown_Hair", "Blond_Hair", "Attractive"]
-    lv_points = [0,1,2,3,4,5,6,7,20,21,40, 41, 43, 51 ]
+    lv_points = [0,1,2,3,4,5,6,7,20,21,40, 41, 43, 51, 60]
     print(lv_points)
     for i in range(H.n_samples):
         idx = data_valid_or_test.metadata.iloc[i].idx
