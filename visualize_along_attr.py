@@ -16,7 +16,7 @@ from train_helpers import set_up_hyperparams, load_vaes
 import wandb
 
 
-wandb.init(project='vdvae_analysis', entity='johnnysummer', dir="/scratch/s193223/wandb/")
+wandb.init(project='vae_visualizations', entity='johnnysummer', dir="/scratch/s193223/wandb/")
 wandb.config.update({"script": "vis_attr"})
 
 
