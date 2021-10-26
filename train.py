@@ -148,7 +148,7 @@ def run_test_eval(H, ema_vae, data_test, preprocess_fn, logprint):
 
 
 def main():
-    H, logprint = set_up_hyperparams(dir=wandb.run.dir)
+    H, logprint = set_up_hyperparams(dir=os.path.join(wandb.run.dir, 'log'))
     H, data_train, data_valid_or_test, preprocess_fn = set_up_data(H)
     vae, ema_vae = load_vaes(H, logprint)
     if H.run_name is not None:
