@@ -12,6 +12,7 @@ if os.environ["CUDA_VISIBLE_DEVICES"]:
     from cuml.neighbors import KNeighborsClassifier as cuKNeighborsClassifier
     from cuml.ensemble import RandomForestClassifier as cuRandomForestClassifier
     from cuml import LogisticRegression as cuLogisticRegression
+    from cuml.linear_model import MBSGDClassifier as cuMBSGDClassifier
     from cuml.svm import SVC as cuSVC
 
 from sklearn.ensemble import RandomForestClassifier
@@ -39,32 +40,35 @@ def get_classification_score(H, X_train, X_test, y_train, y_test, cuda=False):
     if "knn" in H.model:
         n = int(H.model.split("_")[1])
         if cuda:
-            model = cuKNeighborsClassifier(n_neighbors=n, n_jobs=H.n_jobs)
+            model = cuKNeighborsClassifier(n_neighbors=n)
         else:
             model = KNeighborsClassifier(n_neighbors=n, n_jobs=H.n_jobs)
     elif H.model == "svc":
         if cuda:
-            model = cuSVC(n_jobs=H.n_jobs)
+            model = cuSVC()
         else:
             model = SVC(n_jobs=H.n_jobs)
     elif H.model == "logistic":
         if cuda:
-            model = cuLogisticRegression(n_jobs=H.n_jobs)
+            # model = cuLogisticRegression(n_jobs=H.n_jobs)
+            model = cuMBSGDClassifier(loss="log", penalty="none", C=0.999)
         else:
-            model = LogisticRegression(n_jobs=H.n_jobs)
+            model = LogisticRegression(n_jobs=H.n_jobs, solver="saga", max_iter=500)
     elif H.model == "l1":
         if cuda:
-            model = cuLogisticRegression(n_jobs=H.n_jobs, penalty="l1", C=0.999)
+            # model = cuLogisticRegression(n_jobs=H.n_jobs, penalty="l1", C=0.999)
+            model = cuMBSGDClassifier(loss="log", penalty="l1", C=0.999)
         else:
-            model = LogisticRegression(n_jobs=H.n_jobs, penalty="l1", C=0.999)
+            model = LogisticRegression(n_jobs=H.n_jobs, penalty="l1", C=0.999, solver="saga", max_iter=500)
     elif H.model == "l2":
         if cuda:
-            model = cuLogisticRegression(n_jobs=H.n_jobs, penalty="l2", C=0.999)
+            # model = cuLogisticRegression(n_jobs=H.n_jobs, penalty="l2", C=0.999)
+            model = cuMBSGDClassifier(loss="log", penalty="l2", C=0.999)
         else:
-            model = LogisticRegression(n_jobs=H.n_jobs, penalty="l2", C=0.999)
+            model = LogisticRegression(n_jobs=H.n_jobs, penalty="l2", C=0.999, solver="saga", max_iter=500)
     elif H.model == "rf":
         if cuda:
-            model = cuRandomForestClassifier(n_jobs=H.n_jobs)
+            model = cuRandomForestClassifier()
         else:
             model = RandomForestClassifier(n_jobs=H.n_jobs)
 
