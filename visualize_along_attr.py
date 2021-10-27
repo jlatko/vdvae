@@ -64,7 +64,7 @@ def attribute_manipulation(H, idx, attributes, ema_vae, latent_ids, lv_points):
         for attr in tqdm(attributes):
             batches = []
             for i in lv_points:
-                torch.random.seed(0)
+                torch.random.manual_seed(0)
                 print(torch.randn(1).item())
 
                 zs_current = copy(zs)
