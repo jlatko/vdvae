@@ -28,7 +28,7 @@ def add_params(parser):
     parser.add_argument('--norm', type=str, default=None, help="None|channel|pixel")
     parser.add_argument('--n_samples', type=int, default=1)
     parser.add_argument('--size', type=int, default=128)
-    parser.add_argument('--n_steps', type=int, default=9)
+    parser.add_argument('--n_steps', type=int, default=13)
     parser.add_argument('--scale', type=int, default=1)
     parser.add_argument('--keys_set', type=str, default='small')
     parser.add_argument('--temp', type=float, default=0.1)
@@ -64,6 +64,9 @@ def attribute_manipulation(H, idx, attributes, ema_vae, latent_ids, lv_points):
         for attr in tqdm(attributes):
             batches = []
             for i in lv_points:
+                torch.random.seed(0)
+                print(torch.randn(1).item())
+
                 zs_current = copy(zs)
                 # get direction
                 means_dict = np.load(os.path.join(H.attr_means_dir, f"{i}.npz"))
