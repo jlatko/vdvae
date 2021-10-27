@@ -31,6 +31,8 @@ def add_params(parser):
     parser.add_argument('--n_steps', type=int, default=9)
     parser.add_argument('--scale', type=int, default=1)
     parser.add_argument('--keys_set', type=str, default='small')
+    parser.add_argument('--temp', type=float, default=0.1)
+    parser.add_argument('--fixed', type=bool, action="store_true")
 
     return parser
 
@@ -54,7 +56,7 @@ def scale_direction(direction, normalize=None, scale=1):
 
     return scale * direction
 
-def attribute_manipulation(H, idx, attributes, ema_vae, latent_ids, lv_points, fixed=True, temp=0.1):
+def attribute_manipulation(H, idx, attributes, ema_vae, latent_ids, lv_points):
     with torch.no_grad():
         z_dict = np.load(os.path.join(H.latents_dir, f"{idx}.npz"))
         zs = [torch.tensor(z_dict[f'z_{i}'][np.newaxis], dtype=torch.float32).cuda() for i in latent_ids]
@@ -75,10 +77,10 @@ def attribute_manipulation(H, idx, attributes, ema_vae, latent_ids, lv_points, f
 
                 for a in np.linspace(-1, 1, H.n_steps):
                     zs_current[i] = zs[i] + a * direction
-                    if fixed:
-                        img = ema_vae.forward_samples_set_latents(1, zs_current, t=temp)
+                    if H.fixed:
+                        img = ema_vae.forward_samples_set_latents(1, zs_current, t=H.temp)
                     else:
-                        img = ema_vae.forward_samples_set_latents(1, zs_current[:i+1], t=temp)
+                        img = ema_vae.forward_samples_set_latents(1, zs_current[:i+1], t=H.temp)
 
                     img = resize(img, size=(H.size, H.size))
                     batches.append(img)
@@ -87,8 +89,8 @@ def attribute_manipulation(H, idx, attributes, ema_vae, latent_ids, lv_points, f
             im = np.concatenate(batches, axis=0).reshape((n_rows,  H.n_steps, H.size, H.size, 3)).transpose(
                 [0, 2, 1, 3, 4]).reshape([n_rows * H.size, H.size * H.n_steps, 3])
 
-            name_key = f"t{str(temp).replace('.','_')}_"
-            if fixed:
+            name_key = f"t{str(H.temp).replace('.','_')}_"
+            if H.fixed:
                 name_key += "fixed_"
 
             fname = os.path.join(wandb.run.dir, f"{attr}_{name_key}{idx}.png")
@@ -117,9 +119,6 @@ def main():
     for i in range(H.n_samples):
         idx = data_valid_or_test.metadata.iloc[i].idx
         attribute_manipulation(H, idx, attributes, ema_vae, latent_ids, lv_points, fixed=False)
-        # attribute_manipulation(H, idx, attributes, ema_vae, latent_ids, lv_points, fixed=False, temp=0.2)
-        # attribute_manipulation(H, idx, attributes, ema_vae, latent_ids, lv_points, fixed=False, temp=0.5)
-        # attribute_manipulation(H, idx, attributes, ema_vae, latent_ids, lv_points, fixed=True)
 
 
 if __name__ == "__main__":
