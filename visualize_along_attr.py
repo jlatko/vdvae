@@ -25,7 +25,7 @@ wandb.config.update({"script": "vis_attr"})
 def add_params(parser):
     parser.add_argument('--latents_dir', type=str, default='/scratch/s193223/vdvae/latents/')
     parser.add_argument('--attr_means_dir', type=str, default='/scratch/s193223/vdvae/attr_means/')
-    parser.add_argument('--c', type=str, default=None, help="None|channel|pixel")
+    parser.add_argument('--norm', type=str, default=None, help="None|channel|pixel")
     parser.add_argument('--n_samples', type=int, default=1)
     parser.add_argument('--size', type=int, default=128)
     parser.add_argument('--n_steps', type=int, default=9)
