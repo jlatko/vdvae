@@ -108,7 +108,7 @@ def main():
         print(wandb.run.name)
         wandb.run.name = H.run_name + '-' + wandb.run.name.split('-')[-1]
 
-    cols = get_attributes(H.keys_set)
+    attributes = get_attributes(H.keys_set)
 
     lv_points = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 14, 16, 18, 20, 21, 24, 27, 30, 33, 36, 39, 43, 48, 53, 58, 63]
 
