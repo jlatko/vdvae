@@ -29,10 +29,10 @@ def add_params(parser):
     parser.add_argument('--n_samples', type=int, default=1)
     parser.add_argument('--size', type=int, default=128)
     parser.add_argument('--n_steps', type=int, default=13)
-    parser.add_argument('--scale', type=int, default=1)
+    parser.add_argument('--scale', type=float, default=1)
     parser.add_argument('--keys_set', type=str, default='small')
     parser.add_argument('--temp', type=float, default=0.1)
-    parser.add_argument('--fixed', type=bool, action="store_true")
+    parser.add_argument('--fixed', action="store_true")
 
     return parser
 
