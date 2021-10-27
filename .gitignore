@@ -6,4 +6,5 @@ outputs
 visualizations
 notebooks
 .data
+wandb
 *.DS_Store

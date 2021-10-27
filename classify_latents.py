@@ -210,7 +210,7 @@ def main():
 
             results = [str(score_dict[col][k]) for k in score_keys]
             with open(fpath, "a") as fh:
-                fh.write(",".join(results))
+                fh.write("\n"+",".join(results))
 
         # for col, score in score_dict.items():
         #     scores[col].append(score)

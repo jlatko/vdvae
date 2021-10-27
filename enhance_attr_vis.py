@@ -54,11 +54,12 @@ def enhance_attribute_visualization(H, attr, run_scores, run_viz,
     lv_points = run_viz.config['lv_points']
     path = _download(name2file[f'{attr}_t{str(temp).replace(".", "_")}_2.png'], f"./.data/{H.run_id_viz}/")
     img = Image.open(path)
-
+    print(img.width, img.height)
+    print(DPI)
     f, (a0, a1) = plt.subplots(1, 2, gridspec_kw={'width_ratios': [1, 8]},
                                figsize=(1.5 * img.width / DPI, 1.1 * img.height / DPI))
 
-    a1.imshow(img, aspect=img.height / img.width)
+    a1.imshow(img, aspect=1)
     plt.title(f"{attr} (t={temp})", fontsize=24)
 
     scores_picked = [f"{scores.loc[i, H.scores_key]:.3f}" if i in scores.index else "?" for i in lv_points]
@@ -108,7 +109,8 @@ def enhance_attribute_visualization(H, attr, run_scores, run_viz,
     return scores
 
 
-wandb.init(project='vae_visualizations', entity='johnnysummer', dir="/scratch/s193223/wandb/")
+# wandb.init(project='vae_visualizations', entity='johnnysummer', dir="/scratch/s193223/wandb/")
+wandb.init(project='vae_visualizations', entity='johnnysummer')
 wandb.config.update({"script": "enhance"})
 
 def parse_args(s=None):
@@ -136,6 +138,7 @@ def main():
     size = run_viz.config["temp"]
     attributes = run_viz.config["attributes"]
 
+    print(run_viz.config)
     for attr in attributes:
         enhance_attribute_visualization(H, attr, run_scores, run_viz, temp=temp, size=size)
 
