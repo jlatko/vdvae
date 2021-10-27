@@ -25,10 +25,10 @@ wandb.config.update({"script": "vis_attr"})
 def add_params(parser):
     parser.add_argument('--latents_dir', type=str, default='/scratch/s193223/vdvae/latents/')
     parser.add_argument('--attr_means_dir', type=str, default='/scratch/s193223/vdvae/attr_means/')
+    parser.add_argument('--c', type=str, default=None, help="None|channel|pixel")
     parser.add_argument('--n_samples', type=int, default=1)
     parser.add_argument('--size', type=int, default=128)
-    parser.add_argument('--norm', type=str, default=None, help="None|channel|pixel")
-    parser.add_argument('--n_steps', type=int, default=10)
+    parser.add_argument('--n_steps', type=int, default=9)
     parser.add_argument('--scale', type=int, default=1)
     parser.add_argument('--keys_set', type=str, default='small')
 
@@ -67,11 +67,11 @@ def attribute_manipulation(H, idx, attributes, ema_vae, latent_ids, lv_points, f
                 means_dict = np.load(os.path.join(H.attr_means_dir, f"{i}.npz"))
                 direction = means_dict[f"{attr}_neg"] - means_dict[f"{attr}_pos"]
                 wandb.log({f"std_{attr}_{idx}": direction.std(), "i": i})
-                direction = scale_direction(direction, normalize=H.norm, scale=H.scale)
-                wandb.log({f"scaled_std_{attr}_{idx}": direction.std(), "i": i})
-
-
                 direction = torch.tensor(direction[np.newaxis], dtype=torch.float32).cuda()
+                direction = scale_direction(direction, normalize=H.norm, scale=H.scale)
+                wandb.log({f"scaled_std_{attr}_{idx}": torch.std(direction).item(), "i": i})
+
+
 
                 for a in np.linspace(-1, 1, H.n_steps):
                     zs_current[i] = zs[i] + a * direction
