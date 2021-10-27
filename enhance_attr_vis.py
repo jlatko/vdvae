@@ -129,12 +129,12 @@ def parse_args(s=None):
 def main():
     H = parse_args()
 
-    attributes = get_attributes(H.keys_set)
 
     run_viz = api.run(f"{project_viz}/{H.run_id_viz}")
     run_scores = api.run(f"{project_scores}/{H.run_id_scores}")
     temp = run_viz.config["temp"]
     size = run_viz.config["temp"]
+    attributes = run_viz.config["attributes"]
 
     for attr in attributes:
         enhance_attribute_visualization(H, attr, run_scores, run_viz, temp=temp, size=size)
