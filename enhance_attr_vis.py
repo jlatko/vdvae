@@ -104,6 +104,7 @@ def enhance_attribute_visualization(H, attr, run_scores, run_viz,
 
     plt.savefig(os.path.join(wandb.run.dir, f"{attr}_{H.scores_key}.jpg"), bbox_inches='tight')
 
+    wandb.log({f"{attr}": wandb.Image(plt, caption=f"{attr}_{H.scores_key}")})
     return scores
 
 
