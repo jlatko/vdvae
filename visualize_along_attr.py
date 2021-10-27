@@ -33,6 +33,7 @@ def add_params(parser):
     parser.add_argument('--keys_set', type=str, default='small')
     parser.add_argument('--temp', type=float, default=0.1)
     parser.add_argument('--fixed', action="store_true")
+    parser.add_argument('--grouped', action="store_true")
 
     return parser
 
@@ -69,7 +70,11 @@ def attribute_manipulation(H, idx, attributes, ema_vae, latent_ids, lv_points):
                 zs_current = copy(zs)
                 # get direction
                 means_dict = np.load(os.path.join(H.attr_means_dir, f"{i}.npz"))
-                direction = means_dict[f"{attr}_neg"] - means_dict[f"{attr}_pos"]
+                if H.grouped:
+                    direction = means_dict[f"{attr}_diff_grouped"]
+                else:
+                    # direction = means_dict[f"{attr}_diff"]
+                    direction = means_dict[f"{attr}_pos"] - means_dict[f"{attr}_neg"]
                 wandb.log({f"std_{attr}_{idx}": direction.std(), "i": i})
                 direction = torch.tensor(direction[np.newaxis], dtype=torch.float32).cuda()
                 direction = scale_direction(direction, normalize=H.norm, scale=H.scale)

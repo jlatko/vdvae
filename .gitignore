@@ -5,5 +5,5 @@ saved_models
 outputs
 visualizations
 notebooks
-
+.data
 *.DS_Store

@@ -36,7 +36,7 @@ def download_file(run_id, filename, project="johhnysummer/vdvae_analysis", force
     for file in files:
         if file.name == filename:
             return _download(
-                file, f"./data/{run_id}/", force_redownload=force_redownload
+                file, f"./.data/{run_id}/", force_redownload=force_redownload
             )
 
 def enhance_attribute_visualization(H, attr, run_scores, run_viz,
@@ -45,14 +45,14 @@ def enhance_attribute_visualization(H, attr, run_scores, run_viz,
 
     files_scores = run_scores.files()
     name2file_scores = {f.name: f for f in files_scores}
-    path_score = _download(name2file_scores[f'{attr}.csv'], f"./data/{H.run_id_scores}/")
+    path_score = _download(name2file_scores[f'{attr}.csv'], f"./.data/{H.run_id_scores}/")
     scores = pd.read_csv(path_score)
     scores = scores.set_index("layer_ind")
 
     files = run_viz.files()
     name2file = {f.name: f for f in files}
     lv_points = run_viz.config['lv_points']
-    path = _download(name2file[f'{attr}_t{str(temp).replace(".", "_")}_2.png'], f"./data/{H.run_id_viz}/")
+    path = _download(name2file[f'{attr}_t{str(temp).replace(".", "_")}_2.png'], f"./.data/{H.run_id_viz}/")
     img = Image.open(path)
 
     f, (a0, a1) = plt.subplots(1, 2, gridspec_kw={'width_ratios': [1, 8]},

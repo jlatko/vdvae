@@ -20,6 +20,12 @@ import logging
 
 # TODO: consider accounting for the most frequent and correlated attributes (earings only for females etc)
 
+def get_means(z, meta, col):
+    y = np.array(meta[col] == 1)
+    pos_mean = z[y].mean(axis=0)
+    neg_mean = z[~y].mean(axis=0)
+    return pos_mean, neg_mean
+
 def find_means(H, cols, layer_ind, latents_dir, handle_nan=False):
     z, meta = get_latents(latents_dir=latents_dir, layer_ind=layer_ind, splits=[1,2,3], allow_missing=False, handle_nan=handle_nan)
     logging.debug(z.shape)
@@ -27,13 +33,42 @@ def find_means(H, cols, layer_ind, latents_dir, handle_nan=False):
     means_dict = {}
 
     for col in cols:
-        y = np.array(meta[col] == 1)
-        pos_mean = z[y].mean(axis=0)
-        neg_mean = z[~y].mean(axis=0)
+        if H.group:
+            query = meta["Male"] == 1
+            # male
+            if not query.none():
+                pos_mean_male, neg_mean_male = get_means(z[query], meta[query], col)
+                means_dict[f"{col}_pos_male"] = pos_mean_male
+                means_dict[f"{col}_neg_male"] = neg_mean_male
+                means_dict[f"{col}_diff_male"] = pos_mean_male - neg_mean_male
+                means_dict[f"{col}_diff_grouped"] = means_dict[f"{col}_diff_male"]
+            # female
+            if not query.all():
+                pos_mean_female, neg_mean_female = get_means(z[~query], meta[~query], col)
+                means_dict[f"{col}_pos_female"] = pos_mean_female
+                means_dict[f"{col}_neg_female"] = neg_mean_female
+                means_dict[f"{col}_diff_female"] = pos_mean_female - neg_mean_female
+
+                if f"{col}_diff_grouped" in means_dict:
+                    means_dict[f"{col}_diff_grouped"] = (means_dict[f"{col}_diff_male"] + means_dict[f"{col}_diff_female"]) / 2
+                else:
+                    means_dict[f"{col}_diff_grouped"] = means_dict[f"{col}_diff_female"]
+
+
+
+
+
+
+        pos_mean, neg_mean = get_means(z, meta, col)
         means_dict[f"{col}_pos"] = pos_mean
         means_dict[f"{col}_neg"] = neg_mean
+        means_dict[f"{col}_diff"] = pos_mean - neg_mean
 
-    np.savez(os.path.join(H.destination_dir, f"{layer_ind}.npz"), **means_dict)
+    # if H.group:
+    #     fname =  f"{layer_ind}_grouped.npz"
+    # else:
+    fname =  f"{layer_ind}.npz"
+    np.savez(os.path.join(H.destination_dir, fname), **means_dict)
 
 def parse_args(s=None):
     H = Hyperparams()
@@ -46,6 +81,7 @@ def parse_args(s=None):
     parser.add_argument('--layer_ids_set', type=str, default='full')
     parser.add_argument('--log_level', type=str, default='INFO')
     parser.add_argument('--handle_nan', type=str, default=None)
+    # parser.add_argument('--group', action="store_true")
 
     H.update(parser.parse_args(s).__dict__)
     return H
