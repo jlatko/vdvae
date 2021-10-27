@@ -121,7 +121,7 @@ def main():
     print(lv_points)
     for i in range(H.n_samples):
         idx = data_valid_or_test.metadata.iloc[i].idx
-        attribute_manipulation(H, idx, attributes, ema_vae, latent_ids, lv_points, fixed=False)
+        attribute_manipulation(H, idx, attributes, ema_vae, latent_ids, lv_points)
 
 
 if __name__ == "__main__":
