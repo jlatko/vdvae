@@ -116,7 +116,7 @@ def main():
 
     lv_points = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 14, 16, 18, 20, 21, 24, 27, 30, 33, 36, 39, 43, 48, 53, 58, 63]
 
-    wandb.config.update({"attributes": attributes, "latent_ids": latent_ids, "lv_points": lv_points})
+    wandb.config.update(H)
     print(lv_points)
     for i in range(H.n_samples):
         idx = data_valid_or_test.metadata.iloc[i].idx
