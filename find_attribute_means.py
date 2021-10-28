@@ -4,9 +4,9 @@ from time import sleep
 
 from attributes import get_attributes
 
-os.environ["MKL_NUM_THREADS"] = "1"
-os.environ["NUMEXPR_NUM_THREADS"] = "1"
-os.environ["OMP_NUM_THREADS"] = "1"
+os.environ["MKL_NUM_THREADS"] = "4"
+os.environ["NUMEXPR_NUM_THREADS"] = "4"
+os.environ["OMP_NUM_THREADS"] = "4"
 
 from collections import defaultdict
 from tqdm import tqdm
@@ -33,30 +33,25 @@ def find_means(H, cols, layer_ind, latents_dir, handle_nan=False):
     means_dict = {}
 
     for col in cols:
-        if H.group:
-            query = meta["Male"] == 1
-            # male
-            if not query.none():
-                pos_mean_male, neg_mean_male = get_means(z[query], meta[query], col)
-                means_dict[f"{col}_pos_male"] = pos_mean_male
-                means_dict[f"{col}_neg_male"] = neg_mean_male
-                means_dict[f"{col}_diff_male"] = pos_mean_male - neg_mean_male
-                means_dict[f"{col}_diff_grouped"] = means_dict[f"{col}_diff_male"]
-            # female
-            if not query.all():
-                pos_mean_female, neg_mean_female = get_means(z[~query], meta[~query], col)
-                means_dict[f"{col}_pos_female"] = pos_mean_female
-                means_dict[f"{col}_neg_female"] = neg_mean_female
-                means_dict[f"{col}_diff_female"] = pos_mean_female - neg_mean_female
+        query = meta["Male"] == 1
+        # male
+        if not query.none():
+            pos_mean_male, neg_mean_male = get_means(z[query], meta[query], col)
+            means_dict[f"{col}_pos_male"] = pos_mean_male
+            means_dict[f"{col}_neg_male"] = neg_mean_male
+            means_dict[f"{col}_diff_male"] = pos_mean_male - neg_mean_male
+            means_dict[f"{col}_diff_grouped"] = means_dict[f"{col}_diff_male"]
+        # female
+        if not query.all():
+            pos_mean_female, neg_mean_female = get_means(z[~query], meta[~query], col)
+            means_dict[f"{col}_pos_female"] = pos_mean_female
+            means_dict[f"{col}_neg_female"] = neg_mean_female
+            means_dict[f"{col}_diff_female"] = pos_mean_female - neg_mean_female
 
-                if f"{col}_diff_grouped" in means_dict:
-                    means_dict[f"{col}_diff_grouped"] = (means_dict[f"{col}_diff_male"] + means_dict[f"{col}_diff_female"]) / 2
-                else:
-                    means_dict[f"{col}_diff_grouped"] = means_dict[f"{col}_diff_female"]
-
-
-
-
+            if f"{col}_diff_grouped" in means_dict:
+                means_dict[f"{col}_diff_grouped"] = (means_dict[f"{col}_diff_male"] + means_dict[f"{col}_diff_female"]) / 2
+            else:
+                means_dict[f"{col}_diff_grouped"] = means_dict[f"{col}_diff_female"]
 
 
         pos_mean, neg_mean = get_means(z, meta, col)
