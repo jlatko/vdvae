@@ -19,6 +19,7 @@ from latents import get_latents, get_available_latents
 import logging
 
 # TODO: consider accounting for the most frequent and correlated attributes (earings only for females etc)
+MIN_FREQ = 10
 
 def get_means(z, meta, col):
     y = np.array(meta[col] == 1)
@@ -33,17 +34,28 @@ def find_means(H, cols, layer_ind, latents_dir, handle_nan=False):
     means_dict = {}
 
     for col in cols:
-        query = meta["Male"] == 1
+        male = meta["Male"] == 1
+        query = meta[col] == 1
+
+        male_and_query = male & query
+        male_and_not_query = male & (~query)
+        female_and_query = (~male) & query
+        female_and_not_query = (~male) & (~query)
+        logging.info(f"{col}:"
+                     f"\n male (y/n) {male_and_query.sum()} | {male_and_not_query.sum()} "
+                     f"\n female (y/n) {female_and_query.sum()} | {female_and_not_query.sum()} ")
         # male
-        if query.any():
-            pos_mean_male, neg_mean_male = get_means(z[query], meta[query], col)
+        if male_and_query.sum() >= MIN_FREQ and male_and_not_query.sum() >= MIN_FREQ:
+            pos_mean_male, neg_mean_male = get_means(z[male], meta[male], col)
             means_dict[f"{col}_pos_male"] = pos_mean_male
             means_dict[f"{col}_neg_male"] = neg_mean_male
             means_dict[f"{col}_diff_male"] = pos_mean_male - neg_mean_male
             means_dict[f"{col}_diff_grouped"] = means_dict[f"{col}_diff_male"]
+        else:
+            logging.info("skipping male")
         # female
-        if not query.all():
-            pos_mean_female, neg_mean_female = get_means(z[~query], meta[~query], col)
+        if female_and_query.sum() >= MIN_FREQ and female_and_not_query.sum() >= MIN_FREQ:
+            pos_mean_female, neg_mean_female = get_means(z[~male], meta[~male], col)
             means_dict[f"{col}_pos_female"] = pos_mean_female
             means_dict[f"{col}_neg_female"] = neg_mean_female
             means_dict[f"{col}_diff_female"] = pos_mean_female - neg_mean_female
@@ -52,6 +64,8 @@ def find_means(H, cols, layer_ind, latents_dir, handle_nan=False):
                 means_dict[f"{col}_diff_grouped"] = (means_dict[f"{col}_diff_male"] + means_dict[f"{col}_diff_female"]) / 2
             else:
                 means_dict[f"{col}_diff_grouped"] = means_dict[f"{col}_diff_female"]
+        else:
+            logging.info("skipping female")
 
 
         pos_mean, neg_mean = get_means(z, meta, col)
@@ -59,9 +73,6 @@ def find_means(H, cols, layer_ind, latents_dir, handle_nan=False):
         means_dict[f"{col}_neg"] = neg_mean
         means_dict[f"{col}_diff"] = pos_mean - neg_mean
 
-    # if H.group:
-    #     fname =  f"{layer_ind}_grouped.npz"
-    # else:
     fname =  f"{layer_ind}.npz"
     np.savez(os.path.join(H.destination_dir, fname), **means_dict)
 
