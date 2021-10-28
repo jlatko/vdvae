@@ -35,7 +35,7 @@ def find_means(H, cols, layer_ind, latents_dir, handle_nan=False):
     for col in cols:
         query = meta["Male"] == 1
         # male
-        if not query.none():
+        if query.any():
             pos_mean_male, neg_mean_male = get_means(z[query], meta[query], col)
             means_dict[f"{col}_pos_male"] = pos_mean_male
             means_dict[f"{col}_neg_male"] = neg_mean_male
