@@ -112,7 +112,7 @@ def run_folds(H, z, meta, col, cuda, layer_ind, prefix=""):
         score[f"{metric}_avg"] = kfold_scores[metric].mean()
         score[f"{metric}_std"] = kfold_scores[metric].std()
     score["frequency"] = y.sum() / len(y)
-    score = log_score(score, col, layer_ind, prefix=prefix)
+    log_score(score, col, layer_ind, prefix=prefix)
     return score
 
 def get_all_scores(H, z, meta, cols, cuda, layer_ind, prefix=""):
