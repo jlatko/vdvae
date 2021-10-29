@@ -202,7 +202,7 @@ def run_classifications(H, cols, layer_ind, latents_dir, handle_nan=False, cuda=
         scores.update(group_scores(scores_male, scores_female, cols_filtered, layer_ind))
 
         #
-        # scores["Male"] = get_all_scores(H, z, meta, cols, cuda, layer_ind)["Male"]
+        scores["Male"] = get_all_scores(H, z, meta, ["Male"], cuda, layer_ind)["Male"]
 
     else:
         scores.update(get_all_scores(H, z, meta, list(cols_filtered), cuda, layer_ind))
