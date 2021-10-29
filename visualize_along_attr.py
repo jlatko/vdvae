@@ -60,7 +60,7 @@ def scale_direction(direction, normalize=None, scale=1):
 
     return scale * direction
 
-def get_idx_for_attr(H, attr, has_attr, metadata):
+def get_idx_for_attr(H, attr, has_attr, metadata, i):
     attr_mask = metadata[attr] == 1
     male_mask = metadata["Male"] == 1
     ignore_male = (attr_mask & male_mask).sum() < MIN_FREQ or ((~attr_mask) & male_mask).sum() < MIN_FREQ
@@ -78,7 +78,7 @@ def get_idx_for_attr(H, attr, has_attr, metadata):
     if not has_attr:
         attr_mask = ~attr_mask
 
-    return metadata[mask & attr_mask].iloc[0].idx
+    return metadata[mask & attr_mask].iloc[i].idx
 
 def get_zs_for_idx(H, idx, latent_ids):
     z_dict = np.load(os.path.join(H.latents_dir, f"{idx}.npz"))
@@ -104,7 +104,7 @@ def get_direction(H, attr, i, idx, sample_meta):
 
     return direction
 
-def attribute_manipulation(H, attributes, ema_vae, latent_ids, lv_points, metadata, idx=None, has_attr=None):
+def attribute_manipulation(H, attributes, ema_vae, latent_ids, lv_points, metadata, idx=None, has_attr=None, i=0):
     assert (idx is not None) or (has_attr is not None)
     with torch.no_grad():
 
@@ -114,7 +114,7 @@ def attribute_manipulation(H, attributes, ema_vae, latent_ids, lv_points, metada
 
         for attr in tqdm(attributes):
             if has_attr is not None:
-                idx = get_idx_for_attr(H, attr, has_attr, metadata)
+                idx = get_idx_for_attr(H, attr, has_attr, metadata, i)
                 zs = get_zs_for_idx(H, idx, latent_ids)
                 sample_meta = metadata.set_index("idx").loc[idx]
 
@@ -171,8 +171,9 @@ def main():
 
     print(lv_points)
     if H.has_attr:
-        for i, has_attr in enumerate([True, False]):
-            attribute_manipulation(H, attributes, ema_vae, latent_ids, lv_points, has_attr=has_attr, metadata=data_valid_or_test.metadata)
+        for i in range(H.n_samples):
+            for has_attr in [True, False]:
+                attribute_manipulation(H, attributes, ema_vae, latent_ids, lv_points, has_attr=has_attr, metadata=data_valid_or_test.metadata, i=i)
     else:
         for i in range(H.n_samples):
             idx = data_valid_or_test.metadata.iloc[i].idx

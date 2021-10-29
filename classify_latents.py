@@ -51,7 +51,7 @@ def get_model(H, cuda):
         if cuda:
             model = cuSVC()
         else:
-            model = SVC(n_jobs=H.n_jobs)
+            model = SVC()
     elif H.model == "logistic":
         if cuda:
             # model = cuLogisticRegression(n_jobs=H.n_jobs)
@@ -206,6 +206,7 @@ def parse_args(s=None):
     parser.add_argument('--model', type=str, default='knn_11')
     parser.add_argument('--n_jobs', type=int, default=8)
     parser.add_argument('--handle_nan', type=str, default=None)
+    parser.add_argument('--cont_run', type=str, default=None)
 
 
     H.update(parser.parse_args(s).__dict__)
@@ -229,6 +230,12 @@ def setup(H):
 
     return cols, latent_ids
 
+def load_previous(H):
+    if H.cont_run is None:
+        return None
+
+    run = wandb.api.run(f"vdvae_analysis/{H.cont_run}")
+
 def main():
     H = parse_args()
     cols, latent_ids = setup(H)
@@ -249,6 +256,8 @@ def main():
 
     logging.info(cols)
     logging.info(latent_ids)
+
+    previous = load_previous(H)
 
     # scores = defaultdict(list)
     use_cuda = len(os.environ["CUDA_VISIBLE_DEVICES"]) > 0
