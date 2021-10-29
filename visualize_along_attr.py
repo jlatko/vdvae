@@ -36,6 +36,7 @@ def add_params(parser):
     parser.add_argument('--fixed', action="store_true")
     parser.add_argument('--grouped', action="store_true")
     parser.add_argument('--has_attr', action="store_true")
+    parser.add_argument('--use_group_direction', action="store_true")
 
     return parser
 
@@ -62,8 +63,8 @@ def scale_direction(direction, normalize=None, scale=1):
 def get_idx_for_attr(H, attr, has_attr, metadata):
     attr_mask = metadata[attr] == 1
     male_mask = metadata["Male"] == 1
-    ignore_male = (attr_mask & male_mask) < MIN_FREQ or ((~attr_mask) & male_mask) < MIN_FREQ
-    ignore_female = (attr_mask & (~male_mask)) < MIN_FREQ or ((~attr_mask) & (~male_mask)) < MIN_FREQ
+    ignore_male = (attr_mask & male_mask).sum() < MIN_FREQ or ((~attr_mask) & male_mask).sum() < MIN_FREQ
+    ignore_female = (attr_mask & (~male_mask)).sum() < MIN_FREQ or ((~attr_mask) & (~male_mask)).sum() < MIN_FREQ
 
     if ignore_male:
         mask = ~male_mask
@@ -83,6 +84,22 @@ def get_zs_for_idx(H, idx, latent_ids):
     z_dict = np.load(os.path.join(H.latents_dir, f"{idx}.npz"))
     return [torch.tensor(z_dict[f'z_{i}'][np.newaxis], dtype=torch.float32).cuda() for i in latent_ids]
 
+def get_direction(H, attr, i, idx):
+    # get direction
+    means_dict = np.load(os.path.join(H.attr_means_dir, f"{i}.npz"))
+    if H.use_group_direction and attr != "Male":
+
+    elif H.grouped and attr != "Male":
+        direction = means_dict[f"{attr}_diff_grouped"]
+    else:
+        # direction = means_dict[f"{attr}_diff"]
+        direction = means_dict[f"{attr}_pos"] - means_dict[f"{attr}_neg"]
+    wandb.log({f"std_{attr}_{idx}": direction.std(), "i": i})
+    direction = torch.tensor(direction[np.newaxis], dtype=torch.float32).cuda()
+    direction = scale_direction(direction, normalize=H.norm, scale=H.scale)
+    wandb.log({f"scaled_std_{attr}_{idx}": torch.std(direction).item(), "i": i})
+
+    return direction
 
 def attribute_manipulation(H, attributes, ema_vae, latent_ids, lv_points, metadata, idx=None, has_attr=None):
     assert (idx is not None) or (has_attr is not None)
@@ -103,19 +120,8 @@ def attribute_manipulation(H, attributes, ema_vae, latent_ids, lv_points, metada
                 torch.random.manual_seed(0)
 
                 zs_current = copy(zs)
-                # get direction
-                means_dict = np.load(os.path.join(H.attr_means_dir, f"{i}.npz"))
-                if H.grouped and attr != "Male":
-                    direction = means_dict[f"{attr}_diff_grouped"]
-                else:
-                    # direction = means_dict[f"{attr}_diff"]
-                    direction = means_dict[f"{attr}_pos"] - means_dict[f"{attr}_neg"]
-                wandb.log({f"std_{attr}_{idx}": direction.std(), "i": i})
-                direction = torch.tensor(direction[np.newaxis], dtype=torch.float32).cuda()
-                direction = scale_direction(direction, normalize=H.norm, scale=H.scale)
-                wandb.log({f"scaled_std_{attr}_{idx}": torch.std(direction).item(), "i": i})
 
-
+                direction = get_direction(H, attr, i, idx)
 
                 for a in np.linspace(-1, 1, H.n_steps):
                     zs_current[i] = zs[i] + a * direction
