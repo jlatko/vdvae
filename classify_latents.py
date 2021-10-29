@@ -220,6 +220,7 @@ def parse_args(s=None):
     parser.add_argument('--n_jobs', type=int, default=8)
     parser.add_argument('--handle_nan', type=str, default=None)
     parser.add_argument('--cont_run', type=str, default=None)
+    parser.add_argument('--grouped', action="store_true")
 
 
     H.update(parser.parse_args(s).__dict__)
