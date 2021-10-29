@@ -71,7 +71,7 @@ def get_idx_for_attr(H, attr, has_attr, metadata):
     elif ignore_female:
         mask = male_mask
 
-    if ignore_female and ignore_male:
+    if (ignore_female and ignore_male) or (not ignore_female and not ignore_male):
         mask = metadata[attr].isin([-1,1]) # this should be all true
         assert mask.all()
 
@@ -163,7 +163,8 @@ def main():
 
     attributes = get_attributes(H.keys_set)
 
-    lv_points = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 14, 16, 18, 20, 21, 24, 27, 30, 33, 36, 39, 43, 48, 53, 58, 63]
+    # lv_points = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 14, 16, 18, 20, 24, 27, 30, 33, 36, 40, 43, 48, 53, 58, 63]
+    lv_points = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 14, 16, 18, 20, 24, 27, 30, 33, 36, 40, 43, 48, 53, 58, 63]
 
     wandb.config.update(H)
     wandb.config.update({"attributes": attributes, "latent_ids": latent_ids, "lv_points": lv_points})
