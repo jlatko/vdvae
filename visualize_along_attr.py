@@ -84,11 +84,14 @@ def get_zs_for_idx(H, idx, latent_ids):
     z_dict = np.load(os.path.join(H.latents_dir, f"{idx}.npz"))
     return [torch.tensor(z_dict[f'z_{i}'][np.newaxis], dtype=torch.float32).cuda() for i in latent_ids]
 
-def get_direction(H, attr, i, idx):
+def get_direction(H, attr, i, idx, sample_meta):
     # get direction
     means_dict = np.load(os.path.join(H.attr_means_dir, f"{i}.npz"))
     if H.use_group_direction and attr != "Male":
-
+        if sample_meta["Male"]:
+            direction = means_dict[f"{attr}_diff_male"]
+        else:
+            direction = means_dict[f"{attr}_diff_female"]
     elif H.grouped and attr != "Male":
         direction = means_dict[f"{attr}_diff_grouped"]
     else:
@@ -121,7 +124,7 @@ def attribute_manipulation(H, attributes, ema_vae, latent_ids, lv_points, metada
 
                 zs_current = copy(zs)
 
-                direction = get_direction(H, attr, i, idx)
+                direction = get_direction(H, attr, i, idx, sample_meta)
 
                 for a in np.linspace(-1, 1, H.n_steps):
                     zs_current[i] = zs[i] + a * direction
