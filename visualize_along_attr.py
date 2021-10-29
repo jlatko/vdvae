@@ -21,6 +21,7 @@ import torch.nn.functional as F
 wandb.init(project='vae_visualizations', entity='johnnysummer', dir="/scratch/s193223/wandb/")
 wandb.config.update({"script": "vis_attr"})
 
+MIN_FREQ = 2
 
 def add_params(parser):
     parser.add_argument('--latents_dir', type=str, default='/scratch/s193223/vdvae/latents/')
@@ -34,6 +35,7 @@ def add_params(parser):
     parser.add_argument('--temp', type=float, default=0.1)
     parser.add_argument('--fixed', action="store_true")
     parser.add_argument('--grouped', action="store_true")
+    parser.add_argument('--has_attr', action="store_true")
 
     return parser
 
@@ -57,12 +59,45 @@ def scale_direction(direction, normalize=None, scale=1):
 
     return scale * direction
 
-def attribute_manipulation(H, idx, attributes, ema_vae, latent_ids, lv_points):
+def get_idx_for_attr(H, attr, has_attr, metadata):
+    attr_mask = metadata[attr] == 1
+    male_mask = metadata["Male"] == 1
+    ignore_male = (attr_mask & male_mask) < MIN_FREQ or ((~attr_mask) & male_mask) < MIN_FREQ
+    ignore_female = (attr_mask & (~male_mask)) < MIN_FREQ or ((~attr_mask) & (~male_mask)) < MIN_FREQ
+
+    if ignore_male:
+        mask = ~male_mask
+    elif ignore_female:
+        mask = male_mask
+
+    if ignore_female and ignore_male:
+        mask = metadata[attr].isin([-1,1]) # this should be all true
+        assert mask.all()
+
+    if not has_attr:
+        attr_mask = ~attr_mask
+
+    return metadata[mask & attr_mask].iloc[0].idx
+
+def get_zs_for_idx(H, idx, latent_ids):
+    z_dict = np.load(os.path.join(H.latents_dir, f"{idx}.npz"))
+    return [torch.tensor(z_dict[f'z_{i}'][np.newaxis], dtype=torch.float32).cuda() for i in latent_ids]
+
+
+def attribute_manipulation(H, attributes, ema_vae, latent_ids, lv_points, metadata, idx=None, has_attr=None):
+    assert (idx is not None) or (has_attr is not None)
     with torch.no_grad():
-        z_dict = np.load(os.path.join(H.latents_dir, f"{idx}.npz"))
-        zs = [torch.tensor(z_dict[f'z_{i}'][np.newaxis], dtype=torch.float32).cuda() for i in latent_ids]
+
+        if idx is not None:
+            zs = get_zs_for_idx(H, idx, latent_ids)
+            sample_meta = metadata.set_index("idx").loc[idx]
 
         for attr in tqdm(attributes):
+            if idx is not None:
+                idx = get_idx_for_attr(H, attr, has_attr, metadata)
+                zs = get_zs_for_idx(H, idx, latent_ids)
+                sample_meta = metadata.set_index("idx").loc[idx]
+
             batches = []
             for i in lv_points:
                 torch.random.manual_seed(0)
@@ -125,10 +160,13 @@ def main():
     wandb.config.update({"attributes": attributes, "latent_ids": latent_ids, "lv_points": lv_points})
 
     print(lv_points)
-    for i in range(H.n_samples):
-        idx = data_valid_or_test.metadata.iloc[i].idx
-        attribute_manipulation(H, idx, attributes, ema_vae, latent_ids, lv_points)
-
+    if H.has_attr:
+        for i, has_attr in enumerate([True, False]):
+            attribute_manipulation(H, attributes, ema_vae, latent_ids, lv_points, has_attr=has_attr, metadata=data_valid_or_test.metadata)
+    else:
+        for i in range(H.n_samples):
+            idx = data_valid_or_test.metadata.iloc[i].idx
+            attribute_manipulation(H, attributes, ema_vae, latent_ids, lv_points, idx=idx, metadata=data_valid_or_test.metadata)
 
 if __name__ == "__main__":
     main()
