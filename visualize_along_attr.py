@@ -93,7 +93,7 @@ def attribute_manipulation(H, attributes, ema_vae, latent_ids, lv_points, metada
             sample_meta = metadata.set_index("idx").loc[idx]
 
         for attr in tqdm(attributes):
-            if idx is not None:
+            if has_attr is not None:
                 idx = get_idx_for_attr(H, attr, has_attr, metadata)
                 zs = get_zs_for_idx(H, idx, latent_ids)
                 sample_meta = metadata.set_index("idx").loc[idx]

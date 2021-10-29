@@ -52,6 +52,7 @@ def enhance_attribute_visualization(H, attr, run_scores, run_viz,
     files = run_viz.files()
     name2file = {f.name: f for f in files}
     lv_points = run_viz.config['lv_points']
+    # TODO: iterate available files instead of attributes
     path = _download(name2file[f'{attr}_t{str(temp).replace(".", "_")}_2.png'], f"./.data/{H.run_id_viz}/")
     img = Image.open(path)
     f, (a0, a1) = plt.subplots(1, 2, gridspec_kw={'width_ratios': [1, 8]},
