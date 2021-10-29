@@ -155,7 +155,7 @@ def group_scores(scores_male, scores_female, cols, layer_ind):
 
         if scores_female.get(col) is not None and scores_male.get(col) is not None:
             for k in scores_male[col].keys():
-                scores[col][k] =  (scores_male[col] +  scores_female[col]) / 2
+                scores[col][k] =  (scores_male[col][k] +  scores_female[col][k]) / 2
 
                 wandb.log({
                     f"{col}_{k}": scores[col][k]
