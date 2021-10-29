@@ -141,6 +141,7 @@ def group_scores(scores_male, scores_female, cols, layer_ind):
             for k, v in scores_male[col].items():
                 scores[col][f"m_{k}"] = v
             if scores_female.get(col) is None:
+                print(f"skipping female for {col}")
                 for k, v in scores_male[col].items():
                     scores[col][k] = v
 
@@ -148,10 +149,12 @@ def group_scores(scores_male, scores_female, cols, layer_ind):
             for k, v in scores_female[col].items():
                 scores[f"f_{k}"] = v
             if scores_male.get(col) is None:
+                print(f"skipping male for {col}")
                 for k, v in scores_female[col].items():
                     scores[col][k] = v
 
-        if scores_female.get(col) is not None and scores_male.get(col) is not None:
+        if (scores_female.get(col) is not None) and (scores_male.get(col) is not None):
+            print(f"joining both for {col}", scores_male[col].keys())
             for k in scores_male[col].keys():
                 scores[col][k] =  (scores_male[col][k] +  scores_female[col][k]) / 2
 
