@@ -94,7 +94,7 @@ def get_classification_score(H, X_train, X_test, y_train, y_test, cuda=False):
         'roc_auc_score': roc_auc_score(y_test, y_pred),
     }
 
-def run_folds(H, z, meta, col, cuda, z_info, layer_ind, prefix=""):
+def run_folds(H, z, meta, col, cuda, layer_ind, prefix=""):
     kfold = StratifiedKFold(n_splits=3, random_state=0, shuffle=True)
     kfold_scores = []
     y = np.array(meta[col] == 1)
@@ -112,26 +112,24 @@ def run_folds(H, z, meta, col, cuda, z_info, layer_ind, prefix=""):
         score[f"{metric}_avg"] = kfold_scores[metric].mean()
         score[f"{metric}_std"] = kfold_scores[metric].std()
     score["frequency"] = y.sum() / len(y)
-    score = log_and_process_score(score, z_info, col, layer_ind, prefix=prefix)
+    score = log_score(score, col, layer_ind, prefix=prefix)
     return score
 
-def get_all_scores(H, z, meta, cols, cuda, z_info, layer_ind, prefix=""):
+def get_all_scores(H, z, meta, cols, cuda, layer_ind, prefix=""):
     scores = {}
     # z = cudf.DataFrame(z)
     for col in cols:
-        score = run_folds(H, z, meta, col, cuda, z_info, layer_ind, prefix=prefix)
+        score = run_folds(H, z, meta, col, cuda, layer_ind, prefix=prefix)
         scores[col] = score
     return scores
 
-def log_and_process_score(score, z_info, col, layer_ind, prefix=""):
-    score.update(z_info)
+def log_score(score, col, layer_ind, prefix=""):
     wandb.log({
         f"{prefix}{col}_{k}": v
         for k, v
         in score.items()
     }, step=layer_ind)
     logging.debug(f"{prefix}{col}: {score}")
-    return score
 
 
 def group_scores(scores_male, scores_female, cols, layer_ind):
@@ -194,16 +192,19 @@ def run_classifications(H, cols, layer_ind, latents_dir, handle_nan=False, cuda=
     if H.grouped:
         cols_filtered = list(cols_filtered - {"Male"})
         q = meta["Male"] == 1
-        scores_male = get_all_scores(H, z[q], meta[q], cols_filtered, cuda, z_info, layer_ind, prefix="m_")
-        scores_female = get_all_scores(H, z[~q], meta[~q], cols_filtered, cuda, z_info, layer_ind, prefix="f_")
+        scores_male = get_all_scores(H, z[q], meta[q], cols_filtered, cuda, layer_ind, prefix="m_")
+        scores_female = get_all_scores(H, z[~q], meta[~q], cols_filtered, cuda, layer_ind, prefix="f_")
 
         scores.update(group_scores(scores_male, scores_female, cols, layer_ind))
 
         #
-        # scores["Male"] = get_all_scores(H, z, meta, cols, cuda, z_info, layer_ind)["Male"]
+        # scores["Male"] = get_all_scores(H, z, meta, cols, cuda, layer_ind)["Male"]
 
     else:
-        scores.update(get_all_scores(H, z, meta, list(cols_filtered), cuda, z_info, layer_ind))
+        scores.update(get_all_scores(H, z, meta, list(cols_filtered), cuda, layer_ind))
+
+    for k in scores:
+        scores[k].update(z_info)
 
     return scores
 
