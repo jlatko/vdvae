@@ -136,6 +136,7 @@ def group_scores(scores_male, scores_female, cols, layer_ind):
     scores = {}
 
     for col in cols:
+        print(f"grouping {col}")
         scores[col] = {}
         if scores_male.get(col) is not None:
             for k, v in scores_male[col].items():
@@ -198,7 +199,7 @@ def run_classifications(H, cols, layer_ind, latents_dir, handle_nan=False, cuda=
         scores_male = get_all_scores(H, z[q], meta[q], cols_filtered, cuda, layer_ind, prefix="m_")
         scores_female = get_all_scores(H, z[~q], meta[~q], cols_filtered, cuda, layer_ind, prefix="f_")
 
-        scores.update(group_scores(scores_male, scores_female, cols, layer_ind))
+        scores.update(group_scores(scores_male, scores_female, cols_filtered, layer_ind))
 
         #
         # scores["Male"] = get_all_scores(H, z, meta, cols, cuda, layer_ind)["Male"]
