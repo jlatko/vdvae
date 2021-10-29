@@ -148,7 +148,7 @@ def group_scores(scores_male, scores_female, cols, layer_ind):
 
         if scores_female.get(col) is not None:
             for k, v in scores_female[col].items():
-                scores[f"f_{k}"] = v
+                scores[col][f"f_{k}"] = v
             if scores_male.get(col) is None:
                 print(f"skipping male for {col}")
                 for k, v in scores_female[col].items():
