@@ -176,7 +176,7 @@ def run_classifications(H, cols, layer_ind, latents_dir, handle_nan=False, cuda=
                 scores[col] = previous[col][previous[col].layer_ind == layer_ind].iloc[0]
                 cols_filtered = cols_filtered - {col}
 
-    z, meta = get_latents(latents_dir=latents_dir, layer_ind=layer_ind, splits=[1,2,3], allow_missing=False, handle_nan=handle_nan)
+    z, meta = get_latents(latents_dir=latents_dir, layer_ind=layer_ind, splits=H.splits, allow_missing=False, handle_nan=handle_nan)
     logging.debug(z.shape)
 
     resolution = z.shape[-2]
@@ -221,6 +221,8 @@ def parse_args(s=None):
     parser.add_argument('--handle_nan', type=str, default=None)
     parser.add_argument('--cont_run', type=str, default=None)
     parser.add_argument('--grouped', action="store_true")
+    parser.add_argument('-s', '--splits', help='delimited list input',
+                        type=lambda s: [int(item) for item in s.split(',')], default=[1,2,3])
 
 
     H.update(parser.parse_args(s).__dict__)
