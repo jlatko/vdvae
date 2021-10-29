@@ -304,9 +304,11 @@ def main():
             else:
                 raise e
 
-
         if it == 0:
-            score_keys = list(score_dict[cols[0]].keys())
+            score_keys = set()
+            for col in cols:
+                score_keys = score_keys | set(score_dict[col].keys())
+            score_keys = list(score_keys)
 
         for col in cols:
             if col in score_dict:
@@ -315,7 +317,7 @@ def main():
                     with open(fpath, "w") as fh:
                         fh.write(",".join(score_keys))
 
-                results = [str(score_dict[col][k]) for k in score_keys]
+                results = [str(score_dict[col][k]) if k in score_dict[col] else "" for k in score_keys]
                 with open(fpath, "a") as fh:
                     fh.write("\n"+",".join(results))
             else:
