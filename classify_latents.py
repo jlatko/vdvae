@@ -2,6 +2,7 @@ import argparse
 import os
 
 from attributes import get_attributes
+from wandb_utils import _download
 
 os.environ["MKL_NUM_THREADS"] = "1"
 os.environ["NUMEXPR_NUM_THREADS"] = "1"
@@ -163,7 +164,18 @@ def group_scores(scores_male, scores_female, cols, layer_ind):
     return scores
 
 
-def run_classifications(H, cols, layer_ind, latents_dir, handle_nan=False, cuda=False):
+def run_classifications(H, cols, layer_ind, latents_dir, handle_nan=False, cuda=False, previous=None):
+    if previous is None:
+        previous = {}
+    # TODO: get from previous and skip?
+    cols_filtered = set(cols)
+    scores = {}
+    for col in cols:
+        if col in previous:
+            if layer_ind in previous[col].layer_ind:
+                scores[col] = previous[col][previous[col].layer_ind == layer_ind].iloc[0]
+                cols_filtered = cols_filtered - {col}
+
     z, meta = get_latents(latents_dir=latents_dir, layer_ind=layer_ind, splits=[1,2,3], allow_missing=False, handle_nan=handle_nan)
     logging.debug(z.shape)
 
@@ -178,19 +190,20 @@ def run_classifications(H, cols, layer_ind, latents_dir, handle_nan=False, cuda=
     z_info["layer_ind"] = layer_ind
 
     # TODO: ? move to gpu? X_cudf = cudf.DataFrame(X)
+
     if H.grouped:
-        cols_filtered = list(set(cols) - {"Male"})
+        cols_filtered = list(cols_filtered - {"Male"})
         q = meta["Male"] == 1
         scores_male = get_all_scores(H, z[q], meta[q], cols_filtered, cuda, z_info, layer_ind, prefix="m_")
         scores_female = get_all_scores(H, z[~q], meta[~q], cols_filtered, cuda, z_info, layer_ind, prefix="f_")
 
-        scores = group_scores(scores_male, scores_female, cols, layer_ind)
+        scores.update(group_scores(scores_male, scores_female, cols, layer_ind))
 
         #
         # scores["Male"] = get_all_scores(H, z, meta, cols, cuda, z_info, layer_ind)["Male"]
 
     else:
-        scores = get_all_scores(H, z, meta, cols, cuda, z_info, layer_ind)
+        scores.update(get_all_scores(H, z, meta, list(cols_filtered), cuda, z_info, layer_ind))
 
     return scores
 
@@ -232,9 +245,18 @@ def setup(H):
 
 def load_previous(H):
     if H.cont_run is None:
-        return None
-
-    run = wandb.api.run(f"vdvae_analysis/{H.cont_run}")
+        return {}
+    api = wandb.Api()
+    run = api.run(f"vdvae_analysis/{H.cont_run}")
+    files = run.files()
+    name2file = {f.name: f for f in files if f.name.endswith(".csv")}
+    attr2csv = {}
+    for fname, file in name2file.items():
+        attr = fname.split(".")[0]
+        path = _download(file, f"./.data/{H.cont_run}/")
+        df = pd.read_csv(path)
+        attr2csv[attr] = df
+    return attr2csv
 
 def main():
     H = parse_args()
@@ -263,14 +285,14 @@ def main():
     use_cuda = len(os.environ["CUDA_VISIBLE_DEVICES"]) > 0
     for it, i in enumerate(tqdm(latent_ids)):
         try:
-            score_dict = run_classifications(H, cols, i, latents_dir=H.latents_dir, handle_nan=H.handle_nan, cuda=use_cuda)
+            score_dict = run_classifications(H, cols, i, latents_dir=H.latents_dir, handle_nan=H.handle_nan, cuda=use_cuda, previous=previous)
         except Exception as e:
             if use_cuda == True:
                 logging.warning(f"While running on GPU caught {e}")
                 logging.warning("trying without CUDA")
                 use_cuda = False
                 score_dict = run_classifications(H, cols, i, latents_dir=H.latents_dir, handle_nan=H.handle_nan,
-                                                 cuda=use_cuda)
+                                                 cuda=use_cuda, previous=previous)
             else:
                 raise e
 
@@ -279,14 +301,17 @@ def main():
             score_keys = list(score_dict[cols[0]].keys())
 
         for col in cols:
-            fpath = os.path.join(path, f"{col}.csv")
-            if it == 0:
-                with open(fpath, "w") as fh:
-                    fh.write(",".join(score_keys))
+            if col in score_dict:
+                fpath = os.path.join(path, f"{col}.csv")
+                if it == 0:
+                    with open(fpath, "w") as fh:
+                        fh.write(",".join(score_keys))
 
-            results = [str(score_dict[col][k]) for k in score_keys]
-            with open(fpath, "a") as fh:
-                fh.write("\n"+",".join(results))
+                results = [str(score_dict[col][k]) for k in score_keys]
+                with open(fpath, "a") as fh:
+                    fh.write("\n"+",".join(results))
+            else:
+                logging.warning(f"{col} missing for layer {i}")
 
         # for col, score in score_dict.items():
         #     scores[col].append(score)

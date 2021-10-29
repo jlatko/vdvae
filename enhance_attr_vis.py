@@ -10,6 +10,7 @@ import os
 
 from attributes import get_attributes
 from hps import Hyperparams
+from wandb_utils import _download
 
 api = wandb.Api()
 
@@ -21,28 +22,8 @@ plt.close()
 project_viz="johnnysummer/vae_visualizations"
 project_scores = "johnnysummer/vdvae_analysis"
 
-def _download(file, path, force_redownload=False):
-    full_path = os.path.join(path, file.name)
-    if os.path.exists(full_path) and not force_redownload:
-        return full_path
-    else:
-        file.download(path, replace=True)
-        return full_path
-
-def download_file(run_id, filename, project="johhnysummer/vdvae_analysis", force_redownload=False):
-    api = wandb.Api()
-    run = api.run(f"{project}/{run_id}")
-    files = run.files()
-    for file in files:
-        if file.name == filename:
-            return _download(
-                file, f"./.data/{run_id}/", force_redownload=force_redownload
-            )
-
 def enhance_attribute_visualization(H, attr, run_scores, run_viz,
                                     temp=0.1, size=64):
-
-
     files_scores = run_scores.files()
     name2file_scores = {f.name: f for f in files_scores}
     path_score = _download(name2file_scores[f'{attr}.csv'], f"./.data/{H.run_id_scores}/")
