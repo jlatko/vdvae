@@ -105,10 +105,10 @@ def get_direction(H, attr, i, idx, sample_meta):
     return direction
 
 def attribute_manipulation(H, attributes, ema_vae, latent_ids, lv_points, metadata, idx=None, has_attr=None, i=0):
-    assert (idx is not None) or (has_attr is not None)
     with torch.no_grad():
 
-        if idx is not None:
+        if has_attr is None:
+            idx = metadata.iloc[i].idx
             zs = get_zs_for_idx(H, idx, latent_ids)
             sample_meta = metadata.set_index("idx").loc[idx]
 
@@ -119,19 +119,19 @@ def attribute_manipulation(H, attributes, ema_vae, latent_ids, lv_points, metada
                 sample_meta = metadata.set_index("idx").loc[idx]
 
             batches = []
-            for i in lv_points:
+            for l_ind in lv_points:
                 torch.random.manual_seed(0)
 
                 zs_current = copy(zs)
 
-                direction = get_direction(H, attr, i, idx, sample_meta)
+                direction = get_direction(H, attr, l_ind, idx, sample_meta)
 
                 for a in np.linspace(-1, 1, H.n_steps):
-                    zs_current[i] = zs[i] + a * direction
+                    zs_current[l_ind] = zs[l_ind] + a * direction
                     if H.fixed:
                         img = ema_vae.forward_samples_set_latents(1, zs_current, t=H.temp)
                     else:
-                        img = ema_vae.forward_samples_set_latents(1, zs_current[:i+1], t=H.temp)
+                        img = ema_vae.forward_samples_set_latents(1, zs_current[:l_ind+1], t=H.temp)
 
                     img = resize(img, size=(H.size, H.size))
                     batches.append(img)
@@ -176,8 +176,7 @@ def main():
                 attribute_manipulation(H, attributes, ema_vae, latent_ids, lv_points, has_attr=has_attr, metadata=data_valid_or_test.metadata, i=i)
     else:
         for i in range(H.n_samples):
-            idx = data_valid_or_test.metadata.iloc[i].idx
-            attribute_manipulation(H, attributes, ema_vae, latent_ids, lv_points, idx=idx, metadata=data_valid_or_test.metadata)
+            attribute_manipulation(H, attributes, ema_vae, latent_ids, lv_points, i=i, metadata=data_valid_or_test.metadata)
 
 if __name__ == "__main__":
     main()
