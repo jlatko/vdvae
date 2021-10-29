@@ -70,7 +70,7 @@ def attribute_manipulation(H, idx, attributes, ema_vae, latent_ids, lv_points):
                 zs_current = copy(zs)
                 # get direction
                 means_dict = np.load(os.path.join(H.attr_means_dir, f"{i}.npz"))
-                if H.grouped:
+                if H.grouped and attr != "Male":
                     direction = means_dict[f"{attr}_diff_grouped"]
                 else:
                     # direction = means_dict[f"{attr}_diff"]

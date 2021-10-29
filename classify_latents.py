@@ -36,11 +36,11 @@ import logging
 import wandb
 wandb.init(project='vdvae_analysis', entity='johnnysummer', dir="/scratch/s193223/wandb/")
 
+MIN_FREQ = 100
 
 # TODO: consider accounting for the most frequent and correlated attributes (earings only for females etc)
 
-def get_classification_score(H, X_train, X_test, y_train, y_test, cuda=False):
-    # TODO: normalize??
+def get_model(H, cuda):
     if "knn" in H.model:
         n = int(H.model.split("_")[1])
         if cuda:
@@ -79,6 +79,11 @@ def get_classification_score(H, X_train, X_test, y_train, y_test, cuda=False):
     else:
         raise ValueError("unknown model")
 
+    return model
+
+def get_classification_score(H, X_train, X_test, y_train, y_test, cuda=False):
+    # TODO: normalize??
+    model = get_model(H, cuda)
 
     model.fit(X_train, y_train)
     y_pred = model.predict(X_test)
@@ -88,6 +93,76 @@ def get_classification_score(H, X_train, X_test, y_train, y_test, cuda=False):
         'roc_auc_score': roc_auc_score(y_test, y_pred),
     }
 
+def run_folds(H, z, meta, col, cuda, z_info, layer_ind, prefix=""):
+    kfold = StratifiedKFold(n_splits=3, random_state=0, shuffle=True)
+    kfold_scores = []
+    y = np.array(meta[col] == 1)
+    if y.sum() < MIN_FREQ or (~y).sum() < MIN_FREQ:
+        logging.info(f"skipping {col}")
+        return None
+    for train_index, test_index in kfold.split(z, y):
+        X_train, X_test = z[train_index], z[test_index]
+        y_train, y_test = y[train_index], y[test_index]
+        score = get_classification_score(H, X_train, X_test, y_train, y_test, cuda=cuda)
+        kfold_scores.append(score)
+    kfold_scores = pd.DataFrame(kfold_scores)
+    score = {}
+    for metric in kfold_scores.columns:
+        score[f"{metric}_avg"] = kfold_scores[metric].mean()
+        score[f"{metric}_std"] = kfold_scores[metric].std()
+    score["frequency"] = y.sum() / len(y)
+    score = log_and_process_score(score, z_info, col, layer_ind, prefix=prefix)
+    return score
+
+def get_all_scores(H, z, meta, cols, cuda, z_info, layer_ind, prefix=""):
+    scores = {}
+    # z = cudf.DataFrame(z)
+    for col in cols:
+        score = run_folds(H, z, meta, col, cuda, z_info, layer_ind, prefix=prefix)
+        scores[col] = score
+    return scores
+
+def log_and_process_score(score, z_info, col, layer_ind, prefix=""):
+    score.update(z_info)
+    wandb.log({
+        f"{prefix}{col}_{k}": v
+        for k, v
+        in score.items()
+    }, step=layer_ind)
+    logging.debug(f"{prefix}{col}: {score}")
+    return score
+
+
+def group_scores(scores_male, scores_female, cols, layer_ind):
+    scores = {}
+
+    for col in cols:
+        scores[col] = {}
+        if scores_male.get(col) is not None:
+            for k, v in scores_male[col].items():
+                scores[col][f"m_{k}"] = v
+            if scores_female.get(col) is None:
+                for k, v in scores_male[col].items():
+                    scores[col][k] = v
+
+        if scores_female.get(col) is not None:
+            for k, v in scores_female[col].items():
+                scores[f"f_{k}"] = v
+            if scores_male.get(col) is None:
+                for k, v in scores_female[col].items():
+                    scores[col][k] = v
+
+        if scores_female.get(col) is not None and scores_male.get(col) is not None:
+            for k in scores_male[col].keys():
+                scores[col][k] =  (scores_male[col] +  scores_female[col]) / 2
+
+                wandb.log({
+                    f"{col}_{k}": scores[col][k]
+                }, step=layer_ind)
+
+    return scores
+
+
 def run_classifications(H, cols, layer_ind, latents_dir, handle_nan=False, cuda=False):
     z, meta = get_latents(latents_dir=latents_dir, layer_ind=layer_ind, splits=[1,2,3], allow_missing=False, handle_nan=handle_nan)
     logging.debug(z.shape)
@@ -96,35 +171,27 @@ def run_classifications(H, cols, layer_ind, latents_dir, handle_nan=False, cuda=
     wandb.log({"resolution": resolution}, step=layer_ind)
     z = z.reshape(z.shape[0], -1)
     wandb.log({"size": z.shape[1]}, step=layer_ind)
+
+    z_info = {}
+    z_info["shape"] = z.shape
+    z_info["resolution"] = resolution
+    z_info["layer_ind"] = layer_ind
+
     # TODO: ? move to gpu? X_cudf = cudf.DataFrame(X)
+    if H.grouped:
+        cols_filtered = list(set(cols) - {"Male"})
+        q = meta["Male"] == 1
+        scores_male = get_all_scores(H, z[q], meta[q], cols_filtered, cuda, z_info, layer_ind, prefix="m_")
+        scores_female = get_all_scores(H, z[~q], meta[~q], cols_filtered, cuda, z_info, layer_ind, prefix="f_")
 
-    kfold = StratifiedKFold(n_splits=5, random_state=0, shuffle=True)
-    scores = {}
-    for col in cols:
-        kfold_scores = []
-        y = np.array(meta[col] == 1)
-        for train_index, test_index in kfold.split(z, y):
-            X_train, X_test = z[train_index], z[test_index]
-            y_train, y_test = y[train_index], y[test_index]
-            score = get_classification_score(H, X_train, X_test, y_train, y_test, cuda=cuda)
-            kfold_scores.append(score)
-        kfold_scores = pd.DataFrame(kfold_scores)
-        score = {}
-        for metric in kfold_scores.columns:
-            score[f"{metric}_avg"] = kfold_scores[metric].mean()
-            score[f"{metric}_std"] = kfold_scores[metric].std()
+        scores = group_scores(scores_male, scores_female, cols, layer_ind)
 
-        wandb.log({
-            f"{col}_{k}": v
-            for k, v
-            in score.items()
-        }, step=layer_ind)
+        #
+        # scores["Male"] = get_all_scores(H, z, meta, cols, cuda, z_info, layer_ind)["Male"]
 
-        score["shape"] = z.shape
-        score["layer_ind"] = layer_ind
-        score["frequency"] = y.sum() / len(y)
-        scores[col] = score
-        logging.debug(f"{col}: {score}")
+    else:
+        scores = get_all_scores(H, z, meta, cols, cuda, z_info, layer_ind)
+
     return scores
 
 def parse_args(s=None):

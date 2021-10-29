@@ -54,8 +54,6 @@ def enhance_attribute_visualization(H, attr, run_scores, run_viz,
     lv_points = run_viz.config['lv_points']
     path = _download(name2file[f'{attr}_t{str(temp).replace(".", "_")}_2.png'], f"./.data/{H.run_id_viz}/")
     img = Image.open(path)
-    print(img.width, img.height)
-    print(DPI)
     f, (a0, a1) = plt.subplots(1, 2, gridspec_kw={'width_ratios': [1, 8]},
                                figsize=(1.5 * img.width / DPI, 1.1 * img.height / DPI))
 
@@ -63,16 +61,18 @@ def enhance_attribute_visualization(H, attr, run_scores, run_viz,
     plt.title(f"{attr} (t={temp})", fontsize=24)
 
     scores_picked = [f"{scores.loc[i, H.scores_key]:.3f}" if i in scores.index else "?" for i in lv_points]
+    res_picked = [np.sqrt(int(scores.loc[i, 'shape'].split(',')[1][:-1])).astype(int) if i in scores.index else "?" for i in lv_points]
     yticks = [
-        f"{i}\n({s})"
-        for i, s in zip(lv_points, scores_picked)
+        f"{i}\n({s})\n{res}x{res}"
+        for i, s, res in zip(lv_points, scores_picked, res_picked)
     ]
     plt.sca(a1)
-    plt.yticks(size / 2 + size * np.arange(len(lv_points)), yticks);
-    plt.xticks([size / 2, img.width - size / 2], [f"More {attr}", f"Less {attr}"]);
-    plt.tick_params(axis='both', labelsize=20, length=0);
+    plt.yticks(size / 2 + size * np.arange(len(lv_points)), yticks)
+    plt.xticks([size / 2, img.width - size / 2], [f"More {attr}", f"Less {attr}"])
+    plt.tick_params(axis='both', labelsize=20, length=0)
 
     scores_picked = [scores.loc[i, H.scores_key] if i in scores.index else 0 for i in lv_points]
+    plt.sca(a0)
     a0.set_xlim((0.45, 0.8))
 
     a0.invert_xaxis()
@@ -85,11 +85,10 @@ def enhance_attribute_visualization(H, attr, run_scores, run_viz,
     # sns.barplot(x=lv_points, y=scores_picked, ax=a0, orient='h', width=size/2/DPI)
     a0.barh(np.arange(len(lv_points))[::-1] * size / DPI,
             scores_picked,
-            height=16 / DPI,
+            height= size / 4 / DPI,
             color=matplotlib.cm.get_cmap("cool")(scores_picked)
             )
     a0.set_ylim((-size / 2 / DPI, (len(lv_points) * size - size / 2) / DPI))
-    plt.sca(a0)
     plt.xlabel(H.scores_key)
     plt.title(run_scores.config['model'], fontsize=24)
     # yticks = [
@@ -135,7 +134,7 @@ def main():
     run_viz = api.run(f"{project_viz}/{H.run_id_viz}")
     run_scores = api.run(f"{project_scores}/{H.run_id_scores}")
     temp = run_viz.config["temp"]
-    size = run_viz.config["temp"]
+    size = run_viz.config["size"]
     attributes = run_viz.config["attributes"]
 
     print(run_viz.config)
