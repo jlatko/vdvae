@@ -37,8 +37,6 @@ def enhance_attribute_visualization(H, attr, run_scores, run_viz,
     path = _download(name2file[f'{attr}_t{str(temp).replace(".", "_")}_2.png'], f"./.data/{H.run_id_viz}/")
     img = Image.open(path)
 
-    import IPython
-    IPython.embed()
     f, (a0, a1) = plt.subplots(1, 2, gridspec_kw={'width_ratios': [1, 8]},
                                figsize=(1.5 * img.width / DPI, 1.1 * img.height / DPI))
 
