@@ -36,6 +36,9 @@ def enhance_attribute_visualization(H, attr, run_scores, run_viz,
     # TODO: iterate available files instead of attributes
     path = _download(name2file[f'{attr}_t{str(temp).replace(".", "_")}_2.png'], f"./.data/{H.run_id_viz}/")
     img = Image.open(path)
+
+    import IPython
+    IPython.embed()
     f, (a0, a1) = plt.subplots(1, 2, gridspec_kw={'width_ratios': [1, 8]},
                                figsize=(1.5 * img.width / DPI, 1.1 * img.height / DPI))
 
@@ -43,7 +46,7 @@ def enhance_attribute_visualization(H, attr, run_scores, run_viz,
     plt.title(f"{attr} (t={temp})", fontsize=24)
 
     scores_picked = [f"{scores.loc[i, H.scores_key]:.3f}" if i in scores.index else "?" for i in lv_points]
-    res_picked = [np.sqrt(int(scores.loc[i, 'shape'].split(',')[1][:-1])).astype(int) if i in scores.index else "?" for i in lv_points]
+    res_picked = [scores.loc[i, 'resolution'] if i in scores.index else "?" for i in lv_points]
     yticks = [
         f"{i}\n({s})\n{res}x{res}"
         for i, s, res in zip(lv_points, scores_picked, res_picked)
@@ -121,8 +124,12 @@ def main():
 
     print(run_viz.config)
     for attr in attributes:
-        enhance_attribute_visualization(H, attr, run_scores, run_viz, temp=temp, size=size)
-
+        try:
+            enhance_attribute_visualization(H, attr, run_scores, run_viz, temp=temp, size=size)
+        except Exception as e:
+            print(f"Caught error for {attr}")
+            print(e)
+            print("continuing...")
 
 if __name__ == "__main__":
     main()

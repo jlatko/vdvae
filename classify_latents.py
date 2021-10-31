@@ -183,7 +183,8 @@ def run_classifications(H, cols, layer_ind, latents_dir, handle_nan=False, cuda=
     wandb.log({"size": z.shape[1]}, step=layer_ind)
 
     z_info = {}
-    z_info["shape"] = z.shape
+    z_info["len"] = z.shape[0]
+    z_info["size"] = z.shape[1]
     z_info["resolution"] = resolution
     z_info["layer_ind"] = layer_ind
 
