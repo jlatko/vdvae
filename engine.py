@@ -134,7 +134,7 @@ class Engine(pl.LightningModule):
             grad_norm,
             on_step=True,
             on_epoch=False,
-            prog_bar=False,
+            prog_bar=True,
         )
         if ok:
             #
