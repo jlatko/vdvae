@@ -16,6 +16,10 @@ class Engine(pl.LightningModule):
         self.vae = VAE(H)
         self.ema_vae = VAE(H)
         self.skipped_updates = 0
+        self.rate_nans = 0
+        self.distortion_nans = 0
+
+
         if H.restore_path:
             print(f'Restoring vae from {H.restore_path}')
             # restore_params(self.vae, H.restore_path, map_cpu=True, local_rank=H.local_rank, mpi_size=H.mpi_size)
@@ -54,7 +58,30 @@ class Engine(pl.LightningModule):
         print("loaded")
 
     def on_epoch_end(self) -> None:
+        self.log(
+            "skipped_updates_e",
+            self.skipped_updates,
+            on_step=False,
+            on_epoch=True,
+            prog_bar=False,
+        )
+        self.log(
+            "rate_nans_e",
+            self.rate_nans,
+            on_step=False,
+            on_epoch=True,
+            prog_bar=False,
+        )
+        self.log(
+            "distortion_nans_e",
+            self.distortion_nans,
+            on_step=False,
+            on_epoch=True,
+            prog_bar=False,
+        )
         self.skipped_updates = 0
+        self.rate_nans = 0
+        self.distortion_nans = 0
 
     def optimizer_step(self, *args, **kwargs):
         super().optimizer_step(*args, **kwargs)
@@ -91,6 +118,8 @@ class Engine(pl.LightningModule):
         else:
             ok = False
             self.skipped_updates += 1
+            self.distortion_nans += 1
+            self.rate_nans += 1
 
 
         self.log(
@@ -107,7 +136,6 @@ class Engine(pl.LightningModule):
             on_epoch=False,
             prog_bar=False,
         )
-        print("logged")
         if ok:
             #
             # self.log(
