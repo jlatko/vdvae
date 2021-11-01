@@ -128,6 +128,25 @@ def set_up_hyperparams(s=None, extra_args_fn=lambda x: x, dir=None):
     logprint('training model', H.desc, 'on', H.dataset)
     return H, logprint
 
+def set_up_hyperparams_light(s=None, extra_args_fn=lambda x: x, dir=None):
+    H = Hyperparams()
+    parser = argparse.ArgumentParser()
+    parser = add_vae_arguments(parser)
+    parser = extra_args_fn(parser)
+    parse_args_and_update_hparams(H, parser, s=s)
+    # setup_mpi(H)
+    setup_save_dirs(H)
+    if dir is not None:
+        print(f"Overriding H.logdir {H.logdir} with {dir}")
+        H.logdir = dir
+    logprint = logger(H.logdir)
+    for i, k in enumerate(sorted(H)):
+        logprint(type='hparam', key=k, value=H[k])
+    np.random.seed(H.seed)
+    torch.manual_seed(H.seed)
+    torch.cuda.manual_seed(H.seed)
+    logprint('training model', H.desc, 'on', H.dataset)
+    return H, logprint
 
 def restore_params(model, path, local_rank, mpi_size, map_ddp=True, map_cpu=False):
     state_dict = torch.load(distributed_maybe_download(path, local_rank, mpi_size), map_location='cpu' if map_cpu else None)

@@ -10,14 +10,17 @@ import pytorch_lightning as pl
 from data import set_up_data
 from engine import Engine
 from utils import get_cpu_stats_over_ranks
-from train_helpers import set_up_hyperparams, load_vaes, load_opt, accumulate_stats, save_model, update_ema
+from train_helpers import set_up_hyperparams, load_vaes, load_opt, accumulate_stats, save_model, update_ema, \
+    set_up_hyperparams_light
 
 import wandb
 wandb.init(project='vdvae', entity='johnnysummer', dir="/scratch/s193223/wandb/")
+wandb.config.update({"script": "my_train"})
+
 
 
 def main():
-    H, logprint = set_up_hyperparams(dir=os.path.join(wandb.run.dir, 'log'))
+    H, logprint = set_up_hyperparams_light(dir=os.path.join(wandb.run.dir, 'log'))
     H, data_train, data_valid_or_test, preprocess_fn = set_up_data(H)
 
     engine = Engine(H, preprocess_fn)

@@ -12,7 +12,7 @@ class Engine(pl.LightningModule):
         super(Engine, self).__init__()
         self.H = H
         self.preprocess_fn = preprocess_fn
-        self.save_hyperparameters()  # ??
+        # self.save_hyperparameters()  # ??
         self.vae = VAE(H)
         self.ema_vae = VAE(H)
         self.skipped_updates = 0
