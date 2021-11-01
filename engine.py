@@ -84,8 +84,20 @@ class Engine(pl.LightningModule):
         self.distortion_nans = 0
 
     def optimizer_step(self, *args, **kwargs):
+        grad_norm = torch.nn.utils.clip_grad_norm_(self.vae.parameters(), self.H.grad_clip).item()
+        self.log(
+                "grad_norm",
+                grad_norm,
+                on_step=True,
+                on_epoch=False,
+                prog_bar=True,
+            )
+        # if (self.H.skip_threshold == -1 or grad_norm < self.H.skip_threshold):
         super().optimizer_step(*args, **kwargs)
         update_ema(self.vae, self.ema_vae, self.H.ema_rate)
+        # else:
+        #     print("skipping update")
+        # self.vae
 
 
     def configure_optimizers(self):
@@ -104,38 +116,46 @@ class Engine(pl.LightningModule):
         stats = self.vae.forward(data_input, target)
         loss = stats['elbo']
         # stats['elbo'].backward()
-        grad_norm = torch.nn.utils.clip_grad_norm_(self.vae.parameters(), self.H.grad_clip).item()
+        # grad_norm = torch.nn.utils.clip_grad_norm_(self.vae.parameters(), self.H.grad_clip).item()
         distortion_nans = torch.isnan(stats['distortion']).sum()
         rate_nans = torch.isnan(stats['rate']).sum()
-
+        #
         stats.update(dict(rate_nans=0 if rate_nans == 0 else 1, distortion_nans=0 if distortion_nans == 0 else 1))
-        stats = get_cpu_stats_over_ranks(stats)
-
+        # stats = get_cpu_stats_over_ranks(stats)
+        #
         cpu_stats = get_cpu_stats_over_ranks(stats)
-        # only update if no rank has a nan and if the grad norm is below a specific threshold
-        if stats['distortion_nans'] == 0 and stats['rate_nans'] == 0 and (self.H.skip_threshold == -1 or grad_norm < self.H.skip_threshold):
+        # # only update if no rank has a nan and if the grad norm is below a specific threshold
+        if stats['distortion_nans'] == 0 and stats['rate_nans'] == 0:
             ok = True
         else:
             ok = False
             self.skipped_updates += 1
-            self.distortion_nans += 1
-            self.rate_nans += 1
-
-
-        self.log(
-            "skipped_updates",
-            self.skipped_updates,
-            on_step=True,
-            on_epoch=False,
-            prog_bar=True,
-        )
-        self.log(
-            "grad_norm",
-            grad_norm,
-            on_step=True,
-            on_epoch=False,
-            prog_bar=True,
-        )
+            self.distortion_nans += stats['distortion_nans']
+            self.rate_nans += stats['rate_nans']
+        #
+        #
+        # self.log(
+        #     "skipped_updates",
+        #     self.skipped_updates,
+        #     on_step=True,
+        #     on_epoch=False,
+        #     prog_bar=True,
+        # )
+        # self.log(
+        #     "grad_norm",
+        #     grad_norm,
+        #     on_step=True,
+        #     on_epoch=False,
+        #     prog_bar=True,
+        # )
+        # self.log(
+        #     "grad_norm",
+        #     grad_norm,
+        #     on_step=True,
+        #     on_epoch=False,
+        #     prog_bar=True,
+        # )
+        # ok = True
         if ok:
             #
             # self.log(
