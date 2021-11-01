@@ -71,7 +71,6 @@ class Engine(pl.LightningModule):
 
 
     def training_step(self, batch, batch_idx):
-        print("training step")
 
         data_input, target = self.preprocess_fn(batch)
         # t0 = time.time()
@@ -93,7 +92,6 @@ class Engine(pl.LightningModule):
             ok = False
             self.skipped_updates += 1
 
-        print("inside")
 
         self.log(
             "skipped_updates",
@@ -104,7 +102,7 @@ class Engine(pl.LightningModule):
         )
         self.log(
             "grad_norm",
-            self.grad_norm,
+            grad_norm,
             on_step=True,
             on_epoch=False,
             prog_bar=False,
