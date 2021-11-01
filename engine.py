@@ -49,7 +49,9 @@ class Engine(pl.LightningModule):
             # restore_params(self.ema_vae, H.restore_ema_path, map_cpu=True, local_rank=H.local_rank, mpi_size=H.mpi_size)
         else:
             self.ema_vae.load_state_dict(self.vae.state_dict())
+
         self.ema_vae.requires_grad_(False)
+        print("loaded")
 
     def on_epoch_end(self) -> None:
         self.skipped_updates = 0
@@ -69,6 +71,8 @@ class Engine(pl.LightningModule):
 
 
     def training_step(self, batch, batch_idx):
+        print("training step")
+
         data_input, target = self.preprocess_fn(batch)
         # t0 = time.time()
         stats = self.vae.forward(data_input, target)
@@ -89,6 +93,8 @@ class Engine(pl.LightningModule):
             ok = False
             self.skipped_updates += 1
 
+        print("inside")
+
         self.log(
             "skipped_updates",
             self.skipped_updates,
@@ -103,6 +109,7 @@ class Engine(pl.LightningModule):
             on_epoch=False,
             prog_bar=False,
         )
+        print("logged")
         if ok:
             #
             # self.log(
