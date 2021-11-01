@@ -18,15 +18,38 @@ class Engine(pl.LightningModule):
         self.skipped_updates = 0
         if H.restore_path:
             print(f'Restoring vae from {H.restore_path}')
-            restore_params(self.vae, H.restore_path, map_cpu=True, local_rank=H.local_rank, mpi_size=H.mpi_size)
+            # restore_params(self.vae, H.restore_path, map_cpu=True, local_rank=H.local_rank, mpi_size=H.mpi_size)
+            state_dict = torch.load(H.restore_path, map_location='cpu')
+            map_ddp=True
+            if map_ddp:
+                new_state_dict = {}
+                l = len('module.')
+                for k in state_dict:
+                    if k.startswith('module.'):
+                        new_state_dict[k[l:]] = state_dict[k]
+                    else:
+                        new_state_dict[k] = state_dict[k]
+                state_dict = new_state_dict
+            self.vae.load_state_dict(state_dict)
 
-        ema_vae = VAE(H)
         if H.restore_ema_path:
             print(f'Restoring ema vae from {H.restore_ema_path}')
-            restore_params(ema_vae, H.restore_ema_path, map_cpu=True, local_rank=H.local_rank, mpi_size=H.mpi_size)
+            state_dict = torch.load(H.restore_ema_path, map_location='cpu')
+            map_ddp=True
+            if map_ddp:
+                new_state_dict = {}
+                l = len('module.')
+                for k in state_dict:
+                    if k.startswith('module.'):
+                        new_state_dict[k[l:]] = state_dict[k]
+                    else:
+                        new_state_dict[k] = state_dict[k]
+                state_dict = new_state_dict
+            self.ema_vae.load_state_dict(state_dict)
+            # restore_params(self.ema_vae, H.restore_ema_path, map_cpu=True, local_rank=H.local_rank, mpi_size=H.mpi_size)
         else:
-            ema_vae.load_state_dict(self.vae.state_dict())
-        ema_vae.requires_grad_(False)
+            self.ema_vae.load_state_dict(self.vae.state_dict())
+        self.ema_vae.requires_grad_(False)
 
     def on_epoch_end(self) -> None:
         self.skipped_updates = 0
