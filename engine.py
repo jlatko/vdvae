@@ -133,14 +133,14 @@ class Engine(pl.LightningModule):
             self.distortion_nans += stats['distortion_nans']
             self.rate_nans += stats['rate_nans']
         #
-        #
-        # self.log(
-        #     "skipped_updates",
-        #     self.skipped_updates,
-        #     on_step=True,
-        #     on_epoch=False,
-        #     prog_bar=True,
-        # )
+
+        self.log(
+            "skipped_updates",
+            self.skipped_updates,
+            on_step=True,
+            on_epoch=False,
+            prog_bar=True,
+        )
         # self.log(
         #     "grad_norm",
         #     grad_norm,
@@ -157,6 +157,13 @@ class Engine(pl.LightningModule):
         # )
         # ok = True
         if ok:
+            self.log(
+                "loss",
+                loss,
+                on_step=True,
+                on_epoch=False,
+                prog_bar=True,
+            )
             #
             # self.log(
             #     "grad_norm",
