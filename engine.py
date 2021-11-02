@@ -1,5 +1,6 @@
 import pytorch_lightning as pl
 import torch
+from pytorch_lightning.loggers import wandb
 from torch.optim import AdamW
 
 from train_helpers import update_ema, restore_params, linear_warmup
@@ -35,6 +36,8 @@ class Engine(pl.LightningModule):
                         new_state_dict[k] = state_dict[k]
                 state_dict = new_state_dict
             self.vae.load_state_dict(state_dict)
+        else:
+            wandb.run.tags.append("scratch")
 
         if H.restore_ema_path:
             print(f'Restoring ema vae from {H.restore_ema_path}')

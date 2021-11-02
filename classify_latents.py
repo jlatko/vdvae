@@ -253,6 +253,7 @@ def setup(H):
 def load_previous(H):
     if H.cont_run is None:
         return {}
+
     api = wandb.Api()
     run = api.run(f"vdvae_analysis/{H.cont_run}")
     files = run.files()
@@ -264,6 +265,14 @@ def load_previous(H):
         df = pd.read_csv(path)
         attr2csv[attr] = df
     return attr2csv
+
+def add_tags(H):
+    if H.grouped:
+        wandb.run.tags.append("grouped")
+    if H.cont_run is not None:
+        wandb.run.tags.append("cont")
+    wandb.run.tags.append(str(H.splits))
+    wandb.run.tags.append(H.model)
 
 def main():
     H = parse_args()
@@ -284,6 +293,7 @@ def main():
     #     os.makedirs(path)
     if H.grouped:
         cols = [c for c in cols if c != "Male"] # filter out Male as we group by sex
+        wandb.run.tags.append("grouped")
 
     logging.info(cols)
     logging.info(latent_ids)

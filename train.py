@@ -161,8 +161,10 @@ def main():
     wandb.save('*.th')
     wandb.save('*.jsonl')
     if H.test_eval:
+        wandb.run.tags.append("eval")
         run_test_eval(H, ema_vae, data_valid_or_test, preprocess_fn, logprint)
     else:
+        wandb.run.tags.append("train")
         train_loop(H, data_train, data_valid_or_test, preprocess_fn, vae, ema_vae, logprint)
 
 

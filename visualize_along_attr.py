@@ -149,6 +149,12 @@ def attribute_manipulation(H, attributes, ema_vae, latent_ids, lv_points, metada
 
             wandb.log({f"{attr}_{name_key}": wandb.Image(im, caption=f"{attr}_{name_key}{idx}")})
 
+def add_tags(H):
+    if H.grouped:
+        wandb.run.tags.append("grouped")
+    if H.has_attr:
+        wandb.run.tags.append("has_attr")
+
 def main():
     H, logprint = set_up_hyperparams(extra_args_fn=add_params)
 
