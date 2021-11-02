@@ -21,7 +21,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.svm import SVC
-
+import gc
 
 from tqdm import tqdm
 
@@ -88,6 +88,7 @@ def get_classification_score(H, X_train, X_test, y_train, y_test, cuda=False):
 
     model.fit(X_train, y_train)
     y_pred = model.predict(X_test)
+    del model
     return {
         'acc': accuracy_score(y_test, y_pred),
         'f1': f1_score(y_test, y_pred),
@@ -297,6 +298,7 @@ def main():
             if use_cuda == True:
                 logging.warning(f"While running on GPU caught {e}")
                 logging.warning("trying without CUDA")
+                gc.collect()
                 use_cuda = False
                 score_dict = run_classifications(H, cols, i, latents_dir=H.latents_dir, handle_nan=H.handle_nan,
                                                  cuda=use_cuda, previous=previous)
@@ -321,7 +323,8 @@ def main():
                     fh.write("\n" + ",".join(results))
             else:
                 logging.warning(f"{col} missing for layer {i}")
-
+        del score_dict
+        gc.collect()
         # for col, score in score_dict.items():
         #     scores[col].append(score)
     #
