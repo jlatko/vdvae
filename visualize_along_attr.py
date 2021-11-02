@@ -168,6 +168,26 @@ def main():
     if H.run_name:
         print(wandb.run.name)
         wandb.run.name = H.run_name + '-' + wandb.run.name.split('-')[-1]
+    else:
+        print(wandb.run.name)
+        run_name = H.keys_set
+        if H.latents_dir == '/scratch/s193223/vdvae/latents/':
+            run_name += "_tuned"
+        run_name += "_" + str(H.temp)
+
+        if H.fixed:
+            run_name += "_fixed"
+        if H.use_group_direction:
+            run_name += "_group_d"
+
+        elif H.grouped:
+            run_name += "_grouped"
+
+        if H.has_attr:
+            run_name += "_has_attr"
+
+        wandb.run.name = run_name + '-' + wandb.run.name.split('-')[-1]
+
 
     attributes = get_attributes(H.keys_set)
 
