@@ -170,7 +170,7 @@ def run_classifications(H, cols, layer_ind, latents_dir, handle_nan=False, cuda=
     scores = {}
     for col in cols:
         if col in previous:
-            if layer_ind in previous[col].layer_ind:
+            if layer_ind in list(previous[col].layer_ind):
                 scores[col] = previous[col][previous[col].layer_ind == layer_ind].iloc[0].to_dict()
                 log_score(scores[col], col, layer_ind, prefix="")
                 cols_filtered = cols_filtered - {col}
