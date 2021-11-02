@@ -204,7 +204,7 @@ def run_classifications(H, cols, layer_ind, latents_dir, handle_nan=False, cuda=
     else:
         scores.update(get_all_scores(H, z, meta, list(cols_filtered), cuda, layer_ind))
 
-    scores = {k, v for k, v in scores.items() if v is not None}
+    scores = {k: v for k, v in scores.items() if v is not None}
     for k in cols_filtered:
         if k in scores:
             scores[k].update(z_info)
