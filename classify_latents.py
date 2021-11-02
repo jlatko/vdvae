@@ -309,7 +309,8 @@ def main():
         if it == 0:
             score_keys = set()
             for col in cols:
-                score_keys = score_keys | set(score_dict[col].keys())
+                if col in score_dict:
+                    score_keys = score_keys | set(score_dict[col].keys())
             score_keys = list(score_keys)
 
         for col in cols:
