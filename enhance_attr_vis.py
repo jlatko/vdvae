@@ -133,6 +133,10 @@ def main():
         api.run(f"{project_scores}/{run_id}")
         for run_id in H.run_id_scores]
 
+    if H.run_name is not None:
+        wandb.run.name = run_viz.run_name + ','.join([run.config['model'] for run in runs_scores]) + "-" + wandb.run.name.split('-')[-1]
+        wandb.run.save()
+
     temp = run_viz.config["temp"]
     size = run_viz.config["size"]
 
