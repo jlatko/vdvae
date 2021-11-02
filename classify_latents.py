@@ -127,7 +127,7 @@ def log_score(score, col, layer_ind, prefix=""):
     wandb.log({
         f"{prefix}{col}_{k}": v
         for k, v
-        in score.items()
+        in score.items() if k not in ["len", "size", "resolution", "layer_ind"]
     }, step=layer_ind)
     logging.debug(f"{prefix}{col}: {score}")
 
@@ -171,8 +171,13 @@ def run_classifications(H, cols, layer_ind, latents_dir, handle_nan=False, cuda=
     for col in cols:
         if col in previous:
             if layer_ind in previous[col].layer_ind:
-                scores[col] = previous[col][previous[col].layer_ind == layer_ind].iloc[0]
+                scores[col] = previous[col][previous[col].layer_ind == layer_ind].iloc[0].to_dict()
+                log_score(scores[col], col, layer_ind, prefix="")
                 cols_filtered = cols_filtered - {col}
+
+    if len(cols_filtered) == 0:
+        logging.info(f"Found all scores for layer {layer_ind}. Skipping.")
+        return scores
 
     z, meta = get_latents(latents_dir=latents_dir, layer_ind=layer_ind, splits=H.splits, allow_missing=False, handle_nan=handle_nan)
     logging.debug(z.shape)
@@ -191,21 +196,16 @@ def run_classifications(H, cols, layer_ind, latents_dir, handle_nan=False, cuda=
     # TODO: ? move to gpu? X_cudf = cudf.DataFrame(X)
 
     if H.grouped:
-        cols_filtered = list(cols_filtered - {"Male"})
         q = meta["Male"] == 1
         scores_male = get_all_scores(H, z[q], meta[q], cols_filtered, cuda, layer_ind, prefix="m_")
         scores_female = get_all_scores(H, z[~q], meta[~q], cols_filtered, cuda, layer_ind, prefix="f_")
-
         scores.update(group_scores(scores_male, scores_female, cols_filtered, layer_ind))
-
-        #
-        # scores["Male"] = get_all_scores(H, z, meta, ["Male"], cuda, layer_ind)["Male"]
-
     else:
         scores.update(get_all_scores(H, z, meta, list(cols_filtered), cuda, layer_ind))
 
-    for k in scores:
-        scores[k].update(z_info)
+    for k in cols_filtered:
+        if k in scores:
+            scores[k].update(z_info)
 
     return scores
 
@@ -318,7 +318,7 @@ def main():
 
                 results = [str(score_dict[col][k]) if k in score_dict[col] else "" for k in score_keys]
                 with open(fpath, "a") as fh:
-                    fh.write("\n"+",".join(results))
+                    fh.write("\n" + ",".join(results))
             else:
                 logging.warning(f"{col} missing for layer {i}")
 
