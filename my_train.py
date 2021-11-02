@@ -59,6 +59,7 @@ def main():
         gpus=gpus,
         precision=16,
         accumulate_grad_batches=1,
+        gradient_clip_val=200,
         # limit_train_batches=10,
         # limit_test_batches=1,
         # **cfg["trainer"],
