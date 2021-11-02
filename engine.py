@@ -84,14 +84,7 @@ class Engine(pl.LightningModule):
         self.distortion_nans = 0
 
     def optimizer_step(self, *args, **kwargs):
-        grad_norm = torch.nn.utils.clip_grad_norm_(self.vae.parameters(), self.H.grad_clip).item()
-        self.log(
-                "grad_norm",
-                grad_norm,
-                on_step=True,
-                on_epoch=False,
-                prog_bar=True,
-            )
+
         # if (self.H.skip_threshold == -1 or grad_norm < self.H.skip_threshold):
         super().optimizer_step(*args, **kwargs)
         update_ema(self.vae, self.ema_vae, self.H.ema_rate)
@@ -156,6 +149,18 @@ class Engine(pl.LightningModule):
         #     prog_bar=True,
         # )
         # ok = True
+        try:
+            grad_norm = torch.nn.utils.clip_grad_norm_(self.vae.parameters(), self.H.grad_clip).item()
+            self.log(
+                "grad_norm",
+                grad_norm,
+                on_step=True,
+                on_epoch=False,
+                prog_bar=True,
+            )
+        except Exception as e:
+            pass
+
         if ok:
             self.log(
                 "loss",
