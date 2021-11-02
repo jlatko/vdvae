@@ -152,6 +152,8 @@ def attribute_manipulation(H, attributes, ema_vae, latent_ids, lv_points, metada
 def add_tags(H):
     if H.grouped:
         wandb.run.tags.append("grouped")
+    if H.use_group_direction:
+        wandb.run.tags.append("group_direction")
     if H.has_attr:
         wandb.run.tags.append("has_attr")
 

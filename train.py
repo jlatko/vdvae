@@ -144,6 +144,7 @@ def run_test_eval(H, ema_vae, data_test, preprocess_fn, logprint):
     print('test results')
     for k in stats:
         print(k, stats[k])
+    wandb.log(stats)
     logprint(type='test_loss', **stats)
 
 
