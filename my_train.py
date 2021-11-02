@@ -58,7 +58,7 @@ def main():
         default_root_dir="training/logs",
         gpus=gpus,
         precision=16,
-        accumulate_grad_batches=32,
+        accumulate_grad_batches=1,
         # limit_train_batches=10,
         # limit_test_batches=1,
         # **cfg["trainer"],
