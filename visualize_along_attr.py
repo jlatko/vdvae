@@ -18,8 +18,6 @@ import wandb
 
 import torch.nn.functional as F
 
-wandb.init(project='vae_visualizations', entity='johnnysummer', dir="/scratch/s193223/wandb/")
-wandb.config.update({"script": "vis_attr"})
 
 MIN_FREQ = 2
 
@@ -149,21 +147,19 @@ def attribute_manipulation(H, attributes, ema_vae, latent_ids, lv_points, metada
 
             wandb.log({f"{attr}_{name_key}": wandb.Image(im, caption=f"{attr}_{name_key}{idx}")})
 
-def add_tags(H):
+def init_wandb(H):
+    tags = []
     if H.grouped:
-        wandb.run.tags.append("grouped")
+        tags.append("grouped")
     if H.use_group_direction:
-        wandb.run.tags.append("group_direction")
+        tags.append("group_direction")
     if H.has_attr:
-        wandb.run.tags.append("has_attr")
+        tags.append("has_attr")
+    if H.fixed:
+        tags.append("fixed")
 
-def main():
-    H, logprint = set_up_hyperparams(extra_args_fn=add_params)
-
-
-    H, data_train, data_valid_or_test, preprocess_fn = set_up_data(H)
-    latent_ids = get_available_latents(H.latents_dir)
-    vae, ema_vae = load_vaes(H, logprint)
+    wandb.init(project='vae_visualizations', entity='johnnysummer', dir="/scratch/s193223/wandb/", tags=tags)
+    wandb.config.update({"script": "vis_attr"})
 
     if H.run_name:
         print(wandb.run.name)
@@ -187,6 +183,19 @@ def main():
             run_name += "_has_attr"
 
         wandb.run.name = run_name + '-' + wandb.run.name.split('-')[-1]
+
+def main():
+    H, logprint = set_up_hyperparams(extra_args_fn=add_params)
+
+
+    H, data_train, data_valid_or_test, preprocess_fn = set_up_data(H)
+
+
+    latent_ids = get_available_latents(H.latents_dir)
+    vae, ema_vae = load_vaes(H, logprint)
+
+    init_wandb()
+
 
     attributes = get_attributes(H.keys_set)
 

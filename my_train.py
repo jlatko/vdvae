@@ -20,7 +20,7 @@ wandb.config.update({"script": "my_train"})
 
 
 def main():
-    wandb.run.tags.append("my_train")
+    # wandb.run.tags.append("my_train")
     H, logprint = set_up_hyperparams_light(dir=os.path.join(wandb.run.dir, 'log'))
     H, data_train, data_valid_or_test, preprocess_fn = set_up_data(H)
 

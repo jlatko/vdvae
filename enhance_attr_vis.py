@@ -42,7 +42,6 @@ def enhance_attribute_visualization(H, file, runs_scores, run_viz,
                                     temp=0.1, size=64):
     attr = re.match(r"([a-zA-Z_]+)_t.*", file.name).group(1)
     scores = [get_scores(H, run, attr) for run in runs_scores]
-    print(len(scores))
     img, lv_points = get_img(H, run_viz, file)
 
     f, (a0, a1) = plt.subplots(1, 2, gridspec_kw={'width_ratios': [1, 8]},
@@ -104,9 +103,6 @@ def enhance_attribute_visualization(H, file, runs_scores, run_viz,
     return scores
 
 
-# wandb.init(project='vae_visualizations', entity='johnnysummer', dir="/scratch/s193223/wandb/")
-wandb.init(project='vae_visualizations', entity='johnnysummer')
-wandb.config.update({"script": "enhance"})
 
 def parse_args(s=None):
     H = Hyperparams()
@@ -124,6 +120,30 @@ def parse_args(s=None):
     H.update(parser.parse_args(s).__dict__)
     return H
 
+
+def init_wandb(H, run_viz, runs_scores):
+    tags = []
+    tags.append(str(len(runs_scores)))
+    if run_viz.config["grouped"]:
+        tags.append("grouped")
+    if run_viz.config["use_group_direction"]:
+        tags.append("group_direction")
+    if run_viz.config["has_attr"]:
+        tags.append("has_attr")
+    if run_viz.config["fixed"]:
+        tags.append("fixed")
+
+    # wandb.init(project='vae_visualizations', entity='johnnysummer', dir="/scratch/s193223/wandb/", tags=tags)
+    wandb.init(project='vae_visualizations', entity='johnnysummer', tags=tags)
+    wandb.config.update({"script": "enhance"})
+
+    if H.run_name is None:
+        wandb.run.name = "e_" + run_viz.name + "__" + '_'.join([run.config['model'] for run in runs_scores]) + "__" + wandb.run.name.split('-')[-1]
+        wandb.run.save()
+    else:
+        wandb.run.name = "e_" + H.run_name + "-" + wandb.run.name.split('-')[-1]
+        wandb.run.save()
+
 def main():
     H = parse_args()
 
@@ -133,9 +153,8 @@ def main():
         api.run(f"{project_scores}/{run_id}")
         for run_id in H.run_id_scores]
 
-    if H.run_name is not None:
-        wandb.run.name = run_viz.run_name + ','.join([run.config['model'] for run in runs_scores]) + "-" + wandb.run.name.split('-')[-1]
-        wandb.run.save()
+
+    init_wandb(H, run_viz, runs_scores)
 
     temp = run_viz.config["temp"]
     size = run_viz.config["size"]

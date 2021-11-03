@@ -35,7 +35,6 @@ from sklearn.metrics import accuracy_score, f1_score, roc_auc_score
 import logging
 
 import wandb
-wandb.init(project='vdvae_analysis', entity='johnnysummer', dir="/scratch/s193223/wandb/")
 
 MIN_FREQ = 100
 
@@ -266,20 +265,24 @@ def load_previous(H):
         attr2csv[attr] = df
     return attr2csv
 
-def add_tags(H):
+def init_wandb(H):
+    tags = []
     if H.grouped:
-        wandb.run.tags.append("grouped")
+        tags.append("grouped")
     if H.cont_run is not None:
-        wandb.run.tags.append("cont")
-    wandb.run.tags.append(str(H.splits))
-    wandb.run.tags.append(H.model)
+        tags.append("cont")
+    tags.append(str(H.splits))
+    tags.append(H.model)
+
+    wandb.init(project='vdvae_analysis', entity='johnnysummer', dir="/scratch/s193223/wandb/", tags=tags)
+    wandb.run.name = H.run_name if H.run_name else f"{H.model}_{H.keys_set}_{H.layer_ids_set}"
+    wandb.run.save()
 
 def main():
     H = parse_args()
     cols, latent_ids = setup(H)
+    init_wandb(H)
 
-    wandb.run.name = H.run_name if H.run_name else f"{H.model}_{H.keys_set}_{H.layer_ids_set}"
-    wandb.run.save()
 
     wandb.config.update(H)
     wandb.config.update({"cols": cols, "latent_ids": latent_ids})
@@ -293,7 +296,6 @@ def main():
     #     os.makedirs(path)
     if H.grouped:
         cols = [c for c in cols if c != "Male"] # filter out Male as we group by sex
-        wandb.run.tags.append("grouped")
 
     logging.info(cols)
     logging.info(latent_ids)

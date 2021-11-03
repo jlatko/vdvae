@@ -36,8 +36,6 @@ class Engine(pl.LightningModule):
                         new_state_dict[k] = state_dict[k]
                 state_dict = new_state_dict
             self.vae.load_state_dict(state_dict)
-        else:
-            wandb.run.tags.append("scratch")
 
         if H.restore_ema_path:
             print(f'Restoring ema vae from {H.restore_ema_path}')
