@@ -111,41 +111,45 @@ def attribute_manipulation(H, attributes, ema_vae, latent_ids, lv_points, metada
             sample_meta = metadata.set_index("idx").loc[idx]
 
         for attr in tqdm(attributes):
-            if has_attr is not None:
-                idx = get_idx_for_attr(H, attr, has_attr, metadata, i)
-                zs = get_zs_for_idx(H, idx, latent_ids)
-                sample_meta = metadata.set_index("idx").loc[idx]
+            try:
+                if has_attr is not None:
+                    idx = get_idx_for_attr(H, attr, has_attr, metadata, i)
+                    zs = get_zs_for_idx(H, idx, latent_ids)
+                    sample_meta = metadata.set_index("idx").loc[idx]
 
-            batches = []
-            for l_ind in lv_points:
-                torch.random.manual_seed(0)
+                batches = []
+                for l_ind in lv_points:
+                    torch.random.manual_seed(0)
 
-                zs_current = copy(zs)
+                    zs_current = copy(zs)
 
-                direction = get_direction(H, attr, l_ind, idx, sample_meta)
+                    direction = get_direction(H, attr, l_ind, idx, sample_meta)
 
-                for a in np.linspace(-1, 1, H.n_steps):
-                    zs_current[l_ind] = zs[l_ind] + a * direction
-                    if H.fixed:
-                        img = ema_vae.forward_samples_set_latents(1, zs_current, t=H.temp)
-                    else:
-                        img = ema_vae.forward_samples_set_latents(1, zs_current[:l_ind+1], t=H.temp)
+                    for a in np.linspace(-1, 1, H.n_steps):
+                        zs_current[l_ind] = zs[l_ind] + a * direction
+                        if H.fixed:
+                            img = ema_vae.forward_samples_set_latents(1, zs_current, t=H.temp)
+                        else:
+                            img = ema_vae.forward_samples_set_latents(1, zs_current[:l_ind+1], t=H.temp)
 
-                    img = resize(img, size=(H.size, H.size))
-                    batches.append(img)
-            n_rows = len(lv_points)
-            #TODO: consider downsampling
-            im = np.concatenate(batches, axis=0).reshape((n_rows,  H.n_steps, H.size, H.size, 3)).transpose(
-                [0, 2, 1, 3, 4]).reshape([n_rows * H.size, H.size * H.n_steps, 3])
+                        img = resize(img, size=(H.size, H.size))
+                        batches.append(img)
+                n_rows = len(lv_points)
+                #TODO: consider downsampling
+                im = np.concatenate(batches, axis=0).reshape((n_rows,  H.n_steps, H.size, H.size, 3)).transpose(
+                    [0, 2, 1, 3, 4]).reshape([n_rows * H.size, H.size * H.n_steps, 3])
 
-            name_key = f"t{str(H.temp).replace('.','_')}_"
-            if H.fixed:
-                name_key += "fixed_"
+                name_key = f"t{str(H.temp).replace('.','_')}_"
+                if H.fixed:
+                    name_key += "fixed_"
 
-            fname = os.path.join(wandb.run.dir, f"{attr}_{name_key}{idx}.png")
-            imageio.imwrite(fname, im)
+                fname = os.path.join(wandb.run.dir, f"{attr}_{name_key}{idx}.png")
+                imageio.imwrite(fname, im)
 
-            wandb.log({f"{attr}_{name_key}": wandb.Image(im, caption=f"{attr}_{name_key}{idx}")})
+                wandb.log({f"{attr}_{name_key}": wandb.Image(im, caption=f"{attr}_{name_key}{idx}")})
+            except KeyError as e:
+                print(e)
+                print("cont")
 
 def init_wandb(H):
     tags = []
@@ -210,6 +214,7 @@ def main():
         for i in range(H.n_samples):
             for has_attr in [True, False]:
                 attribute_manipulation(H, attributes, ema_vae, latent_ids, lv_points, has_attr=has_attr, metadata=data_valid_or_test.metadata, i=i)
+
     else:
         for i in range(H.n_samples):
             attribute_manipulation(H, attributes, ema_vae, latent_ids, lv_points, i=i, metadata=data_valid_or_test.metadata)
