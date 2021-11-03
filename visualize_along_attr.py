@@ -194,7 +194,7 @@ def main():
     latent_ids = get_available_latents(H.latents_dir)
     vae, ema_vae = load_vaes(H, logprint)
 
-    init_wandb()
+    init_wandb(H)
 
 
     attributes = get_attributes(H.keys_set)
