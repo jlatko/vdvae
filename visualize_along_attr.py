@@ -35,6 +35,7 @@ def add_params(parser):
     parser.add_argument('--grouped', action="store_true")
     parser.add_argument('--has_attr', action="store_true")
     parser.add_argument('--use_group_direction', action="store_true")
+    parser.add_argument('--latent_key', type=str, default="z")
 
     return parser
 
@@ -80,7 +81,7 @@ def get_idx_for_attr(H, attr, has_attr, metadata, i):
 
 def get_zs_for_idx(H, idx, latent_ids):
     z_dict = np.load(os.path.join(H.latents_dir, f"{idx}.npz"))
-    return [torch.tensor(z_dict[f'z_{i}'][np.newaxis], dtype=torch.float32).cuda() for i in latent_ids]
+    return [torch.tensor(z_dict[f'{H.latent_key}_{i}'][np.newaxis], dtype=torch.float32).cuda() for i in latent_ids]
 
 def get_direction(H, attr, i, idx, sample_meta):
     # get direction

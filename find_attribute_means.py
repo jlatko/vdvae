@@ -28,7 +28,7 @@ def get_means(z, meta, col):
     return pos_mean, neg_mean
 
 def find_means(H, cols, layer_ind, latents_dir, handle_nan=False):
-    z, meta = get_latents(latents_dir=latents_dir, layer_ind=layer_ind, splits=[1,2,3], allow_missing=False, handle_nan=handle_nan, key=H.key)
+    z, meta = get_latents(latents_dir=latents_dir, layer_ind=layer_ind, splits=[1,2,3], allow_missing=False, handle_nan=handle_nan, key=H.latent_key)
     logging.debug(z.shape)
 
     means_dict = {}
@@ -87,7 +87,7 @@ def parse_args(s=None):
     parser.add_argument('--layer_ids_set', type=str, default='full')
     parser.add_argument('--log_level', type=str, default='INFO')
     parser.add_argument('--handle_nan', type=str, default=None)
-    parser.add_argument('--key', type=str, default="z")
+    parser.add_argument('--latent_key', type=str, default="z")
     # parser.add_argument('--group', action="store_true")
 
     H.update(parser.parse_args(s).__dict__)

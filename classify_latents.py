@@ -179,7 +179,7 @@ def run_classifications(H, cols, layer_ind, latents_dir, handle_nan=False, cuda=
         logging.info(f"Found all scores for layer {layer_ind}. Skipping.")
         return scores
 
-    z, meta = get_latents(latents_dir=latents_dir, layer_ind=layer_ind, splits=H.splits, allow_missing=False, handle_nan=handle_nan, key=H.key)
+    z, meta = get_latents(latents_dir=latents_dir, layer_ind=layer_ind, splits=H.splits, allow_missing=False, handle_nan=handle_nan, key=H.latent_key)
     logging.debug(z.shape)
 
     resolution = z.shape[-2]
@@ -224,7 +224,7 @@ def parse_args(s=None):
     parser.add_argument('--handle_nan', type=str, default=None)
     parser.add_argument('--cont_run', type=str, default=None)
     parser.add_argument('--grouped', action="store_true")
-    parser.add_argument('--key', type=str, default="z")
+    parser.add_argument('--latent_key', type=str, default="z")
     parser.add_argument('-s', '--splits', help='delimited list input',
                         type=lambda s: [int(item) for item in s.split(',')], default=[1,2,3])
 
