@@ -162,7 +162,7 @@ def group_scores(scores_male, scores_female, cols, layer_ind):
     return scores
 
 
-def run_classifications(H, cols, layer_ind, latents_dir, handle_nan=False, cuda=False, previous=None):
+def run_classifications(H, cols, layer_ind, latents_dir, cuda=False, previous=None):
     if previous is None:
         previous = {}
     # TODO: get from previous and skip?
@@ -179,7 +179,7 @@ def run_classifications(H, cols, layer_ind, latents_dir, handle_nan=False, cuda=
         logging.info(f"Found all scores for layer {layer_ind}. Skipping.")
         return scores
 
-    z, meta = get_latents(latents_dir=latents_dir, layer_ind=layer_ind, splits=H.splits, allow_missing=False, handle_nan=handle_nan, key=H.latent_key)
+    z, meta = get_latents(latents_dir=latents_dir, layer_ind=layer_ind, splits=H.splits, allow_missing=H.allow_missing, handle_nan=H.handle_nan, key=H.latent_key)
     logging.debug(z.shape)
 
     resolution = z.shape[-2]
@@ -224,6 +224,7 @@ def parse_args(s=None):
     parser.add_argument('--handle_nan', type=str, default=None)
     parser.add_argument('--cont_run', type=str, default=None)
     parser.add_argument('--grouped', action="store_true")
+    parser.add_argument('--allow_missing', action="store_true")
     parser.add_argument('--latent_key', type=str, default="z")
     parser.add_argument('-s', '--splits', help='delimited list input',
                         type=lambda s: [int(item) for item in s.split(',')], default=[1,2,3])
@@ -307,14 +308,14 @@ def main():
     use_cuda = len(os.environ["CUDA_VISIBLE_DEVICES"]) > 0
     for it, i in enumerate(tqdm(latent_ids)):
         try:
-            score_dict = run_classifications(H, cols, i, latents_dir=H.latents_dir, handle_nan=H.handle_nan, cuda=use_cuda, previous=previous)
+            score_dict = run_classifications(H, cols, i, latents_dir=H.latents_dir, cuda=use_cuda, previous=previous)
         except Exception as e:
             if use_cuda == True:
                 logging.warning(f"While running on GPU caught {e}")
                 logging.warning("trying without CUDA")
                 gc.collect()
                 use_cuda = False
-                score_dict = run_classifications(H, cols, i, latents_dir=H.latents_dir, handle_nan=H.handle_nan,
+                score_dict = run_classifications(H, cols, i, latents_dir=H.latents_dir,
                                                  cuda=use_cuda, previous=previous)
             else:
                 raise e
