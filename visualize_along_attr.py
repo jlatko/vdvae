@@ -172,8 +172,8 @@ def init_wandb(H):
     else:
         print(wandb.run.name)
         run_name = H.keys_set
-        if H.latents_dir == '/scratch/s193223/vdvae/latents/':
-            run_name += "_tuned"
+        # if H.latents_dir != '/scratch/s193223/vdvae/latents/':
+        #     run_name += "_tuned"
         run_name += "_" + str(H.temp)
 
         if H.fixed:
