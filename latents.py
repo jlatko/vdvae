@@ -15,11 +15,11 @@ def get_available_latents(latents_dir="/scratch/s193223/vdvae/latents/"):
     latent_ids = list(sorted(set(int(k.split("_")[1]) for k in keys)))
     return latent_ids
 
-def get_latents(latents_dir, layer_ind, splits=(1,2,3), root_dir=CELEBAHQ_DIR, allow_missing=False, handle_nan=None):
+def get_latents(latents_dir, layer_ind, splits=(1,2,3), root_dir=CELEBAHQ_DIR, allow_missing=False, handle_nan=None, key="z"):
     metadata = pd.read_csv(os.path.join(root_dir, 'metadata.csv'))
     metadata = metadata[metadata.split.isin(splits)]
 
-    z = np.load(os.path.join(latents_dir, f"{metadata.iloc[0].idx}.npz"))[f"z_{layer_ind}"]
+    z = np.load(os.path.join(latents_dir, f"{metadata.iloc[0].idx}.npz"))[f"{key}_{layer_ind}"]
     shape = [len(metadata)] + list(z.shape)
     latents = np.zeros(shape, dtype=np.float32)
     rows_found = []
@@ -28,17 +28,17 @@ def get_latents(latents_dir, layer_ind, splits=(1,2,3), root_dir=CELEBAHQ_DIR, a
     # for _, row in tqdm(metadata.iterrows(),  total=metadata.shape[0]):
     for _, row in metadata.iterrows():
         try:
-            z = np.load(os.path.join(latents_dir, f"{row.idx}.npz"))[f"z_{layer_ind}"].astype(np.float32)
+            z = np.load(os.path.join(latents_dir, f"{row.idx}.npz"))[f"{key}_{layer_ind}"].astype(np.float32)
             if not np.isfinite(z).all():
                 if handle_nan == "to_num":
-                    logging.warning(f"{row.idx}: z_{layer_ind} contains NaN or inf. Converting to num.")
+                    logging.warning(f"{row.idx}: {key}_{layer_ind} contains NaN or inf. Converting to num.")
                     z = np.nan_to_num(z)
                 if handle_nan == "skip":
-                    logging.warning(f"{row.idx}: z_{layer_ind} contains NaN or inf. Skipping.")
+                    logging.warning(f"{row.idx}: {key}_{layer_ind} contains NaN or inf. Skipping.")
                     rows_missing.append(row)
                     continue
                 else:
-                    raise ValueError(f"{row.idx}: z_{layer_ind} contains NaN or inf")
+                    raise ValueError(f"{row.idx}: {key}_{layer_ind} contains NaN or inf")
             latents[i] = z
             rows_found.append(row)
             i += 1
