@@ -27,6 +27,9 @@ project_scores = "johnnysummer/vdvae_analysis"
 def get_scores(H, run_scores, attr):
     files_scores = run_scores.files()
     name2file_scores = {f.name: f for f in files_scores}
+    if f'{attr}.csv' not in name2file_scores:
+        print(f"{attr}.csv not found in run {run_scores.id}")
+        return None
     path_score = _download(name2file_scores[f'{attr}.csv'], f"./.data/{run_scores.id}/")
     scores = pd.read_csv(path_score)
     scores = scores.set_index("layer_ind")
@@ -42,6 +45,10 @@ def enhance_attribute_visualization(H, file, runs_scores, run_viz,
                                     temp=0.1, size=64):
     attr = re.match(r"([a-zA-Z_]+)_t.*", file.name).group(1)
     scores = [get_scores(H, run, attr) for run in runs_scores]
+    scores = [s for s in scores if s is not None]
+    if len(scores) == 0:
+        print(f"No scores for {attr}")
+        scores = [pd.DataFrame()]
     img, lv_points = get_img(H, run_viz, file)
 
     f, (a0, a1) = plt.subplots(1, 2, gridspec_kw={'width_ratios': [1, 8]},
