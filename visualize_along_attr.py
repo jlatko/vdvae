@@ -187,7 +187,7 @@ def init_wandb(H):
         if H.has_attr:
             run_name += "_has_attr"
 
-        wandb.run.name = run_name + '-' + wandb.run.name.split('-')[-1]
+        wandb.run.name = run_name + "_" + H.latent_key +  '-' + wandb.run.name.split('-')[-1]
 
 def main():
     H, logprint = set_up_hyperparams(extra_args_fn=add_params)
