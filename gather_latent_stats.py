@@ -19,7 +19,7 @@ def get_kls(block_stats, i, block_idx):
     pv = block_stats["pv"][i]
     kl_forward = gaussian_analytical_kl(pm, qm, pv, qv)
     return {
-        f"kl_forward_mean{block_idx}": torch.mean(kl_forward).cpu().numpy().astype(np.float16),
+        f"kl_forward_mean_{block_idx}": torch.mean(kl_forward).cpu().numpy().astype(np.float16),
         f"kl_forward_std_{block_idx}": torch.std(kl_forward).cpu().numpy().astype(np.float16),
         f"kl_mean_{block_idx}": torch.mean(block_stats["kl"][i]).cpu().numpy().astype(np.float16),
         f"kl_std_{block_idx}": torch.std(block_stats["kl"][i]).cpu().numpy().astype(np.float16)
