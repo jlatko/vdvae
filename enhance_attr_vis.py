@@ -140,6 +140,11 @@ def init_wandb(H, run_viz, runs_scores):
     if run_viz.config["fixed"]:
         tags.append("fixed")
 
+    if "latent_key" in run_viz.config:
+        tags.append(run_viz.config["latent_key"])
+    else:
+        tags.append("z")
+
     # wandb.init(project='vae_visualizations', entity='johnnysummer', dir="/scratch/s193223/wandb/", tags=tags)
     wandb.init(project='vae_visualizations', entity='johnnysummer', tags=tags)
     wandb.config.update({"script": "enhance"})
