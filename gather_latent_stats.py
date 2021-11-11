@@ -10,7 +10,7 @@ from tqdm import tqdm
 from data import set_up_data
 from train_helpers import set_up_hyperparams, load_vaes
 from vae_helpers import gaussian_analytical_kl
-
+import pandas as pd
 
 def get_kls(block_stats, i, block_idx):
     qm = block_stats["qm"][i]
@@ -54,6 +54,7 @@ def get_basic_stats(block_stats, i, block_idx):
 def get_stats(H, ema_vae, data_valid, preprocess_fn):
     valid_sampler = DistributedSampler(data_valid, num_replicas=H.mpi_size, rank=H.rank)
     idx = -1
+    all_stats = []
     for x in tqdm(DataLoader(data_valid, batch_size=H.n_batch, drop_last=True, pin_memory=True, sampler=valid_sampler)):
         data_input, target = preprocess_fn(x)
         with torch.no_grad():
@@ -66,6 +67,7 @@ def get_stats(H, ema_vae, data_valid, preprocess_fn):
                 else:
                     idx += 1
 
+                stat_dict["idx"] = idx
                 for block_idx, block_stats in enumerate(stats):
                     # for k in keys:
                     #     stat = block_stats[k][i].cpu().numpy().astype(np.float16)
@@ -75,7 +77,11 @@ def get_stats(H, ema_vae, data_valid, preprocess_fn):
                     stat_dict.update(get_kls(block_stats, i, block_idx))
                     stat_dict.update(get_basic_stats(block_stats, i, block_idx))
 
-                np.savez(os.path.join(H.destination_dir, f"{idx}.npz"), **stat_dict)
+                # np.savez(os.path.join(H.destination_dir, f"{idx}.npz"), **stat_dict)
+                # TODO: save everything to a single file
+                all_stats.append(stat_dict)
+    all_stats = pd.DataFrame(all_stats)
+    all_stats.to_pickle(os.path.join(H.destination_dir, f"{H.dataset}_latent_stats.pkl"))
 
 def add_params(parser):
     parser.add_argument('--destination_dir', type=str, default='/scratch/s193223/vdvae/latent_stats/')
@@ -103,7 +109,6 @@ def main():
         dataset = data_valid_or_test
 
     get_stats(H, ema_vae, dataset, preprocess_fn)
-
 
 if __name__ == "__main__":
     main()
