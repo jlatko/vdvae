@@ -56,6 +56,7 @@ def set_up_data(H):
         shift = -120.63838
         scale = 1. / 64.16736
     elif H.dataset == 'gaussian_noise':
+        trX, vaX, teX = None, None, None
         H.image_size = 256
         H.image_channels = 3
         shift = 0.
@@ -63,6 +64,7 @@ def set_up_data(H):
         shift_loss = 0.
         scale_loss = 0.33 # shouldn't
     elif H.dataset == 'uniform_noise':
+        trX, vaX, teX = None, None, None
         H.image_size = 256
         H.image_channels = 3
         shift = 0.
