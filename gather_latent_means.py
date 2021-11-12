@@ -21,7 +21,7 @@ def all_finite(stats):
         qstd = torch.exp(block_stats["qv"])
         pstd = torch.exp(block_stats["pv"])
         for x in [qm, pm, qv, pv, qstd, pstd]:
-            if not torch.isfinite(x):
+            if not torch.all(torch.isfinite(x)):
                 return False
     return True
 
