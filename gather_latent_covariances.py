@@ -31,12 +31,12 @@ def update_running_covariance(current_mean, new_value, n):
 def get_current_stats(stats, i):
     current_stats = {}
     for block_idx, block_stats in enumerate(stats):
-        current_stats[f"qm_{block_idx}"] = block_stats["qm"][i].cpu().numpy()
-        current_stats[f"pm_{block_idx}"] = block_stats["pm"][i].cpu().numpy()
-        current_stats[f"qstd_{block_idx}"] = torch.exp(block_stats["qv"][i]).cpu().numpy()
-        current_stats[f"pstd_{block_idx}"] = torch.exp(block_stats["pv"][i]).cpu().numpy()
-        current_stats[f"qv_{block_idx}"] = np.power(current_stats[f"qstd_{block_idx}"], 2)
-        current_stats[f"pv_{block_idx}"] = np.power(current_stats[f"pstd_{block_idx}"], 2)
+        current_stats[f"qm_{block_idx}"] = block_stats["qm"][i].cpu().numpy().reshape(-1)
+        current_stats[f"pm_{block_idx}"] = block_stats["pm"][i].cpu().numpy().reshape(-1)
+        current_stats[f"qstd_{block_idx}"] = torch.exp(block_stats["qv"][i]).cpu().numpy().reshape(-1)
+        current_stats[f"pstd_{block_idx}"] = torch.exp(block_stats["pv"][i]).cpu().numpy().reshape(-1)
+        current_stats[f"qv_{block_idx}"] = np.power(current_stats[f"qstd_{block_idx}"], 2).reshape(-1)
+        current_stats[f"pv_{block_idx}"] = np.power(current_stats[f"pstd_{block_idx}"], 2).reshape(-1)
     return current_stats
 
 
@@ -61,7 +61,7 @@ def get_stats(H, ema_vae, data_valid, preprocess_fn):
     with open(os.path.join(H.means_dir,  f"{H.dataset}_latent_means.npz"), 'rb') as fh:
         npz = np.load(fh)
         for k in npz.keys():
-            means_dict[k] = npz[k]
+            means_dict[k] = npz[k].reshape(-1)
 
     valid_sampler = DistributedSampler(data_valid, num_replicas=H.mpi_size, rank=H.rank)
     stat_dict = {}
