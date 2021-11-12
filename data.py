@@ -8,6 +8,7 @@ import torchvision.transforms as transforms
 from sklearn.model_selection import train_test_split
 
 from celebahq import CelebAHQDataset
+from imagenet256 import ImageNet256Dataset
 from noise_dataset import NoiseDataset
 
 
@@ -36,8 +37,15 @@ def set_up_data(H):
         trX, vaX, teX = celebahq(H.data_root)
         H.image_size = 256
         H.image_channels = 3
-        # TODO: ?
         shift = -0.4426144146984313 # same as ffhq256 * 255
+        scale = 1.0 / 0.2743
+        shift_loss = -0.5
+        scale_loss = 2.0
+    elif H.dataset == 'i256': # data (0,1)
+        trX, vaX, teX = None, None, None
+        H.image_size = 256
+        H.image_channels = 3
+        shift = -0.4426144146984313 # same as celebahq
         scale = 1.0 / 0.2743
         shift_loss = -0.5
         scale_loss = 2.0
@@ -96,8 +104,14 @@ def set_up_data(H):
         valid_data = CelebAHQDataset(root_dir=H.data_root, train=False, transform=transforms.ToTensor())
         untranspose = True
     elif H.dataset == 'i256':
-        train_data = CelebAHQDataset(root_dir=H.data_root,  train=True, transform=transforms.ToTensor())
-        valid_data = CelebAHQDataset(root_dir=H.data_root, train=False, transform=transforms.ToTensor())
+        train_data = ImageNet256Dataset(transform=transforms.Compose([
+            transforms.CenterCrop(256),
+            transforms.ToTensor()
+        ]))
+        valid_data = ImageNet256Dataset(transform=transforms.Compose([
+            transforms.CenterCrop(256),
+            transforms.ToTensor()
+        ]))
         untranspose = True
     elif H.dataset == 'gaussian_noise':
         train_data = NoiseDataset(noise_type="gaussian")
