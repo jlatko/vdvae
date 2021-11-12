@@ -108,10 +108,7 @@ def set_up_data(H):
             transforms.CenterCrop(256),
             transforms.ToTensor()
         ]))
-        valid_data = ImageNet256Dataset(transform=transforms.Compose([
-            transforms.CenterCrop(256),
-            transforms.ToTensor()
-        ]))
+        valid_data = train_data
         untranspose = True
     elif H.dataset == 'gaussian_noise':
         train_data = NoiseDataset(noise_type="gaussian")
