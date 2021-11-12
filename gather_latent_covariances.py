@@ -94,7 +94,7 @@ def get_stats(H, ema_vae, data_valid, preprocess_fn):
                 n += 1
         if H.n is not None and n >= H.n:
             break
-    np.savez(os.path.join(H.destination_dir, f"{H.dataset}_latent_means.npz"), **stat_dict)
+    np.savez(os.path.join(H.destination_dir, f"{H.dataset}_latent_cov.npz"), **stat_dict)
     # all_stats = pd.DataFrame(all_stats)
     # all_stats.to_pickle(os.path.join(H.destination_dir, f"{H.dataset}_latent_stats.pkl"))
 
