@@ -74,6 +74,11 @@ celebahq.update(ffhq_256)
 celebahq.dataset = 'celebahq'
 HPARAMS_REGISTRY['celebahq'] = celebahq
 
+i256 = Hyperparams()
+i256.update(i256)
+i256.dataset = 'i256'
+HPARAMS_REGISTRY['i256'] = i256
+
 gaussian_noise = Hyperparams()
 gaussian_noise.update(ffhq_256)
 gaussian_noise.dataset = 'gaussian_noise'

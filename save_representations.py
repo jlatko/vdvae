@@ -13,6 +13,7 @@ from train_helpers import set_up_hyperparams, load_vaes
 def save_repr(H, ema_vae, data_valid, preprocess_fn, keys=("z", "kl", "qm", "qv", "pm", "pv")):
     valid_sampler = DistributedSampler(data_valid, num_replicas=H.mpi_size, rank=H.rank)
     idx = -1
+    n = 0
     for x in tqdm(DataLoader(data_valid, batch_size=H.n_batch, drop_last=True, pin_memory=True, sampler=valid_sampler)):
         data_input, target = preprocess_fn(x)
         with torch.no_grad():
@@ -32,11 +33,15 @@ def save_repr(H, ema_vae, data_valid, preprocess_fn, keys=("z", "kl", "qm", "qv"
                         stat_dict[f"{k}_{block_idx}"] = stat
 
                 np.savez(os.path.join(H.destination_dir, f"{idx}.npz"), **stat_dict)
+                n += 1
+                if H.n is not None and n >= H.n:
+                    return
 
 def add_params(parser):
     parser.add_argument('--destination_dir', type=str, default='/scratch/s193223/vdvae/latents/')
     parser.add_argument('--use_train', dest='use_train', action='store_true')
     parser.add_argument('--keys_mode', type=str, default='z')
+    parser.add_argument('-n', type=int, default=None)
 
     return parser
 

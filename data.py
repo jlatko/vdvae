@@ -95,6 +95,10 @@ def set_up_data(H):
         train_data = CelebAHQDataset(root_dir=H.data_root,  train=True, transform=transforms.ToTensor())
         valid_data = CelebAHQDataset(root_dir=H.data_root, train=False, transform=transforms.ToTensor())
         untranspose = True
+    elif H.dataset == 'i256':
+        train_data = CelebAHQDataset(root_dir=H.data_root,  train=True, transform=transforms.ToTensor())
+        valid_data = CelebAHQDataset(root_dir=H.data_root, train=False, transform=transforms.ToTensor())
+        untranspose = True
     elif H.dataset == 'gaussian_noise':
         train_data = NoiseDataset(noise_type="gaussian")
         valid_data = NoiseDataset(noise_type="gaussian")
