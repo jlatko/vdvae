@@ -34,8 +34,8 @@ def update_latent_means(stat_dict, block_stats, i, block_idx, n):
     pm = block_stats["pm"][i].cpu().numpy()
     qstd = torch.exp(block_stats["qv"][i]).cpu().numpy()
     pstd = torch.exp(block_stats["pv"][i]).cpu().numpy()
-    qv = np.power(qstd, 2).cpu().numpy()
-    pv = np.power(pstd, 2).cpu().numpy()
+    qv = np.power(qstd, 2)
+    pv = np.power(pstd, 2)
     if n == 0:
         stat_dict[f"qv_{block_idx}"] = qv
         stat_dict[f"pv_{block_idx}"] = pv
