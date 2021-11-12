@@ -58,7 +58,7 @@ def update_latent_cov(means_dict, stat_dict, current_stats, n, block_pairs, keys
 
 def get_stats(H, ema_vae, data_valid, preprocess_fn):
     means_dict = {}
-    with open(os.path.join(H.means_dir, ), 'rb') as fh:
+    with open(os.path.join(H.means_dir,  f"{H.dataset}_latent_means.npz"), 'rb') as fh:
         npz = np.load(fh)
         for k in npz.keys():
             means_dict[k] = npz[k]
