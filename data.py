@@ -8,6 +8,7 @@ import torchvision.transforms as transforms
 from sklearn.model_selection import train_test_split
 
 from celebahq import CelebAHQDataset
+from noise_dataset import NoiseDataset
 
 
 def set_up_data(H):
@@ -54,6 +55,20 @@ def set_up_data(H):
         H.image_channels = 3
         shift = -120.63838
         scale = 1. / 64.16736
+    elif H.dataset == 'gaussian_noise':
+        H.image_size = 256
+        H.image_channels = 3
+        shift = 0.
+        scale = 1.
+        shift_loss = 0.
+        scale_loss = 0.33 # shouldn't
+    elif H.dataset == 'uniform_noise':
+        H.image_size = 256
+        H.image_channels = 3
+        shift = 0.
+        scale = 1.
+        shift_loss = 0.
+        scale_loss = 1. # shouldn't matter
     else:
         raise ValueError('unknown dataset: ', H.dataset)
 
@@ -78,6 +93,14 @@ def set_up_data(H):
         train_data = CelebAHQDataset(root_dir=H.data_root,  train=True, transform=transforms.ToTensor())
         valid_data = CelebAHQDataset(root_dir=H.data_root, train=False, transform=transforms.ToTensor())
         untranspose = True
+    elif H.dataset == 'gaussian_noise':
+        train_data = NoiseDataset(noise_type="gaussian")
+        valid_data = NoiseDataset(noise_type="gaussian")
+        untranspose = False
+    elif H.dataset == 'uniform_noise':
+        train_data = NoiseDataset(noise_type="uniform")
+        valid_data = NoiseDataset(noise_type="uniform")
+        untranspose = False
     else:
         train_data = TensorDataset(torch.as_tensor(trX))
         valid_data = TensorDataset(torch.as_tensor(eval_dataset))
