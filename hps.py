@@ -75,7 +75,7 @@ celebahq.dataset = 'celebahq'
 HPARAMS_REGISTRY['celebahq'] = celebahq
 
 i256 = Hyperparams()
-i256.update(i256)
+i256.update(ffhq_256)
 i256.dataset = 'i256'
 HPARAMS_REGISTRY['i256'] = i256
 
