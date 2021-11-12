@@ -49,7 +49,7 @@ def update_latent_cov(means_dict, stat_dict, current_stats, n, block_pairs, keys
 
     for i, j in block_pairs:
         for k in keys:
-            x = deviations[f"{k}_{i}"] * deviations[f"{k}_{j}"]
+            x = np.outer(deviations[f"{k}_{i}"], deviations[f"{k}_{j}"])
             if n == 0:
                 stat_dict[f"{k}_{i}_{j}"] = x
             else:
