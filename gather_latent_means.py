@@ -30,30 +30,26 @@ def update_running_mean(current_mean, new_value, n):
 
 def update_latent_means(stat_dict, block_stats, i, block_idx, n):
     factor = n + 1
-    qm = block_stats["qm"][i]
-    pm = block_stats["pm"][i]
-    qstd = torch.exp(block_stats["qv"][i])
-    pstd = torch.exp(block_stats["pv"][i])
-    qv = torch.pow(qstd, 2)
-    pv = torch.pow(pstd, 2)
+    qm = block_stats["qm"][i].cpu().numpy()
+    pm = block_stats["pm"][i].cpu().numpy()
+    qstd = torch.exp(block_stats["qv"][i]).cpu().numpy()
+    pstd = torch.exp(block_stats["pv"][i]).cpu().numpy()
+    qv = np.power(qstd, 2).cpu().numpy()
+    pv = np.power(pstd, 2).cpu().numpy()
     if n == 0:
-        return {
-            f"qv_{block_idx}": qv,
-            f"pv_{block_idx}": pv,
-            f"qstd_{block_idx}": qstd,
-            f"pstd_{block_idx}": pstd,
-            f"qm_{block_idx}": qm,
-            f"pm_{block_idx}": pm,
-        }
+        stat_dict[f"qv_{block_idx}"] = qv
+        stat_dict[f"pv_{block_idx}"] = pv
+        stat_dict[f"qstd_{block_idx}"] = qstd
+        stat_dict[f"pstd_{block_idx}"] = pstd
+        stat_dict[f"qm_{block_idx}"] = qm
+        stat_dict[f"pm_{block_idx}"] = pm
     else:
-        return {
-            f"qv_{block_idx}": update_running_mean(stat_dict[f"qv_{block_idx}"], qv, n),
-            f"pv_{block_idx}": update_running_mean(stat_dict[f"pv_{block_idx}"], pv, n),
-            f"qstd_{block_idx}": update_running_mean(stat_dict[f"qstd_{block_idx}"], qstd, n),
-            f"pstd_{block_idx}": update_running_mean(stat_dict[f"pstd_{block_idx}"], pstd, n),
-            f"qm_{block_idx}": update_running_mean(stat_dict[f"qm_{block_idx}"], qm, n),
-            f"pm_{block_idx}": update_running_mean(stat_dict[f"pm_{block_idx}"], pm, n),
-        }
+        stat_dict[f"qv_{block_idx}"] = update_running_mean(stat_dict[f"qv_{block_idx}"], qv, n)
+        stat_dict[f"pv_{block_idx}"] = update_running_mean(stat_dict[f"pv_{block_idx}"], pv, n)
+        stat_dict[f"qstd_{block_idx}"] = update_running_mean(stat_dict[f"qstd_{block_idx}"], qstd, n)
+        stat_dict[f"pstd_{block_idx}"] = update_running_mean(stat_dict[f"pstd_{block_idx}"], pstd, n)
+        stat_dict[f"qm_{block_idx}"] = update_running_mean(stat_dict[f"qm_{block_idx}"], qm, n)
+        stat_dict[f"pm_{block_idx}"] = update_running_mean(stat_dict[f"pm_{block_idx}"], pm, n)
 
 
 def get_stats(H, ema_vae, data_valid, preprocess_fn):
@@ -74,7 +70,7 @@ def get_stats(H, ema_vae, data_valid, preprocess_fn):
                 else:
                     idx += 1
                 for block_idx, block_stats in enumerate(stats):
-                    stat_dict = update_latent_means(stat_dict, block_stats, i, block_idx, n)
+                    update_latent_means(stat_dict, block_stats, i, block_idx, n)
                 n += 1
         if H.n is not None and n >= H.n:
             break
