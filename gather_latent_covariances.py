@@ -35,8 +35,8 @@ def get_current_stats(stats, i):
         current_stats[f"pm_{block_idx}"] = block_stats["pm"][i].cpu().numpy()
         current_stats[f"qstd_{block_idx}"] = torch.exp(block_stats["qv"][i]).cpu().numpy()
         current_stats[f"pstd_{block_idx}"] = torch.exp(block_stats["pv"][i]).cpu().numpy()
-        current_stats[f"qv_{block_idx}"] = np.power(current_stats["qstd"], 2)
-        current_stats[f"pv_{block_idx}"] = np.power(current_stats["pstd"], 2)
+        current_stats[f"qv_{block_idx}"] = np.power(current_stats[f"qstd_{block_idx}"], 2)
+        current_stats[f"pv_{block_idx}"] = np.power(current_stats[f"pstd_{block_idx}"], 2)
     return current_stats
 
 
