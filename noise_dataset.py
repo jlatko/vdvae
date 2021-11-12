@@ -26,13 +26,9 @@ class NoiseDataset(Dataset):
         return self.length
 
     def __getitem__(self, idx):
-        if torch.is_tensor(idx):
-            n = len(idx)
-        else:
-            n = 1
-        shape = (n, self.resolution, self.resolution, self.channels)
+        shape = (self.resolution, self.resolution, self.channels)
 
-        if self.noise_type == "guassian":
+        if self.noise_type == "gaussian":
             X = torch.randn(shape)
         elif self.noise_type == "uniform":
             X = torch.rand(shape) * 2 - 1
