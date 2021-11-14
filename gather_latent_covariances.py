@@ -94,13 +94,14 @@ def get_stats(H, ema_vae, data_valid, preprocess_fn):
                 n += 1
         if H.n is not None and n >= H.n:
             break
-    np.savez(os.path.join(H.destination_dir, f"{H.dataset}_latent_cov.npz"), **stat_dict)
+    np.savez(os.path.join(H.destination_dir, f"{H.dataset}_{H.file_name}.npz"), **stat_dict)
     # all_stats = pd.DataFrame(all_stats)
     # all_stats.to_pickle(os.path.join(H.destination_dir, f"{H.dataset}_latent_stats.pkl"))
 
 def add_params(parser):
     parser.add_argument('--destination_dir', type=str, default='/scratch/s193223/vdvae/latent_stats/')
     parser.add_argument('--means_dir', type=str, default=None)
+    parser.add_argument('--file_name', type=str, default='latent_cov')
     parser.add_argument('--use_train', dest='use_train', action='store_true')
     parser.add_argument('-n', type=int, default=None)
 

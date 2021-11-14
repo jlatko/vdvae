@@ -83,11 +83,12 @@ def get_stats(H, ema_vae, data_valid, preprocess_fn):
         if H.n is not None and len(all_stats) >= H.n:
             break
     all_stats = pd.DataFrame(all_stats)
-    all_stats.to_pickle(os.path.join(H.destination_dir, f"{H.dataset}_latent_stats.pkl"))
+    all_stats.to_pickle(os.path.join(H.destination_dir, f"{H.dataset}_{H.file_name}.pkl"))
 
 def add_params(parser):
     parser.add_argument('--destination_dir', type=str, default='/scratch/s193223/vdvae/latent_stats/')
     parser.add_argument('--use_train', dest='use_train', action='store_true')
+    parser.add_argument('--file_name', type=str, default='latent_stats')
     parser.add_argument('-n', type=int, default=None)
 
     return parser
