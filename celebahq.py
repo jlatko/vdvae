@@ -10,7 +10,7 @@ CELEBAHQ_DIR = "/scratch/s193223/celebahq2/CelebAMask-HQ/"
 class CelebAHQDataset(Dataset):
     """Face Landmarks dataset."""
 
-    def __init__(self, root_dir=CELEBAHQ_DIR, train=True, transform=None, resolution=256):
+    def __init__(self, root_dir=CELEBAHQ_DIR, train=True, transform=None, splits=None, resolution=256):
         """
         Args:
             root_dir (string): Directory with all the images.
@@ -32,7 +32,11 @@ class CelebAHQDataset(Dataset):
             True: [0],
             False: [1,2,3]
         }
-        self.metadata = self.metadata[self.metadata.split.isin(self.split_mapping[train])]
+        if splits is None:
+            splits = self.split_mapping[train]
+        if isinstance(splits, str):
+            splits = [int(x) for x in splits.split(',')]
+        self.metadata = self.metadata[self.metadata.split.isin(splits)]
 
     def __len__(self):
         return len(self.metadata)

@@ -100,8 +100,8 @@ def set_up_data(H):
         valid_data = ImageFolder(eval_dataset, transforms.ToTensor())
         untranspose = True
     elif H.dataset == 'celebahq':
-        train_data = CelebAHQDataset(root_dir=H.data_root,  train=True, transform=transforms.ToTensor())
-        valid_data = CelebAHQDataset(root_dir=H.data_root, train=False, transform=transforms.ToTensor())
+        train_data = CelebAHQDataset(root_dir=H.data_root,  train=True, transform=transforms.ToTensor(), splits=H.train_splits)
+        valid_data = CelebAHQDataset(root_dir=H.data_root, train=False, transform=transforms.ToTensor(), splits=H.val_splits)
         untranspose = True
     elif H.dataset == 'i256':
         train_data = ImageNet256Dataset(transform=transforms.Compose([

@@ -177,5 +177,10 @@ def add_vae_arguments(parser):
     parser.add_argument('--num_variables_visualize', type=int, default=6)
     parser.add_argument('--num_temperatures_visualize', type=int, default=3)
 
+    # only for CELEBAHQ
+    parser.add_argument('--train_splits', type=str, default=None)
+    parser.add_argument('--val_splits', type=str, default=None)
+
+
     parser.add_argument('--run_name', type=str, default=None)
     return parser
