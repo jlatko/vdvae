@@ -28,6 +28,11 @@ def all_finite(stats):
 def update_running_mean(current_mean, new_value, n):
     return current_mean + (new_value - current_mean) / (n + 1)
 
+def get_other_stats(block_stats, qm, pm, qstd, pstd, qv, pv, i):
+    other_stats = {}
+    other_stats["kl"] = block_stats["kl"][i].cpu().numpy()
+    return other_stats
+
 def update_latent_means(stat_dict, block_stats, i, block_idx, n):
     qm = block_stats["qm"][i].cpu().numpy()
     pm = block_stats["pm"][i].cpu().numpy()
@@ -35,6 +40,7 @@ def update_latent_means(stat_dict, block_stats, i, block_idx, n):
     pstd = torch.exp(block_stats["pv"][i]).cpu().numpy()
     qv = np.power(qstd, 2)
     pv = np.power(pstd, 2)
+    other_stats = get_other_stats(block_stats, qm, pm, qstd, pstd, qv, pv, i)
     if n == 0:
         stat_dict[f"qv_{block_idx}"] = qv
         stat_dict[f"pv_{block_idx}"] = pv
@@ -42,6 +48,8 @@ def update_latent_means(stat_dict, block_stats, i, block_idx, n):
         stat_dict[f"pstd_{block_idx}"] = pstd
         stat_dict[f"qm_{block_idx}"] = qm
         stat_dict[f"pm_{block_idx}"] = pm
+        for k, v in other_stats:
+            stat_dict[f"{k}_{block_idx}"] = v
     else:
         stat_dict[f"qv_{block_idx}"] = update_running_mean(stat_dict[f"qv_{block_idx}"], qv, n)
         stat_dict[f"pv_{block_idx}"] = update_running_mean(stat_dict[f"pv_{block_idx}"], pv, n)
@@ -49,6 +57,9 @@ def update_latent_means(stat_dict, block_stats, i, block_idx, n):
         stat_dict[f"pstd_{block_idx}"] = update_running_mean(stat_dict[f"pstd_{block_idx}"], pstd, n)
         stat_dict[f"qm_{block_idx}"] = update_running_mean(stat_dict[f"qm_{block_idx}"], qm, n)
         stat_dict[f"pm_{block_idx}"] = update_running_mean(stat_dict[f"pm_{block_idx}"], pm, n)
+        for k, v in other_stats:
+            stat_dict[f"{k}_{block_idx}"] = update_running_mean(stat_dict[f"{k}_{block_idx}"], v, n)
+
 
 
 def get_stats(H, ema_vae, data_valid, preprocess_fn):

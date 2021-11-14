@@ -83,12 +83,12 @@ def get_stats(H, ema_vae, data_valid, preprocess_fn):
                 #       + [(i, 20) for i in range(t)] \
                 #       + [(i, 43) for i in range(t)] \
                 #       + [(43, 43), (20, 20), (20, 43)]
-                # keys = ["qm", "pm", "qstd", "pstd", "qv", "pv"]
                 layers = [1,2, 3, 4, 20, 24, 40]
                 block_pairs = \
                     list(itertools.combinations(layers, 2)) \
                       + [(i, i) for i in layers]
-                keys = ["qv", "pv"]
+                # keys = ["qv", "pv"]
+                keys = ["qm", "pm", "qstd", "pstd", "qv", "pv"]
 
                 update_latent_cov(means_dict, stat_dict, current_stats, n, block_pairs, keys)
                 n += 1
