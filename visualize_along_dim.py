@@ -77,8 +77,6 @@ def get_direction(H, dims, l, dim_i):
 
     return direction
 
-def interpolate_row():
-
 
 def dim_manipulation(H, ema_vae, latent_ids, metadata, dims, dim_i=0, i=0):
     with torch.no_grad():
