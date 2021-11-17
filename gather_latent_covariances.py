@@ -75,9 +75,8 @@ def get_kl_cutoff_mask(means_dict, cutoff):
 def update_means_dict(means_dict, cutoff_masks):
     new_dict = {}
     for k in means_dict:
-        if "kl" in k:
-            i = k.split("_")[-1]
-            new_dict[k] = means_dict[k][cutoff_masks[f"mask_{i}"]]
+        i = k.split("_")[-1]
+        new_dict[k] = means_dict[k][cutoff_masks[f"mask_{i}"]]
     return new_dict
 
 def get_stats(H, ema_vae, data_valid, preprocess_fn):
