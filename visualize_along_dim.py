@@ -101,7 +101,7 @@ def dim_manipulation(H, ema_vae, latent_ids, metadata, dims, dim_i=0, i=0):
         # }
 
         batches = []
-        layers = [dims["l1"], dims["l1"]]
+        layers = [dims["l1"], dims["l2"]]
         for l_ind in layers:
             torch.random.manual_seed(0)
 
@@ -130,7 +130,7 @@ def dim_manipulation(H, ema_vae, latent_ids, metadata, dims, dim_i=0, i=0):
 
         fname = os.path.join(wandb.run.dir, f"{name_key}{idx}.png")
         imageio.imwrite(fname, im)
-        wandb.log({f"{name_key}": wandb.Image(im, caption=f"{name_key}{idx}")})
+        wandb.log({f"{name_key}_{idx}": wandb.Image(im, caption=f"{name_key}_{dim_i}_{idx}")})
 
 
 def init_wandb(H):
