@@ -107,7 +107,7 @@ def dim_manipulation(H, ema_vae, latent_ids, metadata, dims, dim_i=0, i=0):
 
             zs_current = copy(zs)
 
-            direction = get_direction(H, dims, l, dim_i)
+            direction = get_direction(H, dims, l_ind, dim_i)
 
             for a in np.linspace(-1, 1, H.n_steps):
                 zs_current[l_ind] = zs[l_ind] + a * direction
