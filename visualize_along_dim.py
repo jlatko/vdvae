@@ -78,7 +78,7 @@ def get_direction(H, dims, l, dim_i):
     return direction
 
 
-def dim_manipulation(H, ema_vae, latent_ids, metadata, dims, dim_i=0, i=0):
+def dim_manipulation(H, ema_vae, latent_ids, metadata, dims, i=0):
     with torch.no_grad():
 
         idx = metadata.iloc[i].idx
@@ -171,7 +171,7 @@ def main():
 
 
     for i in range(H.n_samples):
-        dim_manipulation(H, ema_vae=ema_vae, latent_ids=latent_ids, dims=dims, dim_i=dim_i, i=i, metadata=data_valid_or_test.metadata)
+        dim_manipulation(H, ema_vae=ema_vae, latent_ids=latent_ids, dims=dims, i=i, metadata=data_valid_or_test.metadata)
 
 if __name__ == "__main__":
     main()
