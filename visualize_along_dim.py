@@ -99,27 +99,28 @@ def dim_manipulation(H, ema_vae, latent_ids, metadata, dims, dim_i=0, i=0):
         #     "total_explained_1": pca.tot_explained1,
         #     "total_explained_2": pca.tot_explained2,
         # }
-
         batches = []
-        layers = [dims["l1"], dims["l2"]]
-        for l_ind in layers:
-            torch.random.manual_seed(0)
+        for dim_i in range(H.n_dim):
 
-            zs_current = copy(zs)
+            layers = [dims["l1"], dims["l2"]]
+            for l_ind in layers:
+                torch.random.manual_seed(0)
 
-            direction = get_direction(H, dims, l_ind, dim_i)
+                zs_current = copy(zs)
 
-            for a in np.linspace(-1, 1, H.n_steps):
-                zs_current[l_ind] = zs[l_ind] + a * direction
-                if H.fixed:
-                    img = ema_vae.forward_samples_set_latents(1, zs_current, t=H.temp)
-                else:
-                    img = ema_vae.forward_samples_set_latents(1, zs_current[:l_ind+1], t=H.temp)
+                direction = get_direction(H, dims, l_ind, dim_i)
 
-                img = resize(img, size=(H.size, H.size))
-                batches.append(img)
+                for a in np.linspace(-1, 1, H.n_steps):
+                    zs_current[l_ind] = zs[l_ind] + a * direction
+                    if H.fixed:
+                        img = ema_vae.forward_samples_set_latents(1, zs_current, t=H.temp)
+                    else:
+                        img = ema_vae.forward_samples_set_latents(1, zs_current[:l_ind+1], t=H.temp)
 
-        n_rows = 2
+                    img = resize(img, size=(H.size, H.size))
+                    batches.append(img)
+
+        n_rows = 2 * H.n_dim
         im = np.concatenate(batches, axis=0).reshape((n_rows,  H.n_steps, H.size, H.size, 3)).transpose(
             [0, 2, 1, 3, 4]).reshape([n_rows * H.size, H.size * H.n_steps, 3])
 
@@ -130,7 +131,7 @@ def dim_manipulation(H, ema_vae, latent_ids, metadata, dims, dim_i=0, i=0):
 
         fname = os.path.join(wandb.run.dir, f"{name_key}{idx}.png")
         imageio.imwrite(fname, im)
-        wandb.log({f"{name_key}_{idx}": wandb.Image(im, caption=f"{name_key}_{dim_i}_{idx}")})
+        wandb.log({f"{name_key}": wandb.Image(im, caption=f"{name_key}_{idx}")})
 
 
 def init_wandb(H):
@@ -170,8 +171,7 @@ def main():
 
 
     for i in range(H.n_samples):
-        for dim_i in range(H.n_dim):
-            dim_manipulation(H, ema_vae=ema_vae, latent_ids=latent_ids, dims=dims, dim_i=dim_i, i=i, metadata=data_valid_or_test.metadata)
+        dim_manipulation(H, ema_vae=ema_vae, latent_ids=latent_ids, dims=dims, dim_i=dim_i, i=i, metadata=data_valid_or_test.metadata)
 
 if __name__ == "__main__":
     main()
