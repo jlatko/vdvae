@@ -124,6 +124,9 @@ def dim_manipulation(H, ema_vae, latent_ids, metadata, dims, i=0):
         im = np.concatenate(batches, axis=0).reshape((n_rows,  H.n_steps, H.size, H.size, 3)).transpose(
             [0, 2, 1, 3, 4]).reshape([n_rows * H.size, H.size * H.n_steps, 3])
 
+        # add lines
+        for j in range(1, H.n_dim):
+            im[j*2*H.size - 2 : j*2*H.size + 2] = 0
 
         name_key = f"{layers[0]}x{layers[1]}_t{str(H.temp).replace('.','_')}_"
         if H.fixed:
