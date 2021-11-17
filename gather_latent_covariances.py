@@ -38,12 +38,12 @@ def get_current_stats(stats, i, cutoff_masks=None):
         current_stats[f"qv_{block_idx}"] = np.power(current_stats[f"qstd_{block_idx}"], 2).reshape(-1)
         current_stats[f"pv_{block_idx}"] = np.power(current_stats[f"pstd_{block_idx}"], 2).reshape(-1)
         if cutoff_masks is not None:
-            current_stats[f"qm_{block_idx}"] = current_stats[f"qm_{block_idx}"][cutoff_masks[f"mask_{i}"]]
-            current_stats[f"pm_{block_idx}"] = current_stats[f"pm_{block_idx}"][cutoff_masks[f"mask_{i}"]]
-            current_stats[f"qstd_{block_idx}"] = current_stats[f"qstd_{block_idx}"][cutoff_masks[f"mask_{i}"]]
-            current_stats[f"pstd_{block_idx}"] = current_stats[f"pstd_{block_idx}"][cutoff_masks[f"mask_{i}"]]
-            current_stats[f"qv_{block_idx}"] = current_stats[f"qv_{block_idx}"][cutoff_masks[f"mask_{i}"]]
-            current_stats[f"pv_{block_idx}"] = current_stats[f"pv_{block_idx}"][cutoff_masks[f"mask_{i}"]]
+            current_stats[f"qm_{block_idx}"] = current_stats[f"qm_{block_idx}"][cutoff_masks[f"mask_{block_idx}"]]
+            current_stats[f"pm_{block_idx}"] = current_stats[f"pm_{block_idx}"][cutoff_masks[f"mask_{block_idx}"]]
+            current_stats[f"qstd_{block_idx}"] = current_stats[f"qstd_{block_idx}"][cutoff_masks[f"mask_{block_idx}"]]
+            current_stats[f"pstd_{block_idx}"] = current_stats[f"pstd_{block_idx}"][cutoff_masks[f"mask_{block_idx}"]]
+            current_stats[f"qv_{block_idx}"] = current_stats[f"qv_{block_idx}"][cutoff_masks[f"mask_{block_idx}"]]
+            current_stats[f"pv_{block_idx}"] = current_stats[f"pv_{block_idx}"][cutoff_masks[f"mask_{block_idx}"]]
 
     return current_stats
 
