@@ -69,7 +69,7 @@ def get_kl_cutoff_mask(means_dict, cutoff):
         if "kl" in k:
             i = k.split("_")[-1]
             cutoff_masks[f"mask_{i}"] = means_dict[k].reshape(-1) > cutoff
-    return cutoff
+    return cutoff_masks
 
 
 def update_means_dict(means_dict, cutoff_masks):
