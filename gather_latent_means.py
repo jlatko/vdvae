@@ -48,7 +48,7 @@ def update_latent_means(stat_dict, block_stats, i, block_idx, n):
         stat_dict[f"pstd_{block_idx}"] = pstd
         stat_dict[f"qm_{block_idx}"] = qm
         stat_dict[f"pm_{block_idx}"] = pm
-        for k, v in other_stats:
+        for k, v in other_stats.items():
             stat_dict[f"{k}_{block_idx}"] = v
     else:
         stat_dict[f"qv_{block_idx}"] = update_running_mean(stat_dict[f"qv_{block_idx}"], qv, n)
@@ -57,7 +57,7 @@ def update_latent_means(stat_dict, block_stats, i, block_idx, n):
         stat_dict[f"pstd_{block_idx}"] = update_running_mean(stat_dict[f"pstd_{block_idx}"], pstd, n)
         stat_dict[f"qm_{block_idx}"] = update_running_mean(stat_dict[f"qm_{block_idx}"], qm, n)
         stat_dict[f"pm_{block_idx}"] = update_running_mean(stat_dict[f"pm_{block_idx}"], pm, n)
-        for k, v in other_stats:
+        for k, v in other_stats.items():
             stat_dict[f"{k}_{block_idx}"] = update_running_mean(stat_dict[f"{k}_{block_idx}"], v, n)
 
 
