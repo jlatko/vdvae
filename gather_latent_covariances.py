@@ -28,22 +28,30 @@ def all_finite(stats):
 def update_running_covariance(current_mean, new_value, n):
     return current_mean + (new_value - current_mean) / (n + 1)
 
-def get_current_stats(stats, i, cutoff_masks=None):
+def get_current_stats(stats, i, cutoff_masks=None, pca=None):
     current_stats = {}
     for block_idx, block_stats in enumerate(stats):
-        current_stats[f"qm_{block_idx}"] = block_stats["qm"][i].cpu().numpy().reshape(-1)
-        current_stats[f"pm_{block_idx}"] = block_stats["pm"][i].cpu().numpy().reshape(-1)
-        current_stats[f"qstd_{block_idx}"] = torch.exp(block_stats["qv"][i]).cpu().numpy().reshape(-1)
-        current_stats[f"pstd_{block_idx}"] = torch.exp(block_stats["pv"][i]).cpu().numpy().reshape(-1)
+        qm = block_stats["qm"][i].cpu().numpy().reshape(-1)
+        pm = block_stats["pm"][i].cpu().numpy().reshape(-1)
+        qstd = torch.exp(block_stats["qv"][i]).cpu().numpy().reshape(-1)
+        pstd = torch.exp(block_stats["pv"][i]).cpu().numpy().reshape(-1)
+        if cutoff_masks is not None:
+            qm = qm[cutoff_masks[f"mask_{block_idx}"]]
+            pm = pm[cutoff_masks[f"mask_{block_idx}"]]
+            qstd = qstd[cutoff_masks[f"mask_{block_idx}"]]
+            pstd = pstd[cutoff_masks[f"mask_{block_idx}"]]
+        if pca is not None: # TODO: do pca ?
+            qm = qm @ pca[block_idx]
+            pm = pm @ pca[block_idx]
+            qstd = qstd @ pca[block_idx]
+            pstd = pstd @ pca[block_idx]
+
+        current_stats[f"qm_{block_idx}"] = qm
+        current_stats[f"pm_{block_idx}"] = pm
+        current_stats[f"qstd_{block_idx}"] = qstd
+        current_stats[f"pstd_{block_idx}"] = pstd
         current_stats[f"qv_{block_idx}"] = np.power(current_stats[f"qstd_{block_idx}"], 2).reshape(-1)
         current_stats[f"pv_{block_idx}"] = np.power(current_stats[f"pstd_{block_idx}"], 2).reshape(-1)
-        if cutoff_masks is not None:
-            current_stats[f"qm_{block_idx}"] = current_stats[f"qm_{block_idx}"][cutoff_masks[f"mask_{block_idx}"]]
-            current_stats[f"pm_{block_idx}"] = current_stats[f"pm_{block_idx}"][cutoff_masks[f"mask_{block_idx}"]]
-            current_stats[f"qstd_{block_idx}"] = current_stats[f"qstd_{block_idx}"][cutoff_masks[f"mask_{block_idx}"]]
-            current_stats[f"pstd_{block_idx}"] = current_stats[f"pstd_{block_idx}"][cutoff_masks[f"mask_{block_idx}"]]
-            current_stats[f"qv_{block_idx}"] = current_stats[f"qv_{block_idx}"][cutoff_masks[f"mask_{block_idx}"]]
-            current_stats[f"pv_{block_idx}"] = current_stats[f"pv_{block_idx}"][cutoff_masks[f"mask_{block_idx}"]]
 
     return current_stats
 
@@ -104,18 +112,29 @@ def get_stats(H, ema_vae, data_valid, preprocess_fn):
             for i in range(data_input.shape[0]):
                 current_stats = get_current_stats(stats, i, cutoff_masks)
 
-                # t = 5
-                # block_pairs = \
-                #     list(itertools.combinations(range(t), 2)) \
-                #       + [(i, i) for i in range(t)] \
-                #       + [(i, 20) for i in range(t)] \
-                #       + [(i, 43) for i in range(t)] \
-                #       + [(43, 43), (20, 20), (20, 43)]
-                layers = [1,2, 3, 4, 20, 24, 40]
-                block_pairs = \
-                    list(itertools.combinations(layers, 2)) \
-                      + [(i, i) for i in layers]
-                # keys = ["qv", "pv"]
+                if H.layers_set == "small":
+                    layers = [1,2, 3, 4, 20, 24]
+                    block_pairs = \
+                        list(itertools.combinations(layers, 2)) \
+                          + [(i, i) for i in layers]
+
+                elif H.layers_set == "mid":
+                    layers = [1, 2, 3, 4, 5, 6, 8, 10, 20, 24, 30, 40]
+                    block_pairs = \
+                        list(itertools.combinations(layers, 2)) \
+                        + [(i, i) for i in layers]
+
+                elif H.layers_set == "in_layer_small":
+                    layers = list(range(20)) + [24, 30, 40]
+                    block_pairs = [(i, i) for i in layers]
+
+                elif H.layers_set == "in_layer":
+                    layers = list(range(66))
+                    block_pairs = [(i, i) for i in layers]
+
+                else:
+                    raise ValueError(f"layers set {H.layers_set} unknown")
+
                 keys = ["qm", "pm", "qstd", "pstd", "qv", "pv"]
 
                 update_latent_cov(means_dict, stat_dict, current_stats, n, block_pairs, keys)
@@ -124,17 +143,19 @@ def get_stats(H, ema_vae, data_valid, preprocess_fn):
             break
     if cutoff_masks is not None:
         stat_dict.update(cutoff_masks)
-    np.savez(os.path.join(H.destination_dir, f"{H.dataset}_{H.file_name}.npz"), **stat_dict)
+    np.savez(os.path.join(H.destination_dir, f"{H.dataset}_{H.file_name}_{H.layers_set}.npz"), **stat_dict)
     # all_stats = pd.DataFrame(all_stats)
     # all_stats.to_pickle(os.path.join(H.destination_dir, f"{H.dataset}_latent_stats.pkl"))
 
 def add_params(parser):
     parser.add_argument('--destination_dir', type=str, default='/scratch/s193223/vdvae/latent_stats/')
+    parser.add_argument('--pca_path', type=str, default=None)
     parser.add_argument('--means_dir', type=str, default=None)
     parser.add_argument('--file_name', type=str, default='latent_cov')
     parser.add_argument('--use_train', dest='use_train', action='store_true')
     parser.add_argument('-n', type=int, default=None)
     parser.add_argument('--kl_cutoff', type=float, default=None)
+    parser.add_argument('--layers_set', type=float, default="small")
 
     return parser
 
