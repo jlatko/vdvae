@@ -151,11 +151,11 @@ def plot_metrics(dims):
     for i in range(l):
         for k in dims["keys"]:
             wandb.log({
-                f"{k}_explained_var": dims[f"{k}_explained_var"][i],
-                f"{k}_explained_var1": dims[f"{k}_explained_var1"][i],
-                f"{k}_explained_var2": dims[f"{k}_explained_var2"][i],
-                f"{k}_covariance_12": dims[f"{k}_covariance_12"][i],
-                f"{k}_correlation_12": dims[f"{k}_correlation_12"][i],
+                f"{k}_explained_var": dims[f"{k}_explained_var"][i].item(),
+                f"{k}_explained_var1": dims[f"{k}_explained_var1"][i].item(),
+                f"{k}_explained_var2": dims[f"{k}_explained_var2"][i].item(),
+                f"{k}_covariance_12": dims[f"{k}_covariance_12"][i].item(),
+                f"{k}_correlation_12": dims[f"{k}_correlation_12"][i].item(),
             }, step=i)
 
 def main():
