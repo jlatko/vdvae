@@ -152,11 +152,11 @@ def plot_metrics(dims):
         for k in dims["keys"]:
             wandb.log({
                 f"{k}_explained_var": dims[f"{k}_explained_var"],
-                f"{k}_explained_var1": dims[f"{k}_explained_var1"],
-                f"{k}_explained_var2": dims[f"{k}_explained_var2"],
-                f"{k}_covariance_12": dims[f"{k}_covariance_12"],
+                # f"{k}_explained_var1": dims[f"{k}_explained_var1"],
+                # f"{k}_explained_var2": dims[f"{k}_explained_var2"],
+                # f"{k}_covariance_12": dims[f"{k}_covariance_12"],
                 f"{k}_correlation_12": dims[f"{k}_correlation_12"],
-            })
+            }, step=i)
 
 def main():
     H, logprint = set_up_hyperparams(extra_args_fn=add_params)
