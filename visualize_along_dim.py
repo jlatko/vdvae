@@ -83,22 +83,7 @@ def dim_manipulation(H, ema_vae, latent_ids, metadata, dims, i=0):
 
         idx = metadata.iloc[i].idx
         zs = get_zs_for_idx(H, idx, latent_ids)
-        sample_meta = metadata.set_index("idx").loc[idx]
 
-        # data = {
-        #     f"d_{l1}": pca.M1(),
-        #     f"d_{l2}": pca.M2(),
-        #     f"mask_{l1}": cov[f"mask_{l1}"],
-        #     f"mask_{l2}": cov[f"mask_{l2}"],
-        #     f"l1": l1,
-        #     f"l2": l2,
-        #     f"n1": n1,
-        #     f"n2": n2,
-        #     f"n3": n3,
-        #     "total_explained": pca.tot_explained,
-        #     "total_explained_1": pca.tot_explained1,
-        #     "total_explained_2": pca.tot_explained2,
-        # }
         batches = []
         for dim_i in range(H.n_dim):
 
@@ -141,8 +126,8 @@ def dim_manipulation(H, ema_vae, latent_ids, metadata, dims, i=0):
 
 def init_wandb(H, dims):
     tags = []
-    tags.append(dims["method"])
-    tags.append(dims["k"])
+    tags.append(dims["method"].item())
+    tags.append(dims["k"].item())
     tags.append(f'{dims["l1"]}_{dims["l2"]}')
     if H.fixed:
         tags.append("fixed")
