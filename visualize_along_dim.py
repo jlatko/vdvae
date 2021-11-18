@@ -112,9 +112,9 @@ def dim_manipulation(H, k, ema_vae, latent_ids, metadata, dims, i=0):
         # add lines
         for j in range(1, H.n_dim):
             im[j*2*H.size - 2 : j*2*H.size + 2] = 0
-            im[j*2*H.size - 2 : j*2*H.size + 2,:,0] = 1
+            im[j*2*H.size - 2 : j*2*H.size + 2,:,0] = 150
 
-        name_key = f"{layers[0]}x{layers[1]}_t{str(H.temp).replace('.','_')}_"
+        name_key = f"{k}_{layers[0]}x{layers[1]}_t{str(H.temp).replace('.','_')}_"
         if H.fixed:
             name_key += "fixed_"
 
