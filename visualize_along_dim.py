@@ -26,10 +26,10 @@ def add_params(parser):
     parser.add_argument('--latent_dim_file', type=str, default=None)
     parser.add_argument('--norm', type=str, default="pixel", help="none|channel|pixel")
     parser.add_argument('--n_samples', type=int, default=1)
-    parser.add_argument('--n_dim', type=int, default=8)
+    parser.add_argument('--n_dim', type=int, default=6)
     parser.add_argument('--size', type=int, default=128)
-    parser.add_argument('--n_steps', type=int, default=13)
-    parser.add_argument('--scale', type=float, default=1)
+    parser.add_argument('--n_steps', type=int, default=9)
+    parser.add_argument('--scale', type=float, default=0.8)
     parser.add_argument('--temp', type=float, default=0.1)
     parser.add_argument('--latent_key', type=str, default="z")
 
