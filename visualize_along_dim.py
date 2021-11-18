@@ -55,13 +55,13 @@ def scale_direction(direction, normalize=None, scale=1):
 
     return scale * direction
 
-def get_direction(H, dims, l, dim_i):
+def get_direction(H, dims, k, l, dim_i):
     # get direction
     mask = dims[f"mask_{l}"]
     s = len(mask)
     direction = np.zeros(s)
 
-    x = dims[f"d_{l}"][:,dim_i]
+    x = dims[f"{k}_d_{l}"][:,dim_i]
 
     res = np.sqrt(s /16)
     shape = (16, int(res), int(res))
@@ -78,7 +78,7 @@ def get_direction(H, dims, l, dim_i):
     return direction
 
 
-def dim_manipulation(H, ema_vae, latent_ids, metadata, dims, i=0):
+def dim_manipulation(H, k, ema_vae, latent_ids, metadata, dims, i=0):
     with torch.no_grad():
 
         idx = metadata.iloc[i].idx
@@ -93,7 +93,7 @@ def dim_manipulation(H, ema_vae, latent_ids, metadata, dims, i=0):
 
                 zs_current = copy(zs)
 
-                direction = get_direction(H, dims, l_ind, dim_i)
+                direction = get_direction(H, dims, k, l_ind, dim_i)
 
                 for a in np.linspace(-1, 1, H.n_steps):
                     zs_current[l_ind] = zs[l_ind] + a * direction
@@ -127,7 +127,6 @@ def dim_manipulation(H, ema_vae, latent_ids, metadata, dims, i=0):
 def init_wandb(H, dims):
     tags = []
     tags.append(dims["method"].item())
-    tags.append(dims["k"].item())
     tags.append(f'{dims["l1"]}_{dims["l2"]}')
     if H.fixed:
         tags.append("fixed")
@@ -148,39 +147,35 @@ def init_wandb(H, dims):
         wandb.run.name = run_name + "_" + H.latent_key +  '-' + wandb.run.name.split('-')[-1]
 
 def plot_metrics(dims):
-    explained_var = dims["explained_var"]
-    explained_var1 = dims["explained_var1"]
-    explained_var2 = dims["explained_var2"]
-    covariance_12 = dims["covariance_12"]
-    correlation_12 = dims["correlation_12"]
-    for i in range(len(explained_var)):
-        wandb.log({
-            "explained_var": explained_var[i],
-            "explained_var1": explained_var1[i],
-            "explained_var2": explained_var2[i],
-            "covariance_12": covariance_12[i],
-            "correlation_12": correlation_12[i],
-        })
+    l = len(dims[f"{dims['keys'][0]}_explained_var"])
+    for i in range(l):
+        for k in dims["keys"]:
+            wandb.log({
+                f"{k}_explained_var": dims[f"{k}_explained_var"],
+                f"{k}_explained_var1": dims[f"{k}_explained_var1"],
+                f"{k}_explained_var2": dims[f"{k}_explained_var2"],
+                f"{k}_covariance_12": dims[f"{k}_covariance_12"],
+                f"{k}_correlation_12": dims[f"{k}_correlation_12"],
+            })
 
 def main():
     H, logprint = set_up_hyperparams(extra_args_fn=add_params)
     assert H.latent_dim_file is not None
 
     H, data_train, data_valid_or_test, preprocess_fn = set_up_data(H)
-
-
-    latent_ids = get_available_latents(H.latents_dir)
     vae, ema_vae = load_vaes(H, logprint)
+
     dims = np.load(H.latent_dim_file)
 
     init_wandb(H, dims)
-
-
     wandb.config.update(H)
 
+    plot_metrics(dims)
 
+    latent_ids = get_available_latents(H.latents_dir)
     for i in range(H.n_samples):
-        dim_manipulation(H, ema_vae=ema_vae, latent_ids=latent_ids, dims=dims, i=i, metadata=data_valid_or_test.metadata)
+        for k in dims["keys"]:
+            dim_manipulation(H, k=k, ema_vae=ema_vae, latent_ids=latent_ids, dims=dims, i=i, metadata=data_valid_or_test.metadata)
 
 if __name__ == "__main__":
     main()
