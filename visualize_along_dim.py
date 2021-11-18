@@ -127,18 +127,23 @@ def dim_manipulation(H, ema_vae, latent_ids, metadata, dims, i=0):
         # add lines
         for j in range(1, H.n_dim):
             im[j*2*H.size - 2 : j*2*H.size + 2] = 0
+            im[j*2*H.size - 2 : j*2*H.size + 2,:,0] = 1
 
         name_key = f"{layers[0]}x{layers[1]}_t{str(H.temp).replace('.','_')}_"
         if H.fixed:
             name_key += "fixed_"
+
 
         fname = os.path.join(wandb.run.dir, f"{name_key}{idx}.png")
         imageio.imwrite(fname, im)
         wandb.log({f"{name_key}": wandb.Image(im, caption=f"{name_key}_{idx}")})
 
 
-def init_wandb(H):
+def init_wandb(H, dims):
     tags = []
+    tags.append(dims["method"])
+    tags.append(dims["k"])
+    tags.append(f'{dims["l1"]}_{dims["l2"]}')
     if H.fixed:
         tags.append("fixed")
 
@@ -157,6 +162,21 @@ def init_wandb(H):
 
         wandb.run.name = run_name + "_" + H.latent_key +  '-' + wandb.run.name.split('-')[-1]
 
+def plot_metrics(dims):
+    explained_var = dims["explained_var"]
+    explained_var1 = dims["explained_var1"]
+    explained_var2 = dims["explained_var2"]
+    covariance_12 = dims["covariance_12"]
+    correlation_12 = dims["correlation_12"]
+    for i in range(len(explained_var)):
+        wandb.log({
+            "explained_var": explained_var[i],
+            "explained_var1": explained_var1[i],
+            "explained_var2": explained_var2[i],
+            "covariance_12": covariance_12[i],
+            "correlation_12": correlation_12[i],
+        })
+
 def main():
     H, logprint = set_up_hyperparams(extra_args_fn=add_params)
     assert H.latent_dim_file is not None
@@ -168,7 +188,8 @@ def main():
     vae, ema_vae = load_vaes(H, logprint)
     dims = np.load(H.latent_dim_file)
 
-    init_wandb(H)
+    init_wandb(H, dims)
+
 
     wandb.config.update(H)
 
