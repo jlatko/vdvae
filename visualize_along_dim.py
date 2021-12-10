@@ -29,7 +29,7 @@ def add_params(parser):
     parser.add_argument('--n_dim', type=int, default=6)
     parser.add_argument('--size', type=int, default=128)
     parser.add_argument('--n_steps', type=int, default=9)
-    parser.add_argument('--scale', type=float, default=0.8)
+    parser.add_argument('--scale', type=float, default=0.95)
     parser.add_argument('--temp', type=float, default=0.1)
     parser.add_argument('--latent_key', type=str, default="z")
 

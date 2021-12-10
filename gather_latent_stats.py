@@ -33,21 +33,21 @@ def get_basic_stats(block_stats, i, block_idx):
     qv = torch.pow(qstd, 2)
     pv = torch.pow(pstd, 2)
     return {
-        f"qv_mean_{block_idx}": torch.mean(qv).cpu().numpy().astype(np.float16),
-        f"qstd_mean_{block_idx}": torch.mean(qstd).cpu().numpy().astype(np.float16),
-        f"qv_mean_squared_{block_idx}":torch.mean(torch.pow(qv, 2)).cpu().numpy().astype(np.float16),
-        f"pv_mean_{block_idx}": torch.mean(pv).cpu().numpy().astype(np.float16),
-        f"pstd_mean_{block_idx}": torch.mean(pstd).cpu().numpy().astype(np.float16),
-        f"pv_mean_squared_{block_idx}":torch.mean(torch.pow(pv, 2)).cpu().numpy().astype(np.float16),
-        f"pm_mean_squared_{block_idx}":torch.mean(torch.pow(pm, 2)).cpu().numpy().astype(np.float16),
-        f"qm_mean_squared_{block_idx}": torch.mean(torch.pow(qm, 2)).cpu().numpy().astype(np.float16),
-        f"pm_mean_abs_{block_idx}":torch.mean(torch.abs(pm)).cpu().numpy().astype(np.float16),
-        f"qm_mean_abs_{block_idx}": torch.mean(torch.abs(qm)).cpu().numpy().astype(np.float16),
-        f"mean_diff_sq_{block_idx}": np.power(qm.cpu().numpy() - pm.cpu().numpy(), 2).mean().astype(np.float16),
-        f"mean_diff_abs_{block_idx}": np.abs(qm.cpu().numpy() - pm.cpu().numpy()).mean().astype(np.float16),
-        f"var_diff_sq_{block_idx}": np.power(qv.cpu().numpy() - pv.cpu().numpy(), 2).mean().astype(np.float16),
-        f"var_diff_abs_{block_idx}": np.abs(qv.cpu().numpy() - pv.cpu().numpy()).mean().astype(np.float16),
-        f"std_diff_abs_{block_idx}": np.abs(qstd.cpu().numpy() - pstd.cpu().numpy()).mean().astype(np.float16),
+        f"qv_mean_{block_idx}": torch.mean(qv).cpu().numpy().item(),
+        f"qstd_mean_{block_idx}": torch.mean(qstd).cpu().numpy().item(),
+        f"qv_mean_squared_{block_idx}":torch.mean(torch.pow(qv, 2)).cpu().numpy().item(),
+        f"pv_mean_{block_idx}": torch.mean(pv).cpu().numpy().item(),
+        f"pstd_mean_{block_idx}": torch.mean(pstd).cpu().numpy().item(),
+        f"pv_mean_squared_{block_idx}":torch.mean(torch.pow(pv, 2)).cpu().numpy().item(),
+        f"pm_mean_squared_{block_idx}":torch.mean(torch.pow(pm, 2)).cpu().numpy().item(),
+        f"qm_mean_squared_{block_idx}": torch.mean(torch.pow(qm, 2)).cpu().numpy().item(),
+        f"pm_mean_abs_{block_idx}":torch.mean(torch.abs(pm)).cpu().numpy().item(),
+        f"qm_mean_abs_{block_idx}": torch.mean(torch.abs(qm)).cpu().numpy().item(),
+        f"mean_diff_sq_{block_idx}": np.power(qm.cpu().numpy() - pm.cpu().numpy(), 2).mean().item(),
+        f"mean_diff_abs_{block_idx}": np.abs(qm.cpu().numpy() - pm.cpu().numpy()).mean().item(),
+        f"var_diff_sq_{block_idx}": np.power(qv.cpu().numpy() - pv.cpu().numpy(), 2).mean().item(),
+        f"var_diff_abs_{block_idx}": np.abs(qv.cpu().numpy() - pv.cpu().numpy()).mean().item(),
+        f"std_diff_abs_{block_idx}": np.abs(qstd.cpu().numpy() - pstd.cpu().numpy()).mean().item(),
     }
 
 

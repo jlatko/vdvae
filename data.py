@@ -33,6 +33,12 @@ def set_up_data(H):
         H.image_channels = 3
         shift = -112.8666757481
         scale = 1. / 69.84780273
+    elif H.dataset == 'ffhq_64': # data (0,255)
+        trX, vaX, teX = ffhq64(H.data_root)
+        H.image_size = 256
+        H.image_channels = 3
+        shift = -112.8666757481
+        scale = 1. / 69.84780273
     elif H.dataset == 'celebahq': # data (0,1)
         trX, vaX, teX = celebahq(H.data_root)
         H.image_size = 256
@@ -200,6 +206,14 @@ def ffhq256(data_root):
     # we did not significantly tune hyperparameters on ffhq-256, and so simply evaluate on the test set
     return train, valid, valid
 
+def ffhq64(data_root):
+    trX = np.load(os.path.join(data_root, 'ffhq-64.npy'), mmap_mode='r')
+    np.random.seed(5)
+    tr_va_split_indices = np.random.permutation(trX.shape[0])
+    train = trX[tr_va_split_indices[:-7000]]
+    valid = trX[tr_va_split_indices[-7000:]]
+    # we did not significantly tune hyperparameters on ffhq-256, and so simply evaluate on the test set
+    return train, valid, valid
 
 def cifar10(data_root, one_hot=True):
     tr_data = [unpickle_cifar10(os.path.join(data_root, 'cifar-10-batches-py/', 'data_batch_%d' % i)) for i in range(1, 6)]
