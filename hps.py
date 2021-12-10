@@ -51,10 +51,10 @@ i64.dec_blocks = "1x2,4m1,4x3,8m4,8x7,16m8,16x15,32m16,32x31,64m32,64x12"
 i64.enc_blocks = "64x11,64d2,32x20,32d2,16x9,16d2,8x8,8d2,4x7,4d4,1x5"
 HPARAMS_REGISTRY['imagenet64'] = i64
 
-ffqh64 = Hyperparams()
-ffqh64.update(i64)
-ffqh64.dataset = 'ffqh64'
-HPARAMS_REGISTRY['ffqh64'] = ffqh64
+ffhq64 = Hyperparams()
+ffhq64.update(i64)
+ffhq64.dataset = 'ffhq64'
+HPARAMS_REGISTRY['ffhq64'] = ffqh64
 
 ffhq_256 = Hyperparams()
 ffhq_256.update(i64)
