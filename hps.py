@@ -53,7 +53,7 @@ HPARAMS_REGISTRY['imagenet64'] = i64
 
 ffhq64 = Hyperparams()
 ffhq64.update(i64)
-ffhq64.dataset = 'ffhq64'
+ffhq64.dataset = 'ffhq_64'
 HPARAMS_REGISTRY['ffhq64'] = ffhq64
 
 ffhq_256 = Hyperparams()
