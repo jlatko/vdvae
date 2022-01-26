@@ -1,24 +1,17 @@
 from copy import copy
-from time import sleep
 
 import numpy as np
 import os
 import torch
 from PIL import Image
-from torch.utils.data import DataLoader
-from torch.utils.data.distributed import DistributedSampler
-from tqdm import tqdm
 import imageio
 
-from attributes import get_attributes
 from data import set_up_data
 from latents import get_available_latents
 from train_helpers import set_up_hyperparams, load_vaes
 import wandb
 
-import torch.nn.functional as F
-
-from visualize_along_attr import get_zs_for_idx
+from visualization.visualize_along_attr import get_zs_for_idx
 
 
 def add_params(parser):
