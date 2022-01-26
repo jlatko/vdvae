@@ -41,6 +41,11 @@ i32.epochs_per_eval = 1
 i32.epochs_per_eval_save = 1
 HPARAMS_REGISTRY['imagenet32'] = i32
 
+ffhq32 = Hyperparams()
+ffhq32.update(i32)
+ffhq32.dataset = 'ffhq_32'
+HPARAMS_REGISTRY['ffhq32'] = ffhq32
+
 i64 = Hyperparams()
 i64.update(i32)
 i64.n_batch = 4
