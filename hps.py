@@ -82,6 +82,7 @@ HPARAMS_REGISTRY['ffhq256'] = ffhq_256
 celebahq = Hyperparams()
 celebahq.update(ffhq_256)
 celebahq.dataset = 'celebahq'
+celebahq.data_root = "/scratch/s193223/celebahq2/CelebAMask-HQ/"
 HPARAMS_REGISTRY['celebahq'] = celebahq
 
 i256 = Hyperparams()
