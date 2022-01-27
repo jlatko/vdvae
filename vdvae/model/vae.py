@@ -171,14 +171,14 @@ class DecBlock(nn.Module):
         return x, acts
 
     def forward(self, xs, activations, get_latents=False,
-                get_mean_var=False, decode_from_p=False):
+                get_mean_var=False, decode_from_p=False, use_mode=False):
 
         x, acts = self.get_inputs(xs, activations)
         if self.mixin is not None:
             # this is some upscaling stuff
             x = x + F.interpolate(xs[self.mixin][:, :x.shape[1], ...], scale_factor=self.base // self.mixin)
 
-        res = self.sample(x, acts, get_mean_var=get_mean_var, decode_from_p=decode_from_p)
+        res = self.sample(x, acts, get_mean_var=get_mean_var, decode_from_p=decode_from_p, use_mode=use_mode)
 
         if get_mean_var:
             z, x, kl, qm, qv, pm, pv = res
