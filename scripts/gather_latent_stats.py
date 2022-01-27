@@ -70,18 +70,47 @@ def get_basic_stats(block_stats, i, block_idx):
     }
 
 def get_losses(loss_dict, i):
-    loss_dict['LIKELIHOOD'] =  - loss_dict['distortion'][i].numpy().item()
-    loss_dict['KL'] = loss_dict['rate'][i].numpy().item()
-    loss_dict['ELBO'] =  - loss_dict['elbo'][i].numpy().item()
+    d = {}
+    d['LIKELIHOOD'] =  - loss_dict['distortion'][i].numpy().item()
+    d['KL'] = loss_dict['rate'][i].numpy().item()
+    d['ELBO'] =  - loss_dict['elbo'][i].numpy().item()
+    return d
+
+def get_decode_from_p(n_latents, k=0, semantic_k=True):
+    """
+    k semantic out
+    0 True     [False, False, False]
+    1 True     [True, False, False]
+    2 True     [True, True, False]
+    0 False    [True, True, True]
+    1 False    [False, True, True]
+    2 False    [False, False, True]
+    """
+    if semantic_k:
+        return [True] * k + [False] * (n_latents - k)
+
+    return [False] * (k + 1) + [True] * (n_latents - k - 1)
 
 def get_stats(H, ema_vae, data_valid, preprocess_fn):
     valid_sampler = DistributedSampler(data_valid, num_replicas=H.mpi_size, rank=H.rank)
     idx = -1
     all_stats = []
+    n_latents = len(ema_vae.decoder.dec_blocks)
     for x in tqdm(DataLoader(data_valid, batch_size=H.n_batch, drop_last=True, pin_memory=True, sampler=valid_sampler)):
         data_input, target = preprocess_fn(x)
         with torch.no_grad():
-            loss_dict, stats = ema_vae.forward_get_loss_and_latents(data_input, target, get_mean_var=True)
+            loss_dict, stats, act = ema_vae.forward_get_loss_and_latents(data_input, target, get_mean_var=True)
+
+            loss_dicts = {}
+            for k in H.ks:
+                decode_from_p = get_decode_from_p(n_latents, k=k)
+                # use_mode = decode_from_p # see hvae
+                loss_dict_k, _, _ = ema_vae.forward_get_loss_and_latents(data_input, target, activations=act,
+                                                                        get_mean_var=False,
+                                                                        decode_from_p=decode_from_p,
+                                                                        use_mode=False)
+                loss_dicts[k] = loss_dict_k
+
             for i in range(data_input.shape[0]):
                 stat_dict = {}
 
@@ -93,6 +122,13 @@ def get_stats(H, ema_vae, data_valid, preprocess_fn):
                 stat_dict["idx"] = idx
 
                 stat_dict.update(get_losses(loss_dict, i))
+
+                for k in H.ks:
+                    loss_dict_k = loss_dicts[k]
+                    d = get_losses(loss_dict_k, i)
+                    for key, val in d.items():
+                        stat_dict[f"{k} {key}"] = val
+                        stat_dict[f"{k} {key} RATIO"] = stat_dict[key] - val
 
                 for block_idx, block_stats in enumerate(stats):
                     # for k in keys:
@@ -114,6 +150,7 @@ def add_params(parser):
     # parser.add_argument('--destination_dir', type=str, default='/scratch/s193223/vdvae/latent_stats/')
     parser.add_argument('--use_train', dest='use_train', action='store_true')
     parser.add_argument('--file_name', type=str, default='latent_stats')
+    parser.add_argument('--ks', type=str, default='1,2,3,20,40,60')
     parser.add_argument('-n', type=int, default=None)
 
     return parser
@@ -121,7 +158,7 @@ def add_params(parser):
 def main():
     H = parse_hparams(extra_args_fn=add_params)
     setup_wandb(H)
-
+    H.ks = [int(x) for x in H.ks.split(',')]
     H.destination_dir = wandb.run.dir
     logprint = setup_parsed(H, dir=os.path.join(wandb.run.dir, 'log'))
 

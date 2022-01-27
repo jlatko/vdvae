@@ -117,21 +117,30 @@ class DecBlock(nn.Module):
         self.resnet.c4.weight.data *= np.sqrt(1 / n_blocks)
         self.z_fn = lambda x: self.z_proj(x)
 
-    def sample(self, x, acts, get_mean_var=False):
+    def sample(self, x, acts, get_mean_var=False, decode_from_p=False, use_mode=False):
         """ Computes block output using bottom up activations and q(z).
             Will sample latents from q(z). p(z) is only used for KL-div"""
         qm, qv = self.enc(torch.cat([x, acts], dim=1)).chunk(2, dim=1)
         feats = self.prior(x)
         pm, pv, xpp = feats[:, :self.zdim, ...], feats[:, self.zdim:self.zdim * 2, ...], feats[:, self.zdim * 2:, ...]
         x = x + xpp
-        # sample z from q(z)
-        z = draw_gaussian_diag_samples(qm, qv)
+        # sample z from q(z) or p(z) or use means
+        if use_mode:
+            if decode_from_p:
+                z = pm
+            else:
+                z = qm
+        else:
+            if decode_from_p:
+                z = draw_gaussian_diag_samples(pm, pv)
+            else:
+                z = draw_gaussian_diag_samples(qm, qv)
+
         kl = gaussian_analytical_kl(qm, pm, qv, pv)
         if get_mean_var:
             return z, x, kl, qm, qv, pm, pv
         else:
             return z, x, kl
-
 
     def sample_uncond(self, x, t=None, lvs=None):
         """ Computes block output without bottom up activations and skips q(z).
@@ -161,15 +170,20 @@ class DecBlock(nn.Module):
             x = x.repeat(acts.shape[0], 1, 1, 1)
         return x, acts
 
-    def forward(self, xs, activations, get_latents=False, get_mean_var=False):
+    def forward(self, xs, activations, get_latents=False,
+                get_mean_var=False, decode_from_p=False):
+
         x, acts = self.get_inputs(xs, activations)
         if self.mixin is not None:
             # this is some upscaling stuff
             x = x + F.interpolate(xs[self.mixin][:, :x.shape[1], ...], scale_factor=self.base // self.mixin)
+
+        res = self.sample(x, acts, get_mean_var=get_mean_var, decode_from_p=decode_from_p)
+
         if get_mean_var:
-            z, x, kl, qm, qv, pm, pv = self.sample(x, acts, get_mean_var=True)
+            z, x, kl, qm, qv, pm, pv = res
         else:
-            z, x, kl = self.sample(x, acts)
+            z, x, kl = res
         x = x + self.z_fn(z)
         x = self.resnet(x)
         xs[self.base] = x
@@ -220,12 +234,22 @@ class Decoder(HModule):
         self.bias = nn.Parameter(torch.zeros(1, H.width, 1, 1))
         self.final_fn = lambda x: x * self.gain + self.bias
 
-    def forward(self, activations, get_latents=False, get_mean_var=False):
+    def forward(self, activations, get_latents=False, get_mean_var=False, decode_from_p=False, use_mode=False):
         """ Will use activations and sample using q(z), p(z) will be calculated for KL."""
         stats = []
         xs = {a.shape[2]: a for a in self.bias_xs}
-        for block in self.dec_blocks:
-            xs, block_stats = block(xs, activations, get_latents=get_latents, get_mean_var=get_mean_var)
+
+        if isinstance(decode_from_p, bool):
+            decode_from_p = [decode_from_p] * len(self.dec_blocks)
+
+        if isinstance(use_mode, bool):
+            use_mode = [use_mode] * len(self.dec_blocks)
+
+        for i, block in enumerate(self.dec_blocks):
+            xs, block_stats = block(xs, activations, get_latents=get_latents,
+                                    get_mean_var=get_mean_var,
+                                    decode_from_p=decode_from_p[i],
+                                    use_mode=use_mode[i])
             stats.append(block_stats)
         xs[self.H.image_size] = self.final_fn(xs[self.H.image_size])
         return xs[self.H.image_size], stats
@@ -254,6 +278,14 @@ class Decoder(HModule):
         xs[self.H.image_size] = self.final_fn(xs[self.H.image_size])
         return xs[self.H.image_size]
 
+def get_elbo(x, distortion_per_pixel, stats):
+    rate_per_pixel = torch.zeros_like(distortion_per_pixel)
+    ndims = np.prod(x.shape[1:])
+    for statdict in stats:
+        rate_per_pixel += statdict['kl'].sum(dim=(1, 2, 3))
+    rate_per_pixel /= ndims
+    elbo = (distortion_per_pixel + rate_per_pixel)
+    return elbo, rate_per_pixel
 
 class VAE(HModule):
     def build(self):
@@ -264,25 +296,23 @@ class VAE(HModule):
         activations = self.encoder.forward(x)
         px_z, stats = self.decoder.forward(activations)
         distortion_per_pixel = self.decoder.out_net.nll(px_z, x_target)
-        rate_per_pixel = torch.zeros_like(distortion_per_pixel)
-        ndims = np.prod(x.shape[1:])
-        for statdict in stats:
-            rate_per_pixel += statdict['kl'].sum(dim=(1, 2, 3))
-        rate_per_pixel /= ndims
-        elbo = (distortion_per_pixel + rate_per_pixel).mean()
-        return dict(elbo=elbo, distortion=distortion_per_pixel.mean(), rate=rate_per_pixel.mean())
+        elbo, rate_per_pixel = get_elbo(x, distortion_per_pixel, stats)
+        return dict(elbo=elbo.mean(),
+                    distortion=distortion_per_pixel.mean(),
+                    rate=rate_per_pixel.mean())
 
-    def forward_get_loss_and_latents(self, x, x_target, get_mean_var=False):
-        activations = self.encoder.forward(x)
-        px_z, stats = self.decoder.forward(activations, get_latents=True, get_mean_var=get_mean_var)
+    def forward_get_loss_and_latents(self, x, x_target, activations=None, get_mean_var=False, decode_from_p=False, use_mode=False):
+        if activations is None:
+            activations = self.encoder.forward(x)
+
+        px_z, stats = self.decoder.forward(activations, get_latents=True, get_mean_var=get_mean_var,
+                                           decode_from_p=decode_from_p, use_mode=use_mode)
         distortion_per_pixel = self.decoder.out_net.nll(px_z, x_target)
-        rate_per_pixel = torch.zeros_like(distortion_per_pixel)
-        ndims = np.prod(x.shape[1:])
-        for statdict in stats:
-            rate_per_pixel += statdict['kl'].sum(dim=(1, 2, 3))
-        rate_per_pixel /= ndims
-        elbo = (distortion_per_pixel + rate_per_pixel).mean()
-        return dict(elbo=elbo, distortion=distortion_per_pixel.mean(), rate=rate_per_pixel.mean()), stats
+        elbo, rate_per_pixel = get_elbo(x, distortion_per_pixel, stats)
+        return dict(elbo=elbo,
+                    distortion=distortion_per_pixel,
+                    rate=rate_per_pixel
+                    ), stats, activations
 
     def forward_get_latents(self, x, get_mean_var=False):
         activations = self.encoder.forward(x)
