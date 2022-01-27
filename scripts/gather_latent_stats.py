@@ -116,14 +116,14 @@ def main():
     H = parse_hparams(extra_args_fn=add_params)
     setup_wandb(H)
 
-    if os.path.exists(H.destination_dir):
-        if len(os.listdir(H.destination_dir)) > 0:
-            print("WARNING: destination non-empty")
-            sleep(5)
-            print("continuing")
-        #     raise RuntimeError('Destination non empty')
-    else:
-        os.makedirs(H.destination_dir)
+    # if os.path.exists(H.destination_dir):
+    #     if len(os.listdir(H.destination_dir)) > 0:
+    #         print("WARNING: destination non-empty")
+    #         sleep(5)
+    #         print("continuing")
+    #     #     raise RuntimeError('Destination non empty')
+    # else:
+    #     os.makedirs(H.destination_dir)
 
     H.destination_dir = wandb.run.dir
     logprint = setup_parsed(H, dir=os.path.join(wandb.run.dir, 'log'))
