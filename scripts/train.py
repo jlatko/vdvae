@@ -165,12 +165,13 @@ def main():
         group_name = f"DDP{mpi_size()}_{H.dataset}_{time_str}"
 
     wandb.init(project='vdvae', entity='johnnysummer', dir="/scratch/s193223/wandb/", name=run_name, group=group_name)
+    H.save_dir = wandb.run.dir # ???
 
     logprint = setup_parsed(H, dir=os.path.join(wandb.run.dir, 'log'))
     H, data_train, data_valid_or_test, preprocess_fn = set_up_data(H)
+
     vae, ema_vae = load_vaes(H, logprint)
 
-    H.save_dir = wandb.run.dir # ???
     wandb.config.update(H)
     wandb.config.update({"machine": os.uname()[1]})
     wandb.save('*.png')
