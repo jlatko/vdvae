@@ -11,7 +11,7 @@ from torch.cuda.amp import autocast
 from tqdm import tqdm
 
 from data import set_up_data
-from utils import get_cpu_stats_over_ranks, mpi_size
+from utils import get_cpu_stats_over_ranks, mpi_size, mpi_rank
 from train_helpers import set_up_hyperparams, load_vaes, load_opt, accumulate_stats, save_model, update_ema, \
     parse_hparams, setup_parsed
 
@@ -153,18 +153,16 @@ def run_test_eval(H, ema_vae, data_test, preprocess_fn, logprint):
 def main():
     H = parse_hparams()
     run_name, group_name = None, None
+    time_str = datetime.now().strftime("%d_%m__%H_%M")
 
     if H.run_name is not None:
         run_name = H.run_name
-        wandb.run.save()
+    else:
+        run_name = f"DDP{mpi_size()}_{H.dataset}_{time_str}"
 
-    print(mpi_size())
-    print(H.mpi_size)
     if mpi_size() > 1:
-        time_str = datetime.now().strftime("%d_%m__%H_%M")
+        run_name += '-' + str(mpi_rank())
         group_name = f"DDP{mpi_size()}_{H.dataset}_{time_str}"
-
-    print(H.mpi_size, H.rank, run_name, group_name)
 
     wandb.init(project='vdvae', entity='johnnysummer', dir="/scratch/s193223/wandb/", name=run_name, group=group_name)
 
@@ -172,21 +170,13 @@ def main():
     H, data_train, data_valid_or_test, preprocess_fn = set_up_data(H)
     vae, ema_vae = load_vaes(H, logprint)
 
-    if H.run_name is None:
-        if mpi_size() > 1:
-            wandb.run.name = H.dataset + '-' + str(H.rank)
-        else:
-            wandb.run.name = H.dataset + '-' + wandb.run.name.split("-")[-1]
-
-
-        wandb.run.save()
-
     H.save_dir = wandb.run.dir # ???
     wandb.config.update(H)
     wandb.config.update({"machine": os.uname()[1]})
     wandb.save('*.png')
     wandb.save('*.th')
     wandb.save('*.jsonl')
+
     if H.test_eval:
         # wandb.run.tags.append("eval")
         run_test_eval(H, ema_vae, data_valid_or_test, preprocess_fn, logprint)
