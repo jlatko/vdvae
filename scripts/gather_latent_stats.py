@@ -16,7 +16,7 @@ import wandb
 
 def setup_wandb(H):
     # add tags and initialize wandb run
-    tags = ["stats"]
+    tags = ["stats", H.dataset]
 
     wandb.init(project="vdvae_analysis", entity="johnnysummer", dir='/scratch/s193223/wandb', tags=tags)
     wandb.config.update(H)
