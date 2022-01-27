@@ -105,7 +105,7 @@ def get_stats(H, ema_vae, data_valid, preprocess_fn):
     all_stats.to_pickle(os.path.join(H.destination_dir, f"{H.dataset}_{H.file_name}.pkl"))
 
 def add_params(parser):
-    parser.add_argument('--destination_dir', type=str, default='/scratch/s193223/vdvae/latent_stats/')
+    # parser.add_argument('--destination_dir', type=str, default='/scratch/s193223/vdvae/latent_stats/')
     parser.add_argument('--use_train', dest='use_train', action='store_true')
     parser.add_argument('--file_name', type=str, default='latent_stats')
     parser.add_argument('-n', type=int, default=None)
@@ -114,6 +114,7 @@ def add_params(parser):
 
 def main():
     H = parse_hparams(extra_args_fn=add_params)
+    setup_wandb(H)
 
     if os.path.exists(H.destination_dir):
         if len(os.listdir(H.destination_dir)) > 0:
