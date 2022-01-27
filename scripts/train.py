@@ -1,3 +1,5 @@
+from datetime import datetime
+
 import numpy as np
 import imageio
 import os
@@ -9,11 +11,11 @@ from torch.cuda.amp import autocast
 from tqdm import tqdm
 
 from data import set_up_data
-from utils import get_cpu_stats_over_ranks
-from train_helpers import set_up_hyperparams, load_vaes, load_opt, accumulate_stats, save_model, update_ema
+from utils import get_cpu_stats_over_ranks, mpi_size
+from train_helpers import set_up_hyperparams, load_vaes, load_opt, accumulate_stats, save_model, update_ema, \
+    parse_hparams, setup_parsed
 
 import wandb
-wandb.init(project='vdvae', entity='johnnysummer', dir="/scratch/s193223/wandb/")
 
 
 def training_step(H, data_input, target, vae, ema_vae, optimizer, iterate):
@@ -149,12 +151,27 @@ def run_test_eval(H, ema_vae, data_test, preprocess_fn, logprint):
 
 
 def main():
-    H, logprint = set_up_hyperparams(dir=os.path.join(wandb.run.dir, 'log'))
+    H = parse_hparams()
+    run_name, group_name = None, None
+
+    if H.run_name is not None:
+        run_name = H.run_name
+        wandb.run.save()
+
+    if mpi_size() > 1:
+        time_str = datetime.now().strftime("%d_%m__%H_%M")
+        group_name = f"DDP_{H.dataset}_{time_str}"
+
+    wandb.init(project='vdvae', entity='johnnysummer', dir="/scratch/s193223/wandb/", name=run_name, group=group_name)
+
+    logprint = setup_parsed(H, dir=os.path.join(wandb.run.dir, 'log'))
     H, data_train, data_valid_or_test, preprocess_fn = set_up_data(H)
     vae, ema_vae = load_vaes(H, logprint)
-    if H.run_name is not None:
-        wandb.run.name = H.run_name
+
+    if H.run_name is None:
+        wandb.run.name = H.dataset + '-' + wandb.run.name.split("-")[-1]
         wandb.run.save()
+
     H.save_dir = wandb.run.dir # ???
     wandb.config.update(H)
     wandb.config.update({"machine": os.uname()[1]})
@@ -171,3 +188,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+    wandb.finish()

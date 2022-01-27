@@ -107,13 +107,15 @@ def setup_save_dirs(H):
     mkdir_p(H.save_dir)
     H.logdir = os.path.join(H.save_dir, 'log')
 
-
-def set_up_hyperparams(s=None, extra_args_fn=lambda x: x, dir=None):
+def parse_hparams(s=None, extra_args_fn=lambda x: x):
     H = Hyperparams()
     parser = argparse.ArgumentParser()
     parser = add_vae_arguments(parser)
     parser = extra_args_fn(parser)
     parse_args_and_update_hparams(H, parser, s=s)
+    return H
+
+def setup_parsed(H, dir=None):
     setup_mpi(H)
     setup_save_dirs(H)
     if dir is not None:
@@ -126,6 +128,11 @@ def set_up_hyperparams(s=None, extra_args_fn=lambda x: x, dir=None):
     torch.manual_seed(H.seed)
     torch.cuda.manual_seed(H.seed)
     logprint('training model', H.desc, 'on', H.dataset)
+    return logprint
+
+def set_up_hyperparams(s=None, extra_args_fn=lambda x: x, dir=None):
+    H = parse_hparams(s=s, extra_args_fn=extra_args_fn)
+    logprint = setup_parsed(H, dir=dir)
     return H, logprint
 
 def set_up_hyperparams_light(s=None, extra_args_fn=lambda x: x, dir=None):
