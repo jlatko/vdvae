@@ -42,7 +42,7 @@ i32.epochs_per_eval_save = 1
 HPARAMS_REGISTRY['imagenet32'] = i32
 
 ffhq32 = Hyperparams()
-ffhq32.update(i32)
+ffhq32.update(cifar10)
 ffhq32.data_root = "/scratch/s193223/ffhq/"
 ffhq32.dataset = 'ffhq_32'
 HPARAMS_REGISTRY['ffhq32'] = ffhq32
