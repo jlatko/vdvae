@@ -158,9 +158,13 @@ def main():
         run_name = H.run_name
         wandb.run.save()
 
+    print(mpi_size())
+    print(H.mpi_size)
     if mpi_size() > 1:
         time_str = datetime.now().strftime("%d_%m__%H_%M")
-        group_name = f"DDP_{H.dataset}_{time_str}"
+        group_name = f"DDP{mpi_size()}_{H.dataset}_{time_str}"
+
+    print(H.mpi_size, H.rank, run_name, group_name)
 
     wandb.init(project='vdvae', entity='johnnysummer', dir="/scratch/s193223/wandb/", name=run_name, group=group_name)
 
@@ -169,7 +173,12 @@ def main():
     vae, ema_vae = load_vaes(H, logprint)
 
     if H.run_name is None:
-        wandb.run.name = H.dataset + '-' + wandb.run.name.split("-")[-1]
+        if mpi_size() > 1:
+            wandb.run.name = H.dataset + '-' + H.rank
+        else:
+            wandb.run.name = H.dataset + '-' + wandb.run.name.split("-")[-1]
+
+
         wandb.run.save()
 
     H.save_dir = wandb.run.dir # ???
