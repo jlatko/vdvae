@@ -174,7 +174,7 @@ def main():
 
     if H.run_name is None:
         if mpi_size() > 1:
-            wandb.run.name = H.dataset + '-' + H.rank
+            wandb.run.name = H.dataset + '-' + str(H.rank)
         else:
             wandb.run.name = H.dataset + '-' + wandb.run.name.split("-")[-1]
 
