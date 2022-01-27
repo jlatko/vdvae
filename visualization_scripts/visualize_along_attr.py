@@ -1,23 +1,17 @@
 from copy import copy
-from time import sleep
 
 import numpy as np
 import os
 import torch
 from PIL import Image
-from torch.utils.data import DataLoader
-from torch.utils.data.distributed import DistributedSampler
 from tqdm import tqdm
 import imageio
 
-from attributes import get_attributes
-from data import set_up_data
-from latents import get_available_latents
-from train_helpers import set_up_hyperparams, load_vaes
+from vdvae.attributes import get_attributes
+from vdvae.data.data import set_up_data
+from vdvae.latents import get_available_latents
+from vdvae.train_helpers import set_up_hyperparams, load_vaes
 import wandb
-
-import torch.nn.functional as F
-
 
 MIN_FREQ = 2
 

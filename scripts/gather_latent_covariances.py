@@ -8,9 +8,9 @@ from torch.utils.data import DataLoader
 from torch.utils.data.distributed import DistributedSampler
 from tqdm import tqdm
 
-from data import set_up_data
-from train_helpers import set_up_hyperparams, load_vaes
-import pandas as pd
+from vdvae.data.data import set_up_data
+from vdvae.train_helpers import set_up_hyperparams, load_vaes
+
 
 def all_finite(stats):
     for block_idx, block_stats in enumerate(stats):

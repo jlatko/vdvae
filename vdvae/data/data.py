@@ -3,13 +3,13 @@ import pickle
 import os
 import torch
 from torch.utils.data import TensorDataset
-from torchvision.datasets import ImageFolder, DatasetFolder
+from torchvision.datasets import ImageFolder
 import torchvision.transforms as transforms
 from sklearn.model_selection import train_test_split
 
-from celebahq import CelebAHQDataset
-from imagenet256 import ImageNet256Dataset
-from noise_dataset import NoiseDataset
+from vdvae.data.celebahq import CelebAHQDataset
+from vdvae.data.imagenet256 import ImageNet256Dataset
+from vdvae.data.noise_dataset import NoiseDataset
 
 
 def set_up_data(H):

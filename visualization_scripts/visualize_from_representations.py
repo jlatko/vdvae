@@ -4,14 +4,12 @@ from time import sleep
 import numpy as np
 import os
 import torch
-from torch.utils.data import DataLoader
-from torch.utils.data.distributed import DistributedSampler
 from tqdm import tqdm
 import imageio
 
-from data import set_up_data
-from latents import get_available_latents
-from train_helpers import set_up_hyperparams, load_vaes
+from vdvae.data.data import set_up_data
+from vdvae.latents import get_available_latents
+from vdvae.train_helpers import set_up_hyperparams, load_vaes
 
 
 def add_params(parser):

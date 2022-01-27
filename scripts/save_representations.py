@@ -7,8 +7,8 @@ from torch.utils.data import DataLoader
 from torch.utils.data.distributed import DistributedSampler
 from tqdm import tqdm
 
-from data import set_up_data
-from train_helpers import set_up_hyperparams, load_vaes
+from vdvae.data.data import set_up_data
+from vdvae.train_helpers import set_up_hyperparams, load_vaes
 
 def save_repr(H, ema_vae, data_valid, preprocess_fn, keys=("z", "kl", "qm", "qv", "pm", "pv")):
     valid_sampler = DistributedSampler(data_valid, num_replicas=H.mpi_size, rank=H.rank)

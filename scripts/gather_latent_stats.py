@@ -7,10 +7,29 @@ from torch.utils.data import DataLoader
 from torch.utils.data.distributed import DistributedSampler
 from tqdm import tqdm
 
-from data import set_up_data
-from train_helpers import set_up_hyperparams, load_vaes
-from vae_helpers import gaussian_analytical_kl
+from vdvae.data.data import set_up_data
+from vdvae.train_helpers import set_up_hyperparams, load_vaes, parse_hparams, setup_parsed
+from vdvae.model.vae_helpers import gaussian_analytical_kl
 import pandas as pd
+import wandb
+
+
+def setup_wandb(H):
+    # add tags and initialize wandb run
+    tags = ["stats"]
+
+    wandb.init(project="vdvae_analysis", entity="johnnysummer", dir='/scratch/s193223/wandb', tags=tags)
+    wandb.config.update(H)
+
+    # wandb configuration
+    if H.run_name is not None:
+        run_name = H.run_name
+    else:
+        run_name = H.dataset
+
+    run_name = "STATS_" + run_name + "-" + wandb.run.name.split("-")[-1]
+    wandb.run.name = run_name
+    wandb.run.save()
 
 def get_kls(block_stats, i, block_idx):
     qm = block_stats["qm"][i]
@@ -94,7 +113,7 @@ def add_params(parser):
     return parser
 
 def main():
-    H, logprint = set_up_hyperparams(extra_args_fn=add_params)
+    H = parse_hparams(extra_args_fn=add_params)
 
     if os.path.exists(H.destination_dir):
         if len(os.listdir(H.destination_dir)) > 0:
@@ -104,6 +123,9 @@ def main():
         #     raise RuntimeError('Destination non empty')
     else:
         os.makedirs(H.destination_dir)
+
+    H.destination_dir = wandb.run.dir
+    logprint = setup_parsed(H, dir=os.path.join(wandb.run.dir, 'log'))
 
     H, data_train, data_valid_or_test, preprocess_fn = set_up_data(H)
     vae, ema_vae = load_vaes(H, logprint)

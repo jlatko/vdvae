@@ -7,9 +7,9 @@ from torch.utils.data.distributed import DistributedSampler
 from torch.cuda.amp import autocast
 from tqdm import tqdm
 
-from data import set_up_data
-from utils import get_cpu_stats_over_ranks
-from train_helpers import set_up_hyperparams, load_vaes, load_opt, accumulate_stats, save_model, update_ema
+from vdvae.data.data import set_up_data
+from vdvae.utils import get_cpu_stats_over_ranks
+from vdvae.train_helpers import set_up_hyperparams, load_opt, accumulate_stats, save_model, update_ema
 
 def training_step(H, data_input, target, vae, ema_vae, optimizer, iterate):
     t0 = time.time()

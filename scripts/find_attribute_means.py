@@ -2,7 +2,7 @@ import argparse
 import os
 from time import sleep
 
-from attributes import get_attributes
+from vdvae.attributes import get_attributes
 
 os.environ["MKL_NUM_THREADS"] = "1"
 os.environ["NUMEXPR_NUM_THREADS"] = "1"
@@ -11,11 +11,10 @@ os.environ["OMP_NUM_THREADS"] = "1"
 from collections import defaultdict
 from tqdm import tqdm
 
-from hps import Hyperparams
+from vdvae.hps import Hyperparams
 
 import numpy as np
-import pandas as pd
-from latents import get_latents, get_available_latents
+from vdvae.latents import get_latents, get_available_latents
 import logging
 
 # TODO: consider accounting for the most frequent and correlated attributes (earings only for females etc)

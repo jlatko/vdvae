@@ -10,9 +10,9 @@ from torch.utils.data.distributed import DistributedSampler
 from torch.cuda.amp import autocast
 from tqdm import tqdm
 
-from data import set_up_data
-from utils import get_cpu_stats_over_ranks, mpi_size, mpi_rank
-from train_helpers import set_up_hyperparams, load_vaes, load_opt, accumulate_stats, save_model, update_ema, \
+from vdvae.data.data import set_up_data
+from vdvae.utils import get_cpu_stats_over_ranks, mpi_size, mpi_rank
+from vdvae.train_helpers import load_vaes, load_opt, accumulate_stats, save_model, update_ema, \
     parse_hparams, setup_parsed
 
 import wandb

@@ -10,9 +10,8 @@ import matplotlib.pyplot as plt
 from PIL import Image
 import os
 
-from attributes import get_attributes
-from hps import Hyperparams
-from wandb_utils import _download
+from vdvae.hps import Hyperparams
+from vdvae.wandb_utils import _download
 
 api = wandb.Api()
 

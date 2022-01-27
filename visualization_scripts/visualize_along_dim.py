@@ -6,9 +6,9 @@ import torch
 from PIL import Image
 import imageio
 
-from data import set_up_data
-from latents import get_available_latents
-from train_helpers import set_up_hyperparams, load_vaes
+from vdvae.data.data import set_up_data
+from vdvae.latents import get_available_latents
+from vdvae.train_helpers import set_up_hyperparams, load_vaes
 import wandb
 
 from visualization.visualize_along_attr import get_zs_for_idx

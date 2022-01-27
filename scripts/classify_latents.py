@@ -1,19 +1,16 @@
 import argparse
 import os
 
-from attributes import get_attributes
-from wandb_utils import _download
+from vdvae.attributes import get_attributes
+from vdvae.wandb_utils import _download
 
 os.environ["MKL_NUM_THREADS"] = "1"
 os.environ["NUMEXPR_NUM_THREADS"] = "1"
 os.environ["OMP_NUM_THREADS"] = "1"
 
-from collections import defaultdict
-
 if os.environ["CUDA_VISIBLE_DEVICES"]:
     from cuml.neighbors import KNeighborsClassifier as cuKNeighborsClassifier
     from cuml.ensemble import RandomForestClassifier as cuRandomForestClassifier
-    from cuml import LogisticRegression as cuLogisticRegression
     from cuml.linear_model import MBSGDClassifier as cuMBSGDClassifier
     from cuml.svm import SVC as cuSVC
 
@@ -25,11 +22,11 @@ import gc
 
 from tqdm import tqdm
 
-from hps import Hyperparams
+from vdvae.hps import Hyperparams
 
 import numpy as np
 import pandas as pd
-from latents import get_latents, get_available_latents
+from vdvae.latents import get_latents, get_available_latents
 from sklearn.model_selection import StratifiedKFold
 from sklearn.metrics import accuracy_score, f1_score, roc_auc_score
 import logging
