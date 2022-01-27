@@ -272,6 +272,18 @@ class VAE(HModule):
         elbo = (distortion_per_pixel + rate_per_pixel).mean()
         return dict(elbo=elbo, distortion=distortion_per_pixel.mean(), rate=rate_per_pixel.mean())
 
+    def forward_get_loss_and_latents(self, x, x_target, get_mean_var=False):
+        activations = self.encoder.forward(x)
+        px_z, stats = self.decoder.forward(activations, get_latents=True, get_mean_var=get_mean_var)
+        distortion_per_pixel = self.decoder.out_net.nll(px_z, x_target)
+        rate_per_pixel = torch.zeros_like(distortion_per_pixel)
+        ndims = np.prod(x.shape[1:])
+        for statdict in stats:
+            rate_per_pixel += statdict['kl'].sum(dim=(1, 2, 3))
+        rate_per_pixel /= ndims
+        elbo = (distortion_per_pixel + rate_per_pixel).mean()
+        return dict(elbo=elbo, distortion=distortion_per_pixel.mean(), rate=rate_per_pixel.mean()), stats
+
     def forward_get_latents(self, x, get_mean_var=False):
         activations = self.encoder.forward(x)
         _, stats = self.decoder.forward(activations, get_latents=True, get_mean_var=get_mean_var)

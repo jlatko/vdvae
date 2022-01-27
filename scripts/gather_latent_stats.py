@@ -38,10 +38,10 @@ def get_kls(block_stats, i, block_idx):
     pv = block_stats["pv"][i]
     kl_forward = gaussian_analytical_kl(pm, qm, pv, qv)
     return {
-        f"kl_forward_mean_{block_idx}": torch.mean(kl_forward).cpu().numpy().astype(np.float16),
-        f"kl_forward_std_{block_idx}": torch.std(kl_forward).cpu().numpy().astype(np.float16),
-        f"kl_mean_{block_idx}": torch.mean(block_stats["kl"][i]).cpu().numpy().astype(np.float16),
-        f"kl_std_{block_idx}": torch.std(block_stats["kl"][i]).cpu().numpy().astype(np.float16)
+        f"kl_forward_{block_idx}": torch.mean(kl_forward).cpu().numpy().astype(np.float16),
+        # f"kl_forward_std_{block_idx}": torch.std(kl_forward).cpu().numpy().astype(np.float16),
+        f"kl_{block_idx}": torch.mean(block_stats["kl"][i]).cpu().numpy().astype(np.float16),
+        # f"kl_std_{block_idx}": torch.std(block_stats["kl"][i]).cpu().numpy().astype(np.float16)
     }
 
 def get_basic_stats(block_stats, i, block_idx):
@@ -52,23 +52,27 @@ def get_basic_stats(block_stats, i, block_idx):
     qv = torch.pow(qstd, 2)
     pv = torch.pow(pstd, 2)
     return {
-        f"qv_mean_{block_idx}": torch.mean(qv).cpu().numpy().item(),
-        f"qstd_mean_{block_idx}": torch.mean(qstd).cpu().numpy().item(),
-        f"qv_mean_squared_{block_idx}":torch.mean(torch.pow(qv, 2)).cpu().numpy().item(),
-        f"pv_mean_{block_idx}": torch.mean(pv).cpu().numpy().item(),
-        f"pstd_mean_{block_idx}": torch.mean(pstd).cpu().numpy().item(),
-        f"pv_mean_squared_{block_idx}":torch.mean(torch.pow(pv, 2)).cpu().numpy().item(),
-        f"pm_mean_squared_{block_idx}":torch.mean(torch.pow(pm, 2)).cpu().numpy().item(),
-        f"qm_mean_squared_{block_idx}": torch.mean(torch.pow(qm, 2)).cpu().numpy().item(),
-        f"pm_mean_abs_{block_idx}":torch.mean(torch.abs(pm)).cpu().numpy().item(),
-        f"qm_mean_abs_{block_idx}": torch.mean(torch.abs(qm)).cpu().numpy().item(),
+        f"q_var_{block_idx}": torch.mean(qv).cpu().numpy().item(),
+        # f"q_std_mean_{block_idx}": torch.mean(qstd).cpu().numpy().item(),
+        # f"q_var_squared_{block_idx}":torch.mean(torch.pow(qv, 2)).cpu().numpy().item(),
+        f"p_var_{block_idx}": torch.mean(pv).cpu().numpy().item(),
+        # f"p_std_mean_{block_idx}": torch.mean(pstd).cpu().numpy().item(),
+        # f"p_var_squared_{block_idx}":torch.mean(torch.pow(pv, 2)).cpu().numpy().item(),
+        f"p_mean_squared_{block_idx}":torch.mean(torch.pow(pm, 2)).cpu().numpy().item(),
+        f"q_mean_squared_{block_idx}": torch.mean(torch.pow(qm, 2)).cpu().numpy().item(),
+        # f"p_mean_abs_{block_idx}":torch.mean(torch.abs(pm)).cpu().numpy().item(),
+        # f"q_mean_abs_{block_idx}": torch.mean(torch.abs(qm)).cpu().numpy().item(),
         f"mean_diff_sq_{block_idx}": np.power(qm.cpu().numpy() - pm.cpu().numpy(), 2).mean().item(),
-        f"mean_diff_abs_{block_idx}": np.abs(qm.cpu().numpy() - pm.cpu().numpy()).mean().item(),
+        # f"mean_diff_abs_{block_idx}": np.abs(qm.cpu().numpy() - pm.cpu().numpy()).mean().item(),
         f"var_diff_sq_{block_idx}": np.power(qv.cpu().numpy() - pv.cpu().numpy(), 2).mean().item(),
-        f"var_diff_abs_{block_idx}": np.abs(qv.cpu().numpy() - pv.cpu().numpy()).mean().item(),
-        f"std_diff_abs_{block_idx}": np.abs(qstd.cpu().numpy() - pstd.cpu().numpy()).mean().item(),
+        # f"var_diff_abs_{block_idx}": np.abs(qv.cpu().numpy() - pv.cpu().numpy()).mean().item(),
+        # f"std_diff_abs_{block_idx}": np.abs(qstd.cpu().numpy() - pstd.cpu().numpy()).mean().item(),
     }
 
+def get_losses(loss_dict, i):
+    loss_dict['distortion'] = loss_dict['distortion'][i].numpy().item()
+    loss_dict['rate'] = loss_dict['rate'][i].numpy().item()
+    loss_dict['elbo'] = loss_dict['elbo'][i].numpy().item()
 
 def get_stats(H, ema_vae, data_valid, preprocess_fn):
     valid_sampler = DistributedSampler(data_valid, num_replicas=H.mpi_size, rank=H.rank)
@@ -77,7 +81,7 @@ def get_stats(H, ema_vae, data_valid, preprocess_fn):
     for x in tqdm(DataLoader(data_valid, batch_size=H.n_batch, drop_last=True, pin_memory=True, sampler=valid_sampler)):
         data_input, target = preprocess_fn(x)
         with torch.no_grad():
-            stats = ema_vae.forward_get_latents(data_input, get_mean_var=True)
+            loss_dict, stats = ema_vae.forward_get_loss_and_latents(data_input, target, get_mean_var=True)
             for i in range(data_input.shape[0]):
                 stat_dict = {}
 
@@ -87,6 +91,9 @@ def get_stats(H, ema_vae, data_valid, preprocess_fn):
                     idx += 1
 
                 stat_dict["idx"] = idx
+
+                stat_dict.update(get_losses(loss_dict, i))
+
                 for block_idx, block_stats in enumerate(stats):
                     # for k in keys:
                     #     stat = block_stats[k][i].cpu().numpy().astype(np.float16)
@@ -96,9 +103,8 @@ def get_stats(H, ema_vae, data_valid, preprocess_fn):
                     stat_dict.update(get_kls(block_stats, i, block_idx))
                     stat_dict.update(get_basic_stats(block_stats, i, block_idx))
 
-                # np.savez(os.path.join(H.destination_dir, f"{idx}.npz"), **stat_dict)
-                # TODO: save everything to a single file
                 all_stats.append(stat_dict)
+
         if H.n is not None and len(all_stats) >= H.n:
             break
     all_stats = pd.DataFrame(all_stats)
@@ -115,15 +121,6 @@ def add_params(parser):
 def main():
     H = parse_hparams(extra_args_fn=add_params)
     setup_wandb(H)
-
-    # if os.path.exists(H.destination_dir):
-    #     if len(os.listdir(H.destination_dir)) > 0:
-    #         print("WARNING: destination non-empty")
-    #         sleep(5)
-    #         print("continuing")
-    #     #     raise RuntimeError('Destination non empty')
-    # else:
-    #     os.makedirs(H.destination_dir)
 
     H.destination_dir = wandb.run.dir
     logprint = setup_parsed(H, dir=os.path.join(wandb.run.dir, 'log'))
