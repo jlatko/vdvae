@@ -174,9 +174,8 @@ def main():
 
     wandb.config.update(H)
     wandb.config.update({"machine": os.uname()[1]})
-    wandb.save('*.png')
-    wandb.save('*.th')
-    wandb.save('*.jsonl')
+    wandb.save(os.path.join(wandb.run.dir, '*.png'))
+    wandb.save(os.path.join(wandb.run.dir, '*.th'))
 
     if H.test_eval:
         # wandb.run.tags.append("eval")

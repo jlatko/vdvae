@@ -141,7 +141,7 @@ def add_vae_arguments(parser):
     parser.add_argument('--save_dir', type=str, default='./saved_models')
     parser.add_argument('--data_root', type=str, default='./')
 
-    parser.add_argument('--desc', type=str, default='test')
+    parser.add_argument('--desc', type=str, default='')
     parser.add_argument('--hparam_sets', '--hps', type=str)
     parser.add_argument('--restore_path', type=str, default=None)
     parser.add_argument('--restore_ema_path', type=str, default=None)
