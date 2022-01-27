@@ -71,9 +71,9 @@ def get_basic_stats(block_stats, i, block_idx):
 
 def get_losses(loss_dict, i):
     d = {}
-    d['LIKELIHOOD'] =  - loss_dict['distortion'][i].numpy().item()
-    d['KL'] = loss_dict['rate'][i].numpy().item()
-    d['ELBO'] =  - loss_dict['elbo'][i].numpy().item()
+    d['LIKELIHOOD'] =  - loss_dict['distortion'][i].detach().cpu().numpy().item()
+    d['KL'] = loss_dict['rate'][i].detach().cpu().numpy().item()
+    d['ELBO'] =  - loss_dict['elbo'][i].detach().cpu().numpy().item()
     return d
 
 def get_decode_from_p(n_latents, k=0, semantic_k=True):
