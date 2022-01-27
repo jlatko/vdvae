@@ -70,9 +70,9 @@ def get_basic_stats(block_stats, i, block_idx):
     }
 
 def get_losses(loss_dict, i):
-    loss_dict['distortion'] = loss_dict['distortion'][i].numpy().item()
-    loss_dict['rate'] = loss_dict['rate'][i].numpy().item()
-    loss_dict['elbo'] = loss_dict['elbo'][i].numpy().item()
+    loss_dict['LIKELIHOOD'] =  - loss_dict['distortion'][i].numpy().item()
+    loss_dict['KL'] = loss_dict['rate'][i].numpy().item()
+    loss_dict['ELBO'] =  - loss_dict['elbo'][i].numpy().item()
 
 def get_stats(H, ema_vae, data_valid, preprocess_fn):
     valid_sampler = DistributedSampler(data_valid, num_replicas=H.mpi_size, rank=H.rank)
