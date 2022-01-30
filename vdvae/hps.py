@@ -60,6 +60,7 @@ HPARAMS_REGISTRY['imagenet64'] = i64
 ffhq64 = Hyperparams()
 ffhq64.update(i64)
 ffhq64.dataset = 'ffhq_64'
+ffhq64.data_root = "/scratch/s193223/ffhq/"
 HPARAMS_REGISTRY['ffhq64'] = ffhq64
 
 ffhq_256 = Hyperparams()
@@ -67,6 +68,7 @@ ffhq_256.update(i64)
 ffhq_256.n_batch = 1
 ffhq_256.lr = 0.00015
 ffhq_256.dataset = 'ffhq_256'
+ffhq_256.data_root = "/scratch/s193223/ffhq/"
 ffhq_256.epochs_per_eval = 1
 ffhq_256.epochs_per_eval_save = 1
 ffhq_256.num_images_visualize = 2
