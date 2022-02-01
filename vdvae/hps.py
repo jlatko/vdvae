@@ -48,6 +48,10 @@ i32_c.dataset = 'imagenet32'
 HPARAMS_REGISTRY['imagenet32_c'] = i32_c
 
 ffhq32 = Hyperparams()
+# ffhq32.ema_rate = 0.999
+# ffhq32.lr = 0.0001
+# ffhq32.grad_clip = 200.
+# ffhq32.skip_threshold = 400.
 ffhq32.update(cifar10)
 ffhq32.data_root = "/scratch/s193223/ffhq/"
 ffhq32.dataset = 'ffhq_32'
