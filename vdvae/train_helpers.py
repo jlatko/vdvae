@@ -15,8 +15,8 @@ from vdvae.utils import (logger,
 from vdvae.data.data import mkdir_p
 from contextlib import contextmanager
 import torch.distributed as dist
-from apex.optimizers import FusedAdam as AdamW
-from apex import amp
+# from apex.optimizers import FusedAdam as AdamW
+from torch.optim import AdamW
 from vdvae.model.vae import VAE
 from torch.nn.parallel.distributed import DistributedDataParallel
 
@@ -212,7 +212,7 @@ def load_vaes(H, logprint):
 
 def load_opt(H, vae, logprint):
     optimizer = AdamW(vae.parameters(), weight_decay=H.wd, lr=H.lr, betas=(H.adam_beta1, H.adam_beta2))
-    vae, optimizer = amp.initialize(vae, optimizer, opt_level="O0")
+    optimizer = AdamW(vae.parameters(), weight_decay=H.wd, lr=H.lr, betas=(H.adam_beta1, H.adam_beta2))
     scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=linear_warmup(H.warmup_iters))
 
     if H.restore_optimizer_path:
