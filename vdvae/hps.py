@@ -41,11 +41,29 @@ i32.epochs_per_eval = 1
 i32.epochs_per_eval_save = 1
 HPARAMS_REGISTRY['imagenet32'] = i32
 
+
+i32_c = Hyperparams()
+i32_c.update(cifar10)
+i32_c.dataset = 'imagenet32'
+HPARAMS_REGISTRY['imagenet32_c'] = i32_c
+
 ffhq32 = Hyperparams()
 ffhq32.update(cifar10)
 ffhq32.data_root = "/scratch/s193223/ffhq/"
 ffhq32.dataset = 'ffhq_32'
 HPARAMS_REGISTRY['ffhq32'] = ffhq32
+
+
+ffhq32_i = Hyperparams()
+ffhq32_i.update(i32)
+ffhq32_i.data_root = "/scratch/s193223/ffhq/"
+ffhq32_i.dataset = 'ffhq_32'
+HPARAMS_REGISTRY['ffhq32_i'] = ffhq32_i
+
+cifar10_i = Hyperparams()
+cifar10_i.update(i32)
+cifar10_i.dataset = 'cifar10'
+HPARAMS_REGISTRY['cifar10_i'] = cifar10_i
 
 i64 = Hyperparams()
 i64.update(i32)

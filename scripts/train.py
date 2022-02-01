@@ -158,13 +158,22 @@ def main():
     if H.run_name is not None:
         run_name = H.run_name
     else:
-        run_name = f"DDP{mpi_size()}_{H.dataset}_{time_str}"
+        run_name = f"{H.dataset}_{time_str}"
 
     if mpi_size() > 1:
-        run_name += '-' + str(mpi_rank())
+        run_name = f"DDP{mpi_size()}_" + run_name + '-' + str(mpi_rank())
         group_name = f"DDP{mpi_size()}_{H.dataset}_{time_str}"
 
-    wandb.init(project='vdvae', entity='johnnysummer', dir="/scratch/s193223/wandb/", name=run_name, group=group_name)
+    if H.test_eval:
+        tags = ["eval"]
+        if group_name is None:
+            group_name = "eval"
+    else:
+        tags = ["train"]
+        if group_name is None:
+            group_name = "train"
+
+    wandb.init(project='vdvae', entity='johnnysummer', dir="/scratch/s193223/wandb/", tags=tags, name=run_name, group=group_name)
     H.save_dir = wandb.run.dir # ???
 
     logprint = setup_parsed(H, dir=os.path.join(wandb.run.dir, 'log'))
