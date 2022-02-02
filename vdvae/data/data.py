@@ -12,6 +12,12 @@ from vdvae.data.imagenet256 import ImageNet256Dataset
 from vdvae.data.noise_dataset import NoiseDataset
 
 
+def cuda(x, **kwargs):
+    if torch.cuda.is_available():
+        return x.cuda(**kwargs)
+    else:
+        return x
+
 def set_up_data(H):
     shift_loss = -127.5
     scale_loss = 1. / 127.5
@@ -102,10 +108,10 @@ def set_up_data(H):
     else:
         eval_dataset = vaX
 
-    shift = torch.tensor([shift]).cuda().view(1, 1, 1, 1)
-    scale = torch.tensor([scale]).cuda().view(1, 1, 1, 1)
-    shift_loss = torch.tensor([shift_loss]).cuda().view(1, 1, 1, 1)
-    scale_loss = torch.tensor([scale_loss]).cuda().view(1, 1, 1, 1)
+    shift = cuda(torch.tensor([shift])).view(1, 1, 1, 1)
+    scale = cuda(torch.tensor([scale])).view(1, 1, 1, 1)
+    shift_loss = cuda(torch.tensor([shift_loss])).view(1, 1, 1, 1)
+    scale_loss = cuda(torch.tensor([scale_loss])).view(1, 1, 1, 1)
 
     if H.dataset  == 'ffhq_1024':
         train_data = ImageFolder(trX, transforms.ToTensor())
@@ -146,7 +152,7 @@ def set_up_data(H):
         'as well as the input processed for the loss'
         if untranspose:
             x[0] = x[0].permute(0, 2, 3, 1)
-        inp = x[0].cuda(non_blocking=True).float()
+        inp = cuda(x[0], non_blocking=True).float()
         out = inp.clone()
         inp.add_(shift).mul_(scale)
         if do_low_bit:
