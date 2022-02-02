@@ -80,8 +80,6 @@ def add_params(parser):
     parser.add_argument('--destination_dir', type=str, default='/scratch/s193223/vdvae/complexities/')
     parser.add_argument('--use_train', dest='use_train', action='store_true')
     parser.add_argument('--file_name', type=str, default='')
-    parser.add_argument("--complexity", type=str, default="mean_local_entropy", help="complexity metric")
-    parser.add_argument("--complexity_param", type=int, default=3, help="locality radius or compression mode")
     parser.add_argument('-n', type=int, default=None)
     return parser
 
@@ -97,8 +95,6 @@ def main():
 
     wandb.init(project='vdvae', entity='johnnysummer', dir="/scratch/s193223/wandb/", tags=tags, name=run_name)
     H.destination_dir = wandb.run.dir  # ???
-
-    complexity_metric = complexity_metrics[H.complexity]
 
     H, data_train, data_valid_or_test, preprocess_fn = set_up_data(H)
     if H.use_train:
