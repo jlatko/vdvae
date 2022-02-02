@@ -89,11 +89,11 @@ def main():
     if H.run_name is not None:
         run_name = H.run_name
     else:
-        run_name = f"{H.dataset}"
+        run_name = f"COMPLEX_{H.dataset}"
 
     tags = ["complexities"]
 
-    wandb.init(project='vdvae', entity='johnnysummer', dir="/scratch/s193223/wandb/", tags=tags, name=run_name)
+    wandb.init(project='vdvae_analysis', entity='johnnysummer', dir="/scratch/s193223/wandb/", tags=tags, name=run_name)
     H.destination_dir = wandb.run.dir  # ???
 
     H, data_train, data_valid_or_test, preprocess_fn = set_up_data(H)
