@@ -1,5 +1,6 @@
 import io
 
+import wandb
 from PIL import Image
 from skimage.filters.rank import entropy
 from skimage.morphology import disk
@@ -11,7 +12,7 @@ from torch.utils.data import DataLoader
 from tqdm import tqdm
 
 from vdvae.data.data import set_up_data
-from vdvae.train_helpers import set_up_hyperparams
+from vdvae.train_helpers import set_up_hyperparams, parse_hparams
 import pandas as pd
 
 
@@ -51,7 +52,7 @@ complexity_metrics = {
     "compression": compression,
 }
 
-def get_complexities(H, data_valid, preprocess_fn, complexity_metric):
+def get_complexities(H, data_valid, preprocess_fn):
     idx = -1
     all_stats = []
     for x in tqdm(DataLoader(data_valid, batch_size=H.n_batch, drop_last=True, pin_memory=False, shuffle=False)):
@@ -82,22 +83,20 @@ def add_params(parser):
     parser.add_argument("--complexity", type=str, default="mean_local_entropy", help="complexity metric")
     parser.add_argument("--complexity_param", type=int, default=3, help="locality radius or compression mode")
     parser.add_argument('-n', type=int, default=None)
-
     return parser
 
-
-
 def main():
-    H, logprint = set_up_hyperparams(extra_args_fn=add_params)
+    H = parse_hparams()
 
-    if os.path.exists(H.destination_dir):
-        if len(os.listdir(H.destination_dir)) > 0:
-            print("WARNING: destination non-empty")
-            sleep(5)
-            print("continuing")
-        #     raise RuntimeError('Destination non empty')
+    if H.run_name is not None:
+        run_name = H.run_name
     else:
-        os.makedirs(H.destination_dir)
+        run_name = f"{H.dataset}"
+
+    tags = ["complexities"]
+
+    wandb.init(project='vdvae', entity='johnnysummer', dir="/scratch/s193223/wandb/", tags=tags, name=run_name)
+    H.destination_dir = wandb.run.dir  # ???
 
     complexity_metric = complexity_metrics[H.complexity]
 
@@ -107,7 +106,7 @@ def main():
     else:
         dataset = data_valid_or_test
 
-    get_complexities(H, dataset, preprocess_fn, complexity_metric)
+    get_complexities(H, dataset, preprocess_fn)
 
 if __name__ == "__main__":
     main()
