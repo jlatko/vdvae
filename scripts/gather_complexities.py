@@ -72,7 +72,7 @@ def get_complexities(H, data_valid, preprocess_fn):
         if H.n is not None and len(all_stats) >= H.n:
             break
     all_stats = pd.DataFrame(all_stats)
-    all_stats.to_pickle(os.path.join(H.destination_dir, f"{H.dataset}_{H.file_name}_{H.complexity}_{H.complexity_param}.pkl"))
+    all_stats.to_pickle(os.path.join(H.destination_dir, f"complexity.pkl"))
 
 
 
