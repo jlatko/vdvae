@@ -65,6 +65,7 @@ def get_basic_stats(block_stats, i, block_idx):
         f"mean_diff_sq_{block_idx}": np.power(qm.cpu().numpy() - pm.cpu().numpy(), 2).mean().item(),
         # f"mean_diff_abs_{block_idx}": np.abs(qm.cpu().numpy() - pm.cpu().numpy()).mean().item(),
         f"var_diff_sq_{block_idx}": np.power(qv.cpu().numpy() - pv.cpu().numpy(), 2).mean().item(),
+        f"var_q_minus_p_{block_idx}": (qv.cpu().numpy() - pv.cpu().numpy()).mean().item(),
         # f"var_diff_abs_{block_idx}": np.abs(qv.cpu().numpy() - pv.cpu().numpy()).mean().item(),
         # f"std_diff_abs_{block_idx}": np.abs(qstd.cpu().numpy() - pstd.cpu().numpy()).mean().item(),
     }
