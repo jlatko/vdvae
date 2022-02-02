@@ -62,14 +62,8 @@ def get_complexities(H, data_valid, preprocess_fn):
 
             stat_dict["idx"] = idx
 
-            stat_dict["mean_local_entropy"] = mean_local_entropy(data_input[i], radius=5)
-            stat_dict["mean_local_entropy_t"] = mean_local_entropy(target[i], radius=5)
-
-            a, b = compression(data_input[i])
-            stat_dict["compressed_ratio"] = a
-            stat_dict["compressed_size"] = b
-
-            a, b = compression(target[i])
+            stat_dict["mean_local_entropy"] = mean_local_entropy(target[i], radius=5)
+            a, b = compression(target[i].permute(2,0,1))
             stat_dict["compressed_ratio_t"] = a
             stat_dict["compressed_size_t"] = b
 
