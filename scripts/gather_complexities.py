@@ -31,21 +31,16 @@ def get_size_bytesio(img, ext="JPEG", optimize=False):
         s = f.getbuffer().nbytes
     return s
 
-def compression(x, mode=0):
+def compression(x):
     x = (x * 255).numpy().astype("uint8")
     if x.shape[0] == 1:
         x = x[0]
     else:
         x = x.transpose(1,2,0)
     img = Image.fromarray(x)
-    if mode == 0: # JPEG optimized/not-optimized
-        optimized = get_size_bytesio(img, ext="JPEG", optimize=True)
-        unoptimized = get_size_bytesio(img, ext="JPEG", optimize=False)
-        return optimized / unoptimized
-
-    if mode == 1: # JPEG optimized
-        optimized = get_size_bytesio(img, ext="JPEG", optimize=True)
-        return optimized
+    optimized = get_size_bytesio(img, ext="JPEG", optimize=True)
+    unoptimized = get_size_bytesio(img, ext="JPEG", optimize=False)
+    return optimized / unoptimized, optimized
 
 complexity_metrics = {
     "mean_local_entropy": mean_local_entropy,
@@ -67,6 +62,16 @@ def get_complexities(H, data_valid, preprocess_fn):
 
             stat_dict["idx"] = idx
 
+            stat_dict["mean_local_entropy"] = mean_local_entropy(data_input[i], radius=5)
+            stat_dict["mean_local_entropy_t"] = mean_local_entropy(target[i], radius=5)
+
+            a, b = compression(data_input[i])
+            stat_dict["compressed_ratio"] = a
+            stat_dict["compressed_size"] = b
+
+            a, b = compression(target[i])
+            stat_dict["compressed_ratio_t"] = a
+            stat_dict["compressed_size_t"] = b
 
             all_stats.append(stat_dict)
         if H.n is not None and len(all_stats) >= H.n:
