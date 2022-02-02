@@ -23,8 +23,14 @@ cifar10.warmup_iters = 100
 cifar10.dataset = 'cifar10'
 cifar10.n_batch = 16
 cifar10.ema_rate = 0.9999
+cifar10.data_root = "/home/s193223/hvae-oodd/data/CIFAR10/"
 HPARAMS_REGISTRY['cifar10'] = cifar10
 
+svhn = Hyperparams()
+svhn.update(cifar10)
+svhn.data_root = "/home/s193223/hvae-oodd/data/SVHN/"
+svhn.dataset = 'svhn'
+HPARAMS_REGISTRY['svhn'] = svhn
 
 i32 = Hyperparams()
 i32.update(cifar10)

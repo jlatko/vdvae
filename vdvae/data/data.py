@@ -6,6 +6,7 @@ from torch.utils.data import TensorDataset
 from torchvision.datasets import ImageFolder
 import torchvision.transforms as transforms
 from sklearn.model_selection import train_test_split
+import scipy.io as sio
 
 from vdvae.data.celebahq import CelebAHQDataset
 from vdvae.data.imagenet256 import ImageNet256Dataset
@@ -77,6 +78,12 @@ def set_up_data(H):
         scale_loss = 2.0
     elif H.dataset == 'cifar10':
         (trX, _), (vaX, _), (teX, _) = cifar10(H.data_root, one_hot=False)
+        H.image_size = 32
+        H.image_channels = 3
+        shift = -120.63838
+        scale = 1. / 64.16736
+    elif H.dataset == 'svhn':
+        trX, vaX, teX = svhn(H.data_root)
         H.image_size = 32
         H.image_channels = 3
         shift = -120.63838
@@ -256,3 +263,12 @@ def cifar10(data_root, one_hot=True):
         vaY = np.reshape(vaY, [-1, 1])
         teY = np.reshape(teY, [-1, 1])
     return (trX, trY), (vaX, vaY), (teX, teY)
+
+
+def svhn(data_root):
+    trX = sio.loadmat(os.path.join(data_root, "train_32x32.mat"))["X"]
+    teX = sio.loadmat(os.path.join(data_root, "test_32x32.mat"))["X"]
+    trX = trX.reshape(-1, 3, 32, 32).transpose(0, 2, 3, 1)
+    teX = teX.reshape(-1, 3, 32, 32).transpose(0, 2, 3, 1)
+    trX, vaX = train_test_split(trX, test_size=5000, random_state=11172018)
+    return trX, vaX, teX
