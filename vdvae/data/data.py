@@ -268,7 +268,7 @@ def cifar10(data_root, one_hot=True):
 def svhn(data_root):
     trX = sio.loadmat(os.path.join(data_root, "train_32x32.mat"))["X"]
     teX = sio.loadmat(os.path.join(data_root, "test_32x32.mat"))["X"]
-    trX = trX.reshape(-1, 3, 32, 32).transpose(0, 2, 3, 1)
-    teX = teX.reshape(-1, 3, 32, 32).transpose(0, 2, 3, 1)
+    trX = trX.transpose(3,0,1,2)
+    teX = teX.transpose(3,0,1,2)
     trX, vaX = train_test_split(trX, test_size=5000, random_state=11172018)
     return trX, vaX, teX
