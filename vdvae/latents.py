@@ -19,7 +19,8 @@ def get_latents(latents_dir, layer_ind, splits=(1,2,3), root_dir=CELEBAHQ_DIR, a
     metadata = pd.read_csv(os.path.join(root_dir, 'metadata.csv'))
     metadata = metadata[metadata.split.isin(splits)]
 
-    z = np.load(os.path.join(latents_dir, f"{metadata.iloc[0].idx}.npz"))[f"{key}_{layer_ind}"]
+    # z = np.load(os.path.join(latents_dir, f"{metadata.iloc[0].idx}.npz"))[f"{key}_{layer_ind}"]
+    z = np.load(os.path.join(latents_dir, f"19.npz"))[f"{key}_{layer_ind}"]
     shape = [len(metadata)] + list(z.shape)
     latents = np.zeros(shape, dtype=np.float32)
     rows_found = []
