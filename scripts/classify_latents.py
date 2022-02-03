@@ -1,14 +1,14 @@
 import argparse
 import os
 
+os.environ["MKL_NUM_THREADS"] = "1"
+os.environ["NUMEXPR_NUM_THREADS"] = "1"
+os.environ["OMP_NUM_THREADS"] = "1"
+
 from sklearn.preprocessing import StandardScaler
 
 from vdvae.attributes import get_attributes
 from vdvae.wandb_utils import _download
-
-os.environ["MKL_NUM_THREADS"] = "1"
-os.environ["NUMEXPR_NUM_THREADS"] = "1"
-os.environ["OMP_NUM_THREADS"] = "1"
 
 if os.environ["CUDA_VISIBLE_DEVICES"]:
     from cuml.neighbors import KNeighborsClassifier as cuKNeighborsClassifier
