@@ -82,8 +82,8 @@ def get_model(H, cuda):
 
 def subsample_ind(prev, y):
     n = int(len(y) * prev)
-    inds_true = np.where(y)
-    inds_false = np.where(~y)
+    inds_true = np.where(y)[0]
+    inds_false = np.where(~y)[0]
     inds = np.random.choice(inds_true, size=n, replace=False)
     return np.concatenate([inds, inds_false])
 
