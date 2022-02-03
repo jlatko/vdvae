@@ -1,6 +1,8 @@
 import argparse
 import os
 
+from sklearn.preprocessing import StandardScaler
+
 from vdvae.attributes import get_attributes
 from vdvae.wandb_utils import _download
 
@@ -78,8 +80,30 @@ def get_model(H, cuda):
 
     return model
 
+def subsample_ind(prev, y):
+    n = int(len(y) * prev)
+    inds_true = np.where(y)
+    inds_false = np.where(~y)
+    inds = np.random.choice(inds_true, size=n, replace=False)
+    return np.concatenate([inds, inds_false])
+
 def get_classification_score(H, X_train, X_test, y_train, y_test, cuda=False):
-    # TODO: normalize??
+    if H.subsample:
+        prev = y_train.sum() / len(y_train)
+        if prev > 0.5:
+            ind_train = subsample_ind(1 - prev, y_train)
+            ind_test = subsample_ind(1 - prev, y_test)
+        else:
+            ind_train = subsample_ind(prev, ~y_train)
+            ind_test = subsample_ind(prev, ~y_test)
+
+        X_train = X_train[ind_train]
+        y_train = y_train[ind_train]
+        X_test = X_test[ind_test]
+        y_test = y_test[ind_test]
+        print('Subsampled from prev: ', prev, 'to ', y_train.sum() / len(y_train), y_test.sum() / len(y_test))
+
+
     model = get_model(H, cuda)
 
     model.fit(X_train, y_train)
@@ -92,7 +116,7 @@ def get_classification_score(H, X_train, X_test, y_train, y_test, cuda=False):
     }
 
 def run_folds(H, z, meta, col, cuda, layer_ind, prefix=""):
-    kfold = StratifiedKFold(n_splits=3, random_state=0, shuffle=True)
+    kfold = StratifiedKFold(n_splits=3, random_state=H.seed, shuffle=True)
     kfold_scores = []
     y = np.array(meta[col] == 1)
     if y.sum() < MIN_FREQ or (~y).sum() < MIN_FREQ:
@@ -101,6 +125,10 @@ def run_folds(H, z, meta, col, cuda, layer_ind, prefix=""):
     for train_index, test_index in kfold.split(z, y):
         X_train, X_test = z[train_index], z[test_index]
         y_train, y_test = y[train_index], y[test_index]
+        if H.normalize:
+            scaler = StandardScaler()
+            X_train = scaler.fit_transform(X_train)
+            X_test = scaler.transform(X_test)
         score = get_classification_score(H, X_train, X_test, y_train, y_test, cuda=cuda)
         kfold_scores.append(score)
     kfold_scores = pd.DataFrame(kfold_scores)
@@ -112,12 +140,38 @@ def run_folds(H, z, meta, col, cuda, layer_ind, prefix=""):
     log_score(score, col, layer_ind, prefix=prefix)
     return score
 
+def run_holdout(H, train_X, test_X, train_index, test_index, meta, col, cuda, layer_ind, prefix=""):
+    y = np.array(meta[col] == 1)
+    if y.sum() < MIN_FREQ or (~y).sum() < MIN_FREQ:
+        logging.info(f"skipping {col}")
+        return None
+
+    y_train, y_test = y[train_index], y[test_index]
+    score = get_classification_score(H, train_X, test_X, y_train, y_test, cuda=cuda)
+    score["frequency"] = y.sum() / len(y)
+    log_score(score, col, layer_ind, prefix=prefix)
+    return score
+
+
 def get_all_scores(H, z, meta, cols, cuda, layer_ind, prefix=""):
     scores = {}
     # z = cudf.DataFrame(z)
-    for col in cols:
-        score = run_folds(H, z, meta, col, cuda, layer_ind, prefix=prefix)
-        scores[col] = score
+    if H.holdout:
+        test_ind = np.array(meta.split.isin(H.test_splits))
+        train_ind = ~test_ind
+        train_X = z[train_ind]
+        test_X = z[test_ind]
+        if H.normalize:
+            scaler = StandardScaler()
+            train_X = scaler.fit_transform(train_X)
+            test_X = scaler.transform(test_X)
+        for col in cols:
+            score = run_holdout(H, train_X, test_X, train_ind, test_ind, meta, col, cuda, layer_ind, prefix=prefix)
+            scores[col] = score
+    else:
+        for col in cols:
+            score = run_folds(H, z, meta, col, cuda, layer_ind, prefix=prefix)
+            scores[col] = score
     return scores
 
 def log_score(score, col, layer_ind, prefix=""):
@@ -222,8 +276,13 @@ def parse_args(s=None):
     parser.add_argument('--cont_run', type=str, default=None)
     parser.add_argument('--grouped', action="store_true")
     parser.add_argument('--allow_missing', action="store_true")
+    parser.add_argument('--holdout', action="store_true")
+    parser.add_argument('--normalize', action="store_true")
+    parser.add_argument('--subsample', action="store_true")
     parser.add_argument('--latent_key', type=str, default="z")
     parser.add_argument('-s', '--splits', help='delimited list input',
+                        type=lambda s: [int(item) for item in s.split(',')], default=[1,2,3])
+    parser.add_argument('--test_splits', help='delimited list input',
                         type=lambda s: [int(item) for item in s.split(',')], default=[1,2,3])
 
 
@@ -245,7 +304,7 @@ def setup(H):
         raise ValueError(f"Unknown latent ids set {H.layer_ids_set}")
 
     logging.basicConfig(level=H.log_level)
-
+    np.random.seed(H.seed)
     return cols, latent_ids
 
 def load_previous(H):
@@ -270,6 +329,17 @@ def init_wandb(H):
         tags.append("grouped")
     if H.cont_run is not None:
         tags.append("cont")
+    if H.holdout:
+        tags.append("holdout")
+    else:
+        tags.append("kfold")
+
+    if H.normalize:
+        tags.append("normalize")
+
+    if H.subsample:
+        tags.append("subsample")
+
     tags.append(str(H.splits))
     tags.append(H.model)
 
