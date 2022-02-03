@@ -1,7 +1,7 @@
 
 def get_attributes(keys_set):
     if keys_set == "small":
-        cols = ["Young", "Male",  "Smiling", "Chubby", "Blond_Hair"]
+        cols = ["Young", "Male",  "Smiling", "Wearing_Hat", "Blond_Hair"]
     elif keys_set == "big":
         cols = ["Young", "Male", "Bald", "Mustache", "Smiling", "Chubby",
                 "Straight_Hair", "Wavy_Hair", "Bangs",
