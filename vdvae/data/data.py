@@ -12,6 +12,25 @@ from vdvae.data.celebahq import CelebAHQDataset
 from vdvae.data.imagenet256 import ImageNet256Dataset
 from vdvae.data.noise_dataset import NoiseDataset
 
+CIFAR_GROUPS = {
+    "animals": [2,3,4,5,6,7],
+    "transportation": [0,1,8,9],
+    "airplane" : [0],
+    "automobile" : [1],
+    "bird" : [2],
+    "cat" : [3],
+    "deer" : [4],
+    "dog" : [5],
+    "frog" : [6],
+    "horse" : [7],
+    "ship" : [8],
+    "truck" : [9],
+    "car_truck": [1, 9],
+    "ship_airplane": [0,8],
+    "cat_dog": [3,5],
+    "deer_horse": [4, 7],
+    "frog_bird": [2, 6]
+}
 
 def cuda(x, **kwargs):
     if torch.cuda.is_available():
@@ -77,7 +96,7 @@ def set_up_data(H):
         shift_loss = -0.5
         scale_loss = 2.0
     elif H.dataset == 'cifar10':
-        (trX, _), (vaX, _), (teX, _) = cifar10(H.data_root, one_hot=False)
+        (trX, _), (vaX, _), (teX, _) = cifar10(H.data_root, one_hot=False, group=H.cifar_group)
         H.image_size = 32
         H.image_channels = 3
         shift = -120.63838
@@ -244,7 +263,7 @@ def ffhq32(data_root):
     return train, valid, valid
 
 
-def cifar10(data_root, one_hot=True):
+def cifar10(data_root, one_hot=True, group=None):
     tr_data = [unpickle_cifar10(os.path.join(data_root, 'cifar-10-batches-py/', 'data_batch_%d' % i)) for i in range(1, 6)]
     trX = np.vstack(data['data'] for data in tr_data)
     trY = np.asarray(flatten([data['labels'] for data in tr_data]))
@@ -254,6 +273,24 @@ def cifar10(data_root, one_hot=True):
     trX = trX.reshape(-1, 3, 32, 32).transpose(0, 2, 3, 1)
     teX = teX.reshape(-1, 3, 32, 32).transpose(0, 2, 3, 1)
     trX, vaX, trY, vaY = train_test_split(trX, trY, test_size=5000, random_state=11172018)
+
+    if group is not None:
+        labels = CIFAR_GROUPS[group]
+
+        print("Group", group, labels)
+        print("Lengths before:", len(trY), len(vaY), len(teY), len(trY) + len(vaY) + len(teY))
+        tr_mask = np.isin(trY, labels)
+        va_mask = np.isin(vaY, labels)
+        te_mask = np.isin(teY, labels)
+        trX = trX[tr_mask]
+        trY = trY[tr_mask]
+        vaX = vaX[va_mask]
+        vaY = vaY[va_mask]
+        teX = teX[te_mask]
+        teY = teY[te_mask]
+        print("Lengths after:", len(trY), len(vaY), len(teY), len(trY) + len(vaY) + len(teY))
+
+
     if one_hot:
         trY = np.eye(10, dtype=np.float32)[trY]
         vaY = np.eye(10, dtype=np.float32)[vaY]

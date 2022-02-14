@@ -176,6 +176,9 @@ def main():
         if group_name is None:
             group_name = "train"
 
+    if H.cifar_group is not None:
+        tags.append(H.cifar_group)
+
     wandb.init(project='vdvae', entity='johnnysummer', dir="/scratch/s193223/wandb/", tags=tags, name=run_name, group=group_name)
     H.save_dir = wandb.run.dir # ???
 

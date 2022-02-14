@@ -223,6 +223,9 @@ def add_vae_arguments(parser):
     parser.add_argument('--train_splits', type=str, default=None)
     parser.add_argument('--val_splits', type=str, default=None)
 
+    # only for cifar
+    parser.add_argument('--cifar_group', type=str, default=None)
+
 
     parser.add_argument('--run_name', type=str, default=None)
     return parser
