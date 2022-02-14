@@ -1,9 +1,14 @@
 import argparse
 import os
 
-os.environ["MKL_NUM_THREADS"] = "1"
-os.environ["NUMEXPR_NUM_THREADS"] = "1"
-os.environ["OMP_NUM_THREADS"] = "1"
+if "N_THREADS" in os.environ:
+    os.environ["MKL_NUM_THREADS"] = os.environ["N_THREADS"]
+    os.environ["NUMEXPR_NUM_THREADS"] = os.environ["N_THREADS"]
+    os.environ["OMP_NUM_THREADS"] = os.environ["N_THREADS"]
+else:
+    os.environ["MKL_NUM_THREADS"] = "1"
+    os.environ["NUMEXPR_NUM_THREADS"] = "1"
+    os.environ["OMP_NUM_THREADS"] = "1"
 
 from sklearn.preprocessing import StandardScaler
 
