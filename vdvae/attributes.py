@@ -2,12 +2,15 @@
 def get_attributes(keys_set):
     if keys_set == "small":
         cols = ["Young", "Male",  "Smiling", "Wearing_Hat", "Blond_Hair"]
-
     elif keys_set == "low_prev":
         cols = ['Bald', 'Wearing_Hat', 'Gray_Hair', 'Eyeglasses', 'Pale_Skin',
                 'Mustache', 'Double_Chin', 'Chubby',
                 'Wearing_Necktie', 'Goatee', 'Sideburns', 'Receding_Hairline',
                 'Rosy_Cheeks']
+    elif keys_set == "male":
+        cols = [
+                 'Male',
+        ]
     elif keys_set == "high_prev":
         cols = [
                  'Big_Nose',
