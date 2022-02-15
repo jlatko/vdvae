@@ -17,12 +17,13 @@ def save_repr(H, ema_vae, data_valid, preprocess_fn, keys=("z", "kl", "qm", "qv"
     for x in tqdm(DataLoader(data_valid, batch_size=H.n_batch, drop_last=True, pin_memory=True, sampler=valid_sampler)):
         if H.check_files:
             all_present  = True
-            for i in range(x.shape[0]):
+            for i in range(x[0].shape[0]):
                 if H.dataset == "celebahq":
                     idx = x[1]["idx"][i].item()
                 else:
                     idx += 1
-                if not os.os.path.join(H.destination_dir, f"{idx}.npz")
+                if not os.path.exists(os.path.join(H.destination_dir, f"{idx}.npz")):
+                    all_present = False
             if all_present:
                 continue
 
