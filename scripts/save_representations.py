@@ -25,6 +25,7 @@ def save_repr(H, ema_vae, data_valid, preprocess_fn, keys=("z", "kl", "qm", "qv"
                 if not os.path.exists(os.path.join(H.destination_dir, f"{idx}.npz")):
                     all_present = False
             if all_present:
+                print("present, skipping")
                 continue
 
         data_input, target = preprocess_fn(x)
