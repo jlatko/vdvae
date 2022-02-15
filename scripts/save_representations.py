@@ -13,16 +13,18 @@ from vdvae.train_helpers import set_up_hyperparams, load_vaes
 def save_repr(H, ema_vae, data_valid, preprocess_fn, keys=("z", "kl", "qm", "qv", "pm", "pv")):
     valid_sampler = DistributedSampler(data_valid, num_replicas=H.mpi_size, rank=H.rank)
     idx = -1
+    idx2 = -1
     n = 0
     for x in tqdm(DataLoader(data_valid, batch_size=H.n_batch, drop_last=True, pin_memory=True, sampler=valid_sampler)):
         if H.check_files:
             all_present  = True
             for i in range(x[0].shape[0]):
                 if H.dataset == "celebahq":
-                    idx = x[1]["idx"][i].item()
+                    idx2 = x[1]["idx"][i].item()
                 else:
-                    idx += 1
-                if not os.path.exists(os.path.join(H.destination_dir, f"{idx}.npz")):
+                    idx2 += 1
+
+                if not os.path.exists(os.path.join(H.destination_dir, f"{idx2}.npz")):
                     all_present = False
             if all_present:
                 print("present, skipping")
