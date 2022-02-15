@@ -15,6 +15,17 @@ def save_repr(H, ema_vae, data_valid, preprocess_fn, keys=("z", "kl", "qm", "qv"
     idx = -1
     n = 0
     for x in tqdm(DataLoader(data_valid, batch_size=H.n_batch, drop_last=True, pin_memory=True, sampler=valid_sampler)):
+        if H.check_files:
+            all_present  = True
+            for i in range(x.shape[0]):
+                if H.dataset == "celebahq":
+                    idx = x[1]["idx"][i].item()
+                else:
+                    idx += 1
+                if not os.os.path.join(H.destination_dir, f"{idx}.npz")
+            if all_present:
+                continue
+
         data_input, target = preprocess_fn(x)
         with torch.no_grad():
             stats = ema_vae.forward_get_latents(data_input, get_mean_var=True)
@@ -40,6 +51,7 @@ def save_repr(H, ema_vae, data_valid, preprocess_fn, keys=("z", "kl", "qm", "qv"
 def add_params(parser):
     parser.add_argument('--destination_dir', type=str, default='/scratch/s193223/vdvae/latents/')
     parser.add_argument('--use_train', dest='use_train', action='store_true')
+    parser.add_argument('--check_files', dest='check_files', action='store_true')
     parser.add_argument('--keys_mode', type=str, default='z')
     parser.add_argument('-n', type=int, default=None)
 

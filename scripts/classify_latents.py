@@ -303,8 +303,13 @@ def setup(H):
         latent_ids = list(range(11)) + list(np.arange(12, 21, 2)) + list(np.arange(21, 42, 3)) + [43, 48, 53, 58, 63]
     elif H.layer_ids_set == "mid_cuda":
         latent_ids = list(np.arange(0, 42, 1)) + [43, 48, 53, 58] # layer 43/44 is too large for cuKNeighborsClassifier (doesn't fit gpu)
+    elif H.layer_ids_set == "res64":
+        latent_ids = list(range(57))
+    elif H.layer_ids_set == "res128":
+        latent_ids = list(range(57)) + [58, 63]
     elif H.layer_ids_set == "full":
-        latent_ids = get_available_latents(latents_dir=H.latents_dir)
+        raise ValueError("full setup unavailable (too much memory)")
+        # latent_ids = get_available_latents(latents_dir=H.latents_dir)
     else:
         raise ValueError(f"Unknown latent ids set {H.layer_ids_set}")
 
