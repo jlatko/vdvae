@@ -93,7 +93,7 @@ def get_decode_from_p(n_latents, k=0, semantic_k=True):
     return [False] * (k + 1) + [True] * (n_latents - k - 1)
 
 def get_stats(H, ema_vae, data_valid, preprocess_fn):
-    valid_sampler = DistributedSampler(data_valid, num_replicas=H.mpi_size, rank=H.rank)
+    valid_sampler = DistributedSampler(data_valid, num_replicas=H.mpi_size, rank=H.rank, shuffle=False)
     idx = -1
     all_stats = []
     n_latents = len(ema_vae.decoder.dec_blocks)
