@@ -35,10 +35,12 @@ def init_wandb(H):
 
 def add_params(parser):
     parser.add_argument('--latents_dir', type=str, default='/scratch/s193223/vdvae/latents/ffhq/all')
-    parser.add_argument('--n_files', type=int, default=1)
+    parser.add_argument('--n_files', type=int, default=5)
     parser.add_argument('--n_samples', type=int, default=10)
     parser.add_argument('--size', type=int, default=128)
     parser.add_argument('--fixed', action="store_true")
+    parser.add_argument('--temp', type=float, default=1)
+
     # parser.add_argument('--size', type=int, default=128)
     # parser.add_argument('--n_steps', type=int, default=7)
     return parser
@@ -52,7 +54,7 @@ def sample_layer(H, l, repr, vae):
         zs = repr["z"][:l]
     # sample next one from posterior by setting temperature to 1
     # keep all other temperatures to 1
-    temps = [0] * l + [1] + [0] * (len(repr["z"]) - l - 1)
+    temps = [0] * l + [H.temp] + [0] * (len(repr["z"]) - l - 1)
 
     return vae.forward_samples_set_latents(1, zs, t=temps)
 
@@ -68,7 +70,8 @@ def visualize(H, file, vae, latent_ids):
         repr['z'] = [torch.tensor(z_dict[f'z_{i}'][np.newaxis], dtype=torch.float32).cuda() for i in latent_ids]
 
         imgs = []
-        ls = [0,1,2,3,7,20,30,40,43,50,60]
+        # ls = [0,1,2,3,7,20,30,40,43,50,60]
+        ls = list(range(len(repr["z"]))) # all layers
         for l in ls:
             torch.random.manual_seed(0)
             for i in range(H.n_samples):
