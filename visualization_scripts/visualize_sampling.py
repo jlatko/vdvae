@@ -77,7 +77,7 @@ def visualize(H, file, vae, latent_ids, ls):
             torch.random.manual_seed(0)
             for i in range(H.n_samples):
                 img = sample_layer(H, l, repr, vae)
-                # img = resize(img, size=(H.size, H.size))
+                img = resize(img, size=(H.size, H.size))
                 batch.append(img)
 
             imgs.extend(batch)
@@ -91,9 +91,9 @@ def visualize(H, file, vae, latent_ids, ls):
             variances /= variances.max()
             variance_images_n.append((variances * 255).astype('uint8'))
 
-        imgs = [resize(img, size=(H.size, H.size)) for img in imgs]
-        variance_images = [resize(img, size=(H.size, H.size)) for img in variance_images]
-        variance_images_n = [resize(img, size=(H.size, H.size)) for img in variance_images_n]
+        # imgs = [resize(img, size=(H.size, H.size)) for img in imgs]
+        # variance_images =  [resize(img, size=(H.size, H.size)) for img in variance_images]
+        # variance_images_n = [resize(img, size=(H.size, H.size)) for img in variance_images_n]
 
         n_sampl = H.n_samples + 1
         im = np.concatenate(imgs, axis=0).reshape((len(ls), n_sampl, H.size, H.size, 3)).transpose(
