@@ -80,11 +80,15 @@ def visualize(H, file, vae, latent_ids, ls):
                 batch.append(img)
 
             imgs.extend(batch)
-            variances = np.concatenate(batch, axis=0).var(axis=0)[np.newaxis, :, :, :]
+            variances = np.concatenate(batch, axis=0).std(axis=0)[np.newaxis, :, :, :]
+
+            imgs.append(variances)
+
             variance_images.append(variances)
 
-        im = np.concatenate(imgs, axis=0).reshape((len(ls), H.n_samples, H.size, H.size, 3)).transpose(
-            [0, 2, 1, 3, 4]).reshape([len(ls) * H.size, H.size * H.n_samples, 3])
+        n_sampl = H.n_samples + 1
+        im = np.concatenate(imgs, axis=0).reshape((len(ls), n_sampl, H.size, H.size, 3)).transpose(
+            [0, 2, 1, 3, 4]).reshape([len(ls) * H.size, H.size * n_sampl, 3])
 
         var_im = np.concatenate(variance_images, axis=0).reshape((len(ls), 1, H.size, H.size, 3)).transpose(
             [0, 2, 1, 3, 4]).reshape([len(ls) * H.size, H.size, 3])
