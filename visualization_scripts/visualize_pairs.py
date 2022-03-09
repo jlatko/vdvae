@@ -61,6 +61,9 @@ def visualize_pairs(H, file, vae, latent_ids, ls):
         repr['z'] = [torch.tensor(z_dict[f'z_{i}'][np.newaxis], dtype=torch.float32).cuda() for i in latent_ids]
 
         imgs = []
+
+        temps = [0] * l2 + [H.temp] + [H.temp_rest] * (len(repr["z"]) - l2 - 1)
+        
         for i in range(H.n_samples):
             if H.fixed:
                 raise NotImplementedError()
@@ -72,7 +75,6 @@ def visualize_pairs(H, file, vae, latent_ids, ls):
             for j in range(H.n_samples):
                 torch.random.manual_seed(j)
 
-                temps = [0] * l2 + [H.temp] + [H.temp_rest] * (len(repr["z"]) - l2 - 1)
                 img = vae.forward_samples_set_latents(1, zs, t=temps)
 
                 imgs.append(img)
