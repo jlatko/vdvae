@@ -48,48 +48,46 @@ def add_params(parser):
     return parser
 
 
-def visualize_pairs(H, file, vae, latent_ids, ls):
-    pair = [2,3]
-
-    l1, l2 = pair
+def visualize_pairs(H, file, vae, latent_ids, pairs):
     with torch.no_grad():
-        z_dict = np.load(file)
-        repr = {}
-        repr['qm'] = [torch.tensor(z_dict[f'qm_{i}'][np.newaxis], dtype=torch.float32).cuda() for i in latent_ids]
-        repr['pm'] = [torch.tensor(z_dict[f'pm_{i}'][np.newaxis], dtype=torch.float32).cuda() for i in latent_ids]
-        repr['qv'] = [torch.tensor(z_dict[f'qv_{i}'][np.newaxis], dtype=torch.float32).cuda() for i in latent_ids]
-        repr['pv'] = [torch.tensor(z_dict[f'pv_{i}'][np.newaxis], dtype=torch.float32).cuda() for i in latent_ids]
-        repr['z'] = [torch.tensor(z_dict[f'z_{i}'][np.newaxis], dtype=torch.float32).cuda() for i in latent_ids]
+        for l1, l2 in pairs:
+            z_dict = np.load(file)
+            repr = {}
+            repr['qm'] = [torch.tensor(z_dict[f'qm_{i}'][np.newaxis], dtype=torch.float32).cuda() for i in latent_ids]
+            repr['pm'] = [torch.tensor(z_dict[f'pm_{i}'][np.newaxis], dtype=torch.float32).cuda() for i in latent_ids]
+            repr['qv'] = [torch.tensor(z_dict[f'qv_{i}'][np.newaxis], dtype=torch.float32).cuda() for i in latent_ids]
+            repr['pv'] = [torch.tensor(z_dict[f'pv_{i}'][np.newaxis], dtype=torch.float32).cuda() for i in latent_ids]
+            repr['z'] = [torch.tensor(z_dict[f'z_{i}'][np.newaxis], dtype=torch.float32).cuda() for i in latent_ids]
 
-        imgs = []
+            imgs = []
 
-        temps = [0] * l2 + [H.temp] + [H.temp_rest] * (len(repr["z"]) - l2 - 1)
+            temps = [0] * l2 + [H.temp] + [H.temp_rest] * (len(repr["z"]) - l2 - 1)
 
-        for i in range(H.n_samples):
-            if H.fixed:
-                raise NotImplementedError()
+            for i in range(H.n_samples):
+                if H.fixed:
+                    raise NotImplementedError()
 
-            torch.random.manual_seed(i * 100)
-            zs = repr["z"][:l1]
-            pv = repr['pv'][l1]
-            pm = repr['pm'][l1]
-            pv = pv + torch.ones_like(pv) * np.log(H.temp)
-            # sample z from p(z)
-            z = draw_gaussian_diag_samples(pm, pv)
-            zs.append(z)
+                torch.random.manual_seed(i * 100)
+                zs = repr["z"][:l1]
+                pv = repr['pv'][l1]
+                pm = repr['pm'][l1]
+                pv = pv + torch.ones_like(pv) * np.log(H.temp)
+                # sample z from p(z)
+                z = draw_gaussian_diag_samples(pm, pv)
+                zs.append(z)
 
-            for j in range(H.n_samples):
-                torch.random.manual_seed(j)
+                for j in range(H.n_samples):
+                    torch.random.manual_seed(j)
 
-                img = vae.forward_samples_set_latents(1, zs, t=temps)
+                    img = vae.forward_samples_set_latents(1, zs, t=temps)
 
-                imgs.append(img)
+                    imgs.append(img)
 
-        imgs = [resize(img, size=(H.size, H.size)) for img in imgs]
-        im = np.concatenate(imgs, axis=0).reshape((H.n_samples, H.n_samples, H.size, H.size, 3)).transpose(
-            [0, 2, 1, 3, 4]).reshape([H.n_samples * H.size, H.n_samples * H.size, 3])
-        i = file.split('/')[-1].split('.')[0]
-        wandb.log({f"{l1}_{l2}": wandb.Image(im, caption=f"{i}")})
+            imgs = [resize(img, size=(H.size, H.size)) for img in imgs]
+            im = np.concatenate(imgs, axis=0).reshape((H.n_samples, H.n_samples, H.size, H.size, 3)).transpose(
+                [0, 2, 1, 3, 4]).reshape([H.n_samples * H.size, H.n_samples * H.size, 3])
+            i = file.split('/')[-1].split('.')[0]
+            wandb.log({f"{l1}_{l2}": wandb.Image(im, caption=f"{i}")})
 
 def main():
     H, logprint = set_up_hyperparams(extra_args_fn=add_params)
@@ -102,10 +100,22 @@ def main():
 
     init_wandb(H)
 
+    pairs = [
+        [2,3],
+        [2,7],
+        [2,20],
+        [2,30],
+        [2,43],
+        [3,7],
+        [3,20],
+        [3,30],
+        [3,43],
+    ]
+
     files = list(sorted(glob(os.path.join(H.latents_dir, "*.npz"))))[:H.n_files]
     for i, file in tqdm(enumerate(files)):
 
-        visualize_pairs(H, file, ema_vae, latent_ids)
+        visualize_pairs(H, file, ema_vae, latent_ids, pairs)
 
 if __name__ == "__main__":
     main()
