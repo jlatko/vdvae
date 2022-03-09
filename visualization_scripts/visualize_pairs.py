@@ -12,6 +12,7 @@ import imageio
 
 from vdvae.data.data import set_up_data
 from vdvae.latents import get_available_latents
+from vdvae.model.vae_helpers import draw_gaussian_diag_samples
 from vdvae.train_helpers import set_up_hyperparams, load_vaes
 from visualization_scripts.visualize_interpolate import resize
 
@@ -63,14 +64,19 @@ def visualize_pairs(H, file, vae, latent_ids, ls):
         imgs = []
 
         temps = [0] * l2 + [H.temp] + [H.temp_rest] * (len(repr["z"]) - l2 - 1)
-        
+
         for i in range(H.n_samples):
             if H.fixed:
                 raise NotImplementedError()
 
             torch.random.manual_seed(i * 100)
             zs = repr["z"][:l1]
-            # TODO: sample from prior here
+            pv = repr['pv'][l1]
+            pm = repr['pm'][l1]
+            pv = pv + torch.ones_like(pv) * np.log(H.temp)
+            # sample z from p(z)
+            z = draw_gaussian_diag_samples(pm, pv)
+            zs.append(z)
 
             for j in range(H.n_samples):
                 torch.random.manual_seed(j)
@@ -83,7 +89,7 @@ def visualize_pairs(H, file, vae, latent_ids, ls):
         im = np.concatenate(imgs, axis=0).reshape((H.n_samples, H.n_samples, H.size, H.size, 3)).transpose(
             [0, 2, 1, 3, 4]).reshape([H.n_samples * H.size, H.n_samples * H.size, 3])
         i = file.split('/')[-1].split('.')[0]
-        wandb.log({"samples": wandb.Image(im, caption=f"{i}")})
+        wandb.log({f"{l1}_{l2}": wandb.Image(im, caption=f"{i}")})
 
 def main():
     H, logprint = set_up_hyperparams(extra_args_fn=add_params)
