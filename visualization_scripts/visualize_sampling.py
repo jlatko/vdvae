@@ -71,23 +71,23 @@ def visualize(H, file, vae, latent_ids, ls):
 
         imgs = []
         variance_images = []
-        batch = []
         for l in ls:
+            batch = []
             torch.random.manual_seed(0)
             for i in range(H.n_samples):
                 img = sample_layer(H, l, repr, vae)
                 img = resize(img, size=(H.size, H.size))
                 batch.append(img)
 
+            imgs.extend(batch)
             variances = np.concatenate(batch, axis=0).var(axis=0)[np.newaxis, :, :, :]
             variance_images.append(variances)
-            imgs.extend(batch)
 
         im = np.concatenate(imgs, axis=0).reshape((len(ls), H.n_samples, H.size, H.size, 3)).transpose(
             [0, 2, 1, 3, 4]).reshape([len(ls) * H.size, H.size * H.n_samples, 3])
 
         var_im = np.concatenate(variance_images, axis=0).reshape((len(ls), 1, H.size, H.size, 3)).transpose(
-            [0, 2, 1, 3, 4]).reshape([len(ls) * H.size, H.size, 1, 3])
+            [0, 2, 1, 3, 4]).reshape([len(ls) * H.size, H.size, 3])
 
         i = file.split('/')[-1].split('.')[0]
         wandb.log({"samples": wandb.Image(im, caption=f"{i}")})
