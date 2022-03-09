@@ -59,7 +59,7 @@ def sample_layer(H, l, repr, vae):
     return vae.forward_samples_set_latents(1, zs, t=temps)
 
 
-def visualize(H, file, vae, latent_ids):
+def visualize(H, file, vae, latent_ids, ls):
     with torch.no_grad():
         z_dict = np.load(file)
         repr = {}
@@ -70,22 +70,28 @@ def visualize(H, file, vae, latent_ids):
         repr['z'] = [torch.tensor(z_dict[f'z_{i}'][np.newaxis], dtype=torch.float32).cuda() for i in latent_ids]
 
         imgs = []
-        # ls = [0,1,2,3,7,20,30,40,43,50,60]
-        ls = list(range(len(repr["z"]))) # all layers
+        variance_images = []
+        batch = []
         for l in ls:
             torch.random.manual_seed(0)
             for i in range(H.n_samples):
                 img = sample_layer(H, l, repr, vae)
                 img = resize(img, size=(H.size, H.size))
-                imgs.append(img)
+                batch.append(img)
+
+            variances = np.concatenate(batch, axis=0).var(axis=0)[np.newaxis, :, :, :]
+            variance_images.append(variances)
+            imgs.extend(batch)
 
         im = np.concatenate(imgs, axis=0).reshape((len(ls), H.n_samples, H.size, H.size, 3)).transpose(
             [0, 2, 1, 3, 4]).reshape([len(ls) * H.size, H.size * H.n_samples, 3])
 
+        var_im = np.concatenate(variance_images, axis=0).reshape((len(ls), 1, H.size, H.size, 3)).transpose(
+            [0, 2, 1, 3, 4]).reshape([len(ls) * H.size, H.size, 1, 3])
+
         i = file.split('/')[-1].split('.')[0]
-        fname = os.path.join(wandb.run.dir, f"{i}.png")
-        imageio.imwrite(fname, im)
         wandb.log({"samples": wandb.Image(im, caption=f"{i}")})
+        wandb.log({"variances": wandb.Image(var_im, caption=f"{i}")})
 
 def main():
     H, logprint = set_up_hyperparams(extra_args_fn=add_params)
@@ -95,12 +101,17 @@ def main():
     latent_ids = get_available_latents(H.latents_dir)
     vae, ema_vae = load_vaes(H, logprint)
 
+    # ls = [0,1,2,3,7,20,30,40,43,50,60]
+    ls = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 14, 16, 18, 20, 24, 27, 30, 33, 36, 40, 43, 48, 53, 58, 63]
+    # ls = list(range(66))  # all layers
+    wandb.config.update({"lv_points": ls})
+
     init_wandb(H)
 
     files = list(sorted(glob(os.path.join(H.latents_dir, "*.npz"))))[:H.n_files]
     for i, file in tqdm(enumerate(files)):
 
-        visualize(H, file, ema_vae, latent_ids)
+        visualize(H, file, ema_vae, latent_ids, ls)
 
 if __name__ == "__main__":
     main()
