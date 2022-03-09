@@ -152,6 +152,8 @@ class DecBlock(nn.Module):
         if lvs is not None:
             # use given latents as z
             z = lvs
+        elif t == 0:
+            z = pm.clone()
         else:
             if t is not None:
                 # adjust variance to given temperature
@@ -272,9 +274,13 @@ class Decoder(HModule):
         xs = {}
         for bias in self.bias_xs:
             xs[bias.shape[2]] = bias.repeat(n, 1, 1, 1)
-        for block, lvs in itertools.zip_longest(self.dec_blocks, latents): # yields None for latents that are not given
+        for idx, (block, lvs) in enumerate(itertools.zip_longest(self.dec_blocks, latents)): # yields None for latents that are not given
+            try:
+                temp = t[idx]
+            except TypeError:
+                temp = t
             # will use lvs
-            xs = block.forward_uncond(xs, t, lvs=lvs)
+            xs = block.forward_uncond(xs, temp, lvs=lvs)
         xs[self.H.image_size] = self.final_fn(xs[self.H.image_size])
         return xs[self.H.image_size]
 
