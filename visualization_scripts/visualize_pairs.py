@@ -17,13 +17,13 @@ from visualization_scripts.visualize_interpolate import resize
 
 
 def init_wandb(H):
-    tags = ["sample", f"T{H.temp}|{H.temp_rest}"]
+    tags = ["pairs", f"T{H.temp}|{H.temp_rest}"]
 
     if H.fixed:
         tags.append("fixed")
 
     wandb.init(project='vae_visualizations', entity='johnnysummer', dir="/scratch/s193223/wandb/", tags=tags)
-    wandb.config.update({"script": "vis_sample"})
+    wandb.config.update({"script": "vis_pairs"})
 
     if H.run_name:
         print(wandb.run.name)
@@ -31,7 +31,7 @@ def init_wandb(H):
     else:
         print(wandb.run.name)
         # wandb.run.name = H.run_name + '-' + wandb.run.name.split('-')[-1]
-        wandb.run.name =  'SAMPLE-' + wandb.run.name
+        wandb.run.name =  'PAIRS-' + wandb.run.name
 
 def add_params(parser):
     parser.add_argument('--latents_dir', type=str, default='/scratch/s193223/vdvae/latents/ffhq/all')
@@ -46,7 +46,7 @@ def add_params(parser):
     # parser.add_argument('--n_steps', type=int, default=7)
     return parser
 
-def sample_layer(H, l, repr, vae):
+def sample_layers(H, l, repr, vae):
     if H.fixed:
         # replace single layer with None such that the model samples it from cond. prior
         zs = repr["z"][:l] + [None] + repr["z"][l+1:]
@@ -59,7 +59,8 @@ def sample_layer(H, l, repr, vae):
 
     return vae.forward_samples_set_latents(1, zs, t=temps)
 
-def visualize(H, file, vae, latent_ids, ls):
+def visualize_pairs(H, file, vae, latent_ids, ls):
+    pair = [2,3]
     with torch.no_grad():
         z_dict = np.load(file)
         repr = {}
@@ -70,44 +71,16 @@ def visualize(H, file, vae, latent_ids, ls):
         repr['z'] = [torch.tensor(z_dict[f'z_{i}'][np.newaxis], dtype=torch.float32).cuda() for i in latent_ids]
 
         imgs = []
-        variance_images = []
-        variance_images_n = []
-        for l in ls:
-            batch = []
-            torch.random.manual_seed(0)
-            for i in range(H.n_samples):
-                img = sample_layer(H, l, repr, vae)
-                # img = resize(img, size=(H.size, H.size))
-                batch.append(img)
-
-            imgs.extend(batch)
-            variances = np.concatenate(batch, axis=0).std(axis=0)[np.newaxis, :, :, :]
-            imgs.append((variances * 255).astype('uint8'))
-
-            variances = np.repeat(variances.mean(axis=-1)[:, :, :, np.newaxis], 3, axis=-1)
-
-            variance_images.append((variances * 255).astype('uint8'))
-            # variances -= variances.min()
-            variances /= variances.max()
-            variance_images.append((variances * 255).astype('uint8'))
+        for i in range(H.n_samples):
+            torch.random.manual_seed(i * 100)
+            for j in range(H.n_samples):
+                torch.random.manual_seed(j)
 
         imgs = [resize(img, size=(H.size, H.size)) for img in imgs]
-        variance_images = [resize(img, size=(H.size, H.size)) for img in variance_images]
-        variance_images_n = [resize(img, size=(H.size, H.size)) for img in variance_images_n]
-
-        n_sampl = H.n_samples + 1
-        im = np.concatenate(imgs, axis=0).reshape((len(ls), n_sampl, H.size, H.size, 3)).transpose(
-            [0, 2, 1, 3, 4]).reshape([len(ls) * H.size, H.size * n_sampl, 3])
-
-        var_im = np.concatenate(variance_images, axis=0).reshape((len(ls), 1, H.size, H.size, 3)).transpose(
-            [0, 2, 1, 3, 4]).reshape([len(ls) * H.size, H.size, 3])
-        var_im_n = np.concatenate(variance_images_n, axis=0).reshape((len(ls), 1, H.size, H.size, 3)).transpose(
-            [0, 2, 1, 3, 4]).reshape([len(ls) * H.size, H.size, 3])
-
+        im = np.concatenate(imgs, axis=0).reshape((H.n_samples, H.n_samples, H.size, H.size, 3)).transpose(
+            [0, 2, 1, 3, 4]).reshape([H.n_samples * H.size, H.n_samples * H.size, 3])
         i = file.split('/')[-1].split('.')[0]
         wandb.log({"samples": wandb.Image(im, caption=f"{i}")})
-        wandb.log({"variances": wandb.Image(var_im, caption=f"{i}")})
-        wandb.log({"variances_normalized": wandb.Image(var_im_n, caption=f"{i}")})
 
 def main():
     H, logprint = set_up_hyperparams(extra_args_fn=add_params)
@@ -127,7 +100,7 @@ def main():
     files = list(sorted(glob(os.path.join(H.latents_dir, "*.npz"))))[:H.n_files]
     for i, file in tqdm(enumerate(files)):
 
-        visualize(H, file, ema_vae, latent_ids, ls)
+        visualize_pairs(H, file, ema_vae, latent_ids, ls)
 
 if __name__ == "__main__":
     main()
