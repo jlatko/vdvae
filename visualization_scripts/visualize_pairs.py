@@ -46,21 +46,11 @@ def add_params(parser):
     # parser.add_argument('--n_steps', type=int, default=7)
     return parser
 
-def sample_layers(H, l, repr, vae):
-    if H.fixed:
-        # replace single layer with None such that the model samples it from cond. prior
-        zs = repr["z"][:l] + [None] + repr["z"][l+1:]
-    else:
-        # fix top l latents to "z" (which is sampled from encoder)
-        zs = repr["z"][:l]
-    # sample next one from posterior by setting temperature to 1
-    # keep all other temperatures to 1
-    temps = [0] * l + [H.temp] + [H.temp_rest] * (len(repr["z"]) - l - 1)
-
-    return vae.forward_samples_set_latents(1, zs, t=temps)
 
 def visualize_pairs(H, file, vae, latent_ids, ls):
     pair = [2,3]
+
+    l1, l2 = pair
     with torch.no_grad():
         z_dict = np.load(file)
         repr = {}
@@ -72,9 +62,20 @@ def visualize_pairs(H, file, vae, latent_ids, ls):
 
         imgs = []
         for i in range(H.n_samples):
+            if H.fixed:
+                raise NotImplementedError()
+
             torch.random.manual_seed(i * 100)
+            zs = repr["z"][:l1]
+            # TODO: sample from prior here
+
             for j in range(H.n_samples):
                 torch.random.manual_seed(j)
+
+                temps = [0] * l2 + [H.temp] + [H.temp_rest] * (len(repr["z"]) - l2 - 1)
+                img = vae.forward_samples_set_latents(1, zs, t=temps)
+
+                imgs.append(img)
 
         imgs = [resize(img, size=(H.size, H.size)) for img in imgs]
         im = np.concatenate(imgs, axis=0).reshape((H.n_samples, H.n_samples, H.size, H.size, 3)).transpose(
@@ -90,17 +91,13 @@ def main():
     latent_ids = get_available_latents(H.latents_dir)
     vae, ema_vae = load_vaes(H, logprint)
 
-    # ls = [0,1,2,3,7,20,30,40,43,50,60]
-    ls = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 14, 16, 18, 20, 24, 27, 30, 33, 36, 40, 43, 48, 53, 58, 63]
-    # ls = list(range(66))  # all layers
 
     init_wandb(H)
-    wandb.config.update({"lv_points": ls})
 
     files = list(sorted(glob(os.path.join(H.latents_dir, "*.npz"))))[:H.n_files]
     for i, file in tqdm(enumerate(files)):
 
-        visualize_pairs(H, file, ema_vae, latent_ids, ls)
+        visualize_pairs(H, file, ema_vae, latent_ids)
 
 if __name__ == "__main__":
     main()

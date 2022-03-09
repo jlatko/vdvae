@@ -89,7 +89,7 @@ def visualize(H, file, vae, latent_ids, ls):
             variance_images.append((variances * 255).astype('uint8'))
             # variances -= variances.min()
             variances /= variances.max()
-            variance_images.append((variances * 255).astype('uint8'))
+            variance_images_n.append((variances * 255).astype('uint8'))
 
         imgs = [resize(img, size=(H.size, H.size)) for img in imgs]
         variance_images = [resize(img, size=(H.size, H.size)) for img in variance_images]
