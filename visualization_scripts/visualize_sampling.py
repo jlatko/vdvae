@@ -104,9 +104,9 @@ def main():
     # ls = [0,1,2,3,7,20,30,40,43,50,60]
     ls = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 14, 16, 18, 20, 24, 27, 30, 33, 36, 40, 43, 48, 53, 58, 63]
     # ls = list(range(66))  # all layers
-    wandb.config.update({"lv_points": ls})
 
     init_wandb(H)
+    wandb.config.update({"lv_points": ls})
 
     files = list(sorted(glob(os.path.join(H.latents_dir, "*.npz"))))[:H.n_files]
     for i, file in tqdm(enumerate(files)):
