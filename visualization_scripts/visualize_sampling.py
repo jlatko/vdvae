@@ -17,7 +17,7 @@ from visualization_scripts.visualize_interpolate import resize
 
 
 def init_wandb(H):
-    tags = ["sample"]
+    tags = ["sample", f"T{H.temp}|{H.temp_rest}"]
 
     if H.fixed:
         tags.append("fixed")
@@ -40,6 +40,7 @@ def add_params(parser):
     parser.add_argument('--size', type=int, default=128)
     parser.add_argument('--fixed', action="store_true")
     parser.add_argument('--temp', type=float, default=1)
+    parser.add_argument('--temp_rest', type=float, default=0)
 
     # parser.add_argument('--size', type=int, default=128)
     # parser.add_argument('--n_steps', type=int, default=7)
@@ -54,7 +55,7 @@ def sample_layer(H, l, repr, vae):
         zs = repr["z"][:l]
     # sample next one from posterior by setting temperature to 1
     # keep all other temperatures to 1
-    temps = [0] * l + [H.temp] + [0] * (len(repr["z"]) - l - 1)
+    temps = [0] * l + [H.temp] + [H.temp_rest] * (len(repr["z"]) - l - 1)
 
     return vae.forward_samples_set_latents(1, zs, t=temps)
 
