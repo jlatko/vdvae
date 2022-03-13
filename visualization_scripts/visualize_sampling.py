@@ -82,7 +82,6 @@ def visualize(H, file, vae, latent_ids, ls):
 
             imgs.extend(batch)
             variances = np.concatenate(batch, axis=0).std(axis=0)[np.newaxis, :, :, :]
-            imgs.append(variances)
             variance_images.append(variances)
 
             variances = np.repeat(variances.mean(axis=-1)[:, :, :, np.newaxis], 3, axis=-1)
@@ -90,6 +89,7 @@ def visualize(H, file, vae, latent_ids, ls):
             # variances -= variances.min()
             variances /= variances.max()
             variance_images_n.append((variances * 255).astype('uint8'))
+            imgs.append((variances * 255).astype('uint8'))
 
         # imgs = [resize(img, size=(H.size, H.size)) for img in imgs]
         # variance_images =  [resize(img, size=(H.size, H.size)) for img in variance_images]
