@@ -63,8 +63,12 @@ def set_up_data(H):
         trX, vaX, teX = ffhq32(H.data_root)
         H.image_size = 32
         H.image_channels = 3
-        shift = -112.8666757481
-        scale = 1. / 69.84780273
+        # like ffhq
+        # shift = -112.8666757481
+        # scale = 1. / 69.84780273
+        # like cifar
+        shift = -120.63838
+        scale = 1. / 64.16736
     elif H.dataset == 'ffhq_64': # data (0,255)
         trX, vaX, teX = ffhq64(H.data_root)
         H.image_size = 64
