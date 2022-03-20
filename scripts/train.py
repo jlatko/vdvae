@@ -80,8 +80,10 @@ def train_loop(H, data_train, data_valid, preprocess_fn, vae, ema_vae, logprint)
                 accumulated_stats['lr'] = scheduler.get_last_lr()[0]
                 wandb.log(accumulated_stats, step=iterate)
                 if accumulated_stats["skipped_updates"] == 100:
-                    print("Skipped all updates, quitting...")
-                    return
+                    print("Skipped all updates, lowering LR...")
+                    for param_group in optimizer.param_groups:
+                        param_group['lr'] = param_group['lr'] / 2
+                        break
 
             if iterate % H.iters_per_print == 0 or iters_since_starting in early_evals:
                 logprint(model=H.desc, type='train_loss', lr=scheduler.get_last_lr()[0], epoch=epoch, step=iterate, **accumulate_stats(stats, H.iters_per_print))
