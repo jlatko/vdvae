@@ -37,8 +37,8 @@ def init_wandb(H):
 def add_params(parser):
     parser.add_argument('--latents_dir', type=str, default='/scratch/s193223/vdvae/latents/ffhq/all')
     parser.add_argument('--n_files', type=int, default=5)
-    parser.add_argument('--n_samples', type=int, default=10)
-    parser.add_argument('--size', type=int, default=128)
+    parser.add_argument('--n_samples', type=int, default=8)
+    parser.add_argument('--size', type=int, default=256)
     parser.add_argument('--fixed', action="store_true")
     parser.add_argument('--temp', type=float, default=1)
     parser.add_argument('--temp_rest', type=float, default=0)
@@ -101,6 +101,11 @@ def main():
     init_wandb(H)
 
     pairs = [
+        [0,1],
+        [0,2],
+        [0,3],
+        [1,2],
+        [1,3],
         [2,3],
         [2,7],
         [2,20],
@@ -110,6 +115,9 @@ def main():
         [3,20],
         [3,30],
         [3,43],
+        [7,20],
+        [7,30],
+        [7,40]
     ]
 
     files = list(sorted(glob(os.path.join(H.latents_dir, "*.npz"))))[:H.n_files]
