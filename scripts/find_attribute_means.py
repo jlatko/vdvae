@@ -51,7 +51,7 @@ def find_means(H, cols, layer_ind, latents_dir, handle_nan=False):
             means_dict[f"{col}_diff_male"] = pos_mean_male - neg_mean_male
             means_dict[f"{col}_diff_grouped"] = means_dict[f"{col}_diff_male"]
         else:
-            logging.info("skipping male")
+            logging.info(f"{col} skipping male")
         # female
         if female_and_query.sum() >= MIN_FREQ and female_and_not_query.sum() >= MIN_FREQ:
             pos_mean_female, neg_mean_female = get_means(z[~male], meta[~male], col)
@@ -64,7 +64,7 @@ def find_means(H, cols, layer_ind, latents_dir, handle_nan=False):
             else:
                 means_dict[f"{col}_diff_grouped"] = means_dict[f"{col}_diff_female"]
         else:
-            logging.info("skipping female")
+            logging.info(f"{col} skipping female")
 
 
         pos_mean, neg_mean = get_means(z, meta, col)
@@ -125,7 +125,7 @@ def main():
     logging.info(latent_ids)
 
     scores = defaultdict(list)
-    for i in tqdm(latent_ids):
+    for i in tqdm(list(reversed(latent_ids))):
         find_means(H, cols, i, latents_dir=H.latents_dir, handle_nan=H.handle_nan)
 
 
