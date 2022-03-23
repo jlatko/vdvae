@@ -27,7 +27,7 @@ def get_means(z, meta, col):
     return pos_mean, neg_mean
 
 def find_means(H, cols, layer_ind, latents_dir, handle_nan=False):
-    z, meta = get_latents(latents_dir=latents_dir, layer_ind=layer_ind, splits=[1,2,3], allow_missing=False, handle_nan=handle_nan, key=H.latent_key)
+    z, meta = get_latents(latents_dir=latents_dir, layer_ind=layer_ind, splits=[0,1,2,3], allow_missing=False, handle_nan=handle_nan, key=H.latent_key)
     logging.debug(z.shape)
 
     means_dict = {}
@@ -40,9 +40,9 @@ def find_means(H, cols, layer_ind, latents_dir, handle_nan=False):
         male_and_not_query = male & (~query)
         female_and_query = (~male) & query
         female_and_not_query = (~male) & (~query)
-        logging.info(f"{col}:"
-                     f"\n male (y/n) {male_and_query.sum()} | {male_and_not_query.sum()} "
-                     f"\n female (y/n) {female_and_query.sum()} | {female_and_not_query.sum()} ")
+        # logging.info(f"{col}:"
+        #              f"\n male (y/n) {male_and_query.sum()} | {male_and_not_query.sum()} "
+        #              f"\n female (y/n) {female_and_query.sum()} | {female_and_not_query.sum()} ")
         # male
         if male_and_query.sum() >= MIN_FREQ and male_and_not_query.sum() >= MIN_FREQ:
             pos_mean_male, neg_mean_male = get_means(z[male], meta[male], col)
