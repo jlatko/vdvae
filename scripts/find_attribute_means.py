@@ -99,6 +99,8 @@ def setup(H):
         latent_ids = [0,1,2,3,5,10,15,20,30,40,50]
     elif H.layer_ids_set == "mid":
         latent_ids = list(range(11)) + list(np.arange(12, 21, 2)) + list(np.arange(21, 42, 3)) + [43, 48, 53, 58, 63]
+    elif H.layer_ids_set == "mid_mem":
+        latent_ids = list(range(11)) + list(np.arange(12, 21, 2)) + list(np.arange(21, 42, 3)) + [43, 48, 53]
     elif H.layer_ids_set == "full":
         latent_ids = get_available_latents(latents_dir=H.latents_dir)
     else:
