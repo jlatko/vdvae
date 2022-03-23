@@ -27,7 +27,9 @@ def get_latents(latents_dir, layer_ind, splits=(1,2,3), root_dir=CELEBAHQ_DIR, a
     rows_missing = []
     i = 0
     # for _, row in tqdm(metadata.iterrows(),  total=metadata.shape[0]):
-    for _, row in metadata.iterrows():
+    for i, row in metadata.iterrows():
+        if i % 10000 == 0 and i > 0:
+            print(i)
         try:
             z = np.load(os.path.join(latents_dir, f"{row.idx}.npz"))[f"{key}_{layer_ind}"].astype(np.float32)
             if not np.isfinite(z).all():
