@@ -37,7 +37,7 @@ def init_wandb(H):
 def add_params(parser):
     parser.add_argument('--latents_dir', type=str, default='/scratch/s193223/vdvae/latents/ffhq/all')
     parser.add_argument('--n_files', type=int, default=5)
-    parser.add_argument('--n_samples', type=int, default=8)
+    parser.add_argument('--n_samples', type=int, default=10)
     parser.add_argument('--size', type=int, default=256)
     parser.add_argument('--fixed', action="store_true")
     parser.add_argument('--temp', type=float, default=1)
