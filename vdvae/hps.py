@@ -21,6 +21,7 @@ cifar10.dec_blocks = "1x1,4m1,4x2,8m4,8x5,16m8,16x10,32m16,32x21"
 cifar10.enc_blocks = "32x11,32d2,16x6,16d2,8x6,8d2,4x3,4d4,1x3"
 cifar10.warmup_iters = 100
 cifar10.dataset = 'cifar10'
+cifar10.dataset_norm = 'cifar10'
 cifar10.n_batch = 16
 cifar10.ema_rate = 0.9999
 cifar10.data_root = "/home/s193223/hvae-oodd/data/CIFAR10/"
@@ -30,11 +31,13 @@ svhn = Hyperparams()
 svhn.update(cifar10)
 svhn.data_root = "/home/s193223/hvae-oodd/data/SVHN/"
 svhn.dataset = 'svhn'
+svhn.dataset_norm = 'svhn'
 HPARAMS_REGISTRY['svhn'] = svhn
 
 i32 = Hyperparams()
 i32.update(cifar10)
 i32.dataset = 'imagenet32'
+i32.dataset_norm = 'imagenet32'
 i32.ema_rate = 0.999
 i32.dec_blocks = "1x2,4m1,4x4,8m4,8x9,16m8,16x19,32m16,32x40"
 i32.enc_blocks = "32x15,32d2,16x9,16d2,8x8,8d2,4x6,4d4,1x6"
@@ -51,6 +54,7 @@ HPARAMS_REGISTRY['imagenet32'] = i32
 i32_c = Hyperparams()
 i32_c.update(cifar10)
 i32_c.dataset = 'imagenet32'
+i32_c.dataset_norm = 'imagenet32'
 HPARAMS_REGISTRY['imagenet32_c'] = i32_c
 
 ffhq32 = Hyperparams()
@@ -61,6 +65,7 @@ ffhq32 = Hyperparams()
 ffhq32.update(cifar10)
 ffhq32.data_root = "/scratch/s193223/ffhq/"
 ffhq32.dataset = 'ffhq_32'
+ffhq32.dataset_norm = 'ffhq_32'
 HPARAMS_REGISTRY['ffhq32'] = ffhq32
 
 
@@ -68,11 +73,13 @@ ffhq32_i = Hyperparams()
 ffhq32_i.update(i32)
 ffhq32_i.data_root = "/scratch/s193223/ffhq/"
 ffhq32_i.dataset = 'ffhq_32'
+ffhq32_i.dataset_norm = 'ffhq_32'
 HPARAMS_REGISTRY['ffhq32_i'] = ffhq32_i
 
 cifar10_i = Hyperparams()
 cifar10_i.update(i32)
 cifar10_i.dataset = 'cifar10'
+cifar10_i.dataset_norm = 'cifar10'
 HPARAMS_REGISTRY['cifar10_i'] = cifar10_i
 
 i64 = Hyperparams()
@@ -81,6 +88,7 @@ i64.n_batch = 4
 i64.grad_clip = 220.0
 i64.skip_threshold = 380.0
 i64.dataset = 'imagenet64'
+i64.dataset_norm = 'imagenet64'
 i64.dec_blocks = "1x2,4m1,4x3,8m4,8x7,16m8,16x15,32m16,32x31,64m32,64x12"
 i64.enc_blocks = "64x11,64d2,32x20,32d2,16x9,16d2,8x8,8d2,4x7,4d4,1x5"
 HPARAMS_REGISTRY['imagenet64'] = i64
@@ -88,6 +96,7 @@ HPARAMS_REGISTRY['imagenet64'] = i64
 ffhq64 = Hyperparams()
 ffhq64.update(i64)
 ffhq64.dataset = 'ffhq_64'
+ffhq64.dataset_norm = 'ffhq_64'
 ffhq64.data_root = "/scratch/s193223/ffhq/"
 HPARAMS_REGISTRY['ffhq64'] = ffhq64
 
@@ -96,6 +105,7 @@ ffhq_256.update(i64)
 ffhq_256.n_batch = 1
 ffhq_256.lr = 0.00015
 ffhq_256.dataset = 'ffhq_256'
+ffhq_256.dataset_norm = 'ffhq_256'
 ffhq_256.data_root = "/scratch/s193223/ffhq/"
 ffhq_256.epochs_per_eval = 1
 ffhq_256.epochs_per_eval_save = 1
@@ -113,27 +123,32 @@ HPARAMS_REGISTRY['ffhq256'] = ffhq_256
 celebahq = Hyperparams()
 celebahq.update(ffhq_256)
 celebahq.dataset = 'celebahq'
+celebahq.dataset_norm = 'celebahq'
 celebahq.data_root = "/scratch/s193223/celebahq2/CelebAMask-HQ/"
 HPARAMS_REGISTRY['celebahq'] = celebahq
 
 i256 = Hyperparams()
 i256.update(ffhq_256)
 i256.dataset = 'i256'
+i256.dataset_norm = 'i256'
 HPARAMS_REGISTRY['i256'] = i256
 
 gaussian_noise = Hyperparams()
 gaussian_noise.update(ffhq_256)
 gaussian_noise.dataset = 'gaussian_noise'
+gaussian_noise.dataset_norm = 'gaussian_noise'
 HPARAMS_REGISTRY['gaussian_noise'] = gaussian_noise
 
 uniform_noise = Hyperparams()
 uniform_noise.update(ffhq_256)
 uniform_noise.dataset = 'uniform_noise'
+uniform_noise.dataset_norm = 'uniform_noise'
 HPARAMS_REGISTRY['uniform_noise'] = uniform_noise
 
 ffhq1024 = Hyperparams()
 ffhq1024.update(ffhq_256)
 ffhq1024.dataset = 'ffhq_1024'
+ffhq1024.dataset_norm = 'ffhq_1024'
 ffhq1024.data_root = './ffhq_images1024x1024'
 ffhq1024.epochs_per_eval = 1
 ffhq1024.epochs_per_eval_save = 1

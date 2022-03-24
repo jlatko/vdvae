@@ -41,94 +41,94 @@ def cuda(x, **kwargs):
 def set_up_data(H):
     shift_loss = -127.5
     scale_loss = 1. / 127.5
+
+    # PICK DATASET
     if H.dataset == 'imagenet32':
         trX, vaX, teX = imagenet32(H.data_root)
         H.image_size = 32
         H.image_channels = 3
-        shift = -116.2373
-        scale = 1. / 69.37404
     elif H.dataset == 'imagenet64':
         trX, vaX, teX = imagenet64(H.data_root)
         H.image_size = 64
         H.image_channels = 3
-        shift = -115.92961967
-        scale = 1. / 69.37404
     elif H.dataset == 'ffhq_256': # data (0,255)
         trX, vaX, teX = ffhq256(H.data_root)
         H.image_size = 256
         H.image_channels = 3
-        shift = -112.8666757481
-        scale = 1. / 69.84780273
     elif H.dataset == 'ffhq_32': # data (0,255)
         trX, vaX, teX = ffhq32(H.data_root)
         H.image_size = 32
         H.image_channels = 3
-        # like ffhq
-        # shift = -112.8666757481
-        # scale = 1. / 69.84780273
-        # like cifar
-        shift = -120.63838
-        scale = 1. / 64.16736
     elif H.dataset == 'ffhq_64': # data (0,255)
         trX, vaX, teX = ffhq64(H.data_root)
         H.image_size = 64
         H.image_channels = 3
-        shift = -112.8666757481
-        scale = 1. / 69.84780273
     elif H.dataset == 'celebahq': # data (0,1)
         trX, vaX, teX = celebahq(H.data_root)
         H.image_size = 256
         H.image_channels = 3
-        shift = -0.4426144146984313 # same as ffhq256 * 255
-        scale = 1.0 / 0.2743
-        shift_loss = -0.5
-        scale_loss = 2.0
     elif H.dataset == 'i256': # data (0,1)
         trX, vaX, teX = None, None, None
         H.image_size = 256
         H.image_channels = 3
-        shift = -0.4426144146984313 # same as celebahq
-        scale = 1.0 / 0.2743
-        shift_loss = -0.5
-        scale_loss = 2.0
     elif H.dataset == 'ffhq_1024':
         trX, vaX, teX = ffhq1024(H.data_root)
         H.image_size = 1024
         H.image_channels = 3
-        shift = -0.4387
-        scale = 1.0 / 0.2743
-        shift_loss = -0.5
-        scale_loss = 2.0
     elif H.dataset == 'cifar10':
         (trX, _), (vaX, _), (teX, _) = cifar10(H.data_root, one_hot=False, group=H.cifar_group)
         H.image_size = 32
         H.image_channels = 3
-        shift = -120.63838
-        scale = 1. / 64.16736
     elif H.dataset == 'svhn':
         trX, vaX, teX = svhn(H.data_root)
         H.image_size = 32
         H.image_channels = 3
-        shift = -120.63838
-        scale = 1. / 64.16736
     elif H.dataset == 'gaussian_noise':
         trX, vaX, teX = None, None, None
         H.image_size = 256
         H.image_channels = 3
-        shift = 0.
-        scale = 1.
-        shift_loss = 0.
-        scale_loss = 0.33 # shouldn't
     elif H.dataset == 'uniform_noise':
         trX, vaX, teX = None, None, None
         H.image_size = 256
         H.image_channels = 3
+    else:
+        raise ValueError('unknown dataset: ', H.dataset)
+
+    # get normalization constants
+    if H.dataset_norm == 'imagenet32':
+        shift = -116.2373
+        scale = 1. / 69.37404
+    elif H.dataset_norm == 'imagenet64':
+        shift = -115.92961967
+        scale = 1. / 69.37404
+    elif H.dataset_norm in ['ffhq_32', 'ffhq_64', 'ffhq_256']: # data (0,255)
+        shift = -112.8666757481
+        scale = 1. / 69.84780273
+    elif H.dataset_norm == 'celebahq': # data (0,1)
+        shift = -0.4426144146984313 # same as ffhq256 * 255
+        scale = 1.0 / 0.2743
+        shift_loss = -0.5
+        scale_loss = 2.0
+    elif H.dataset_norm == 'i256': # data (0,1)
+        shift = -0.4426144146984313 # same as celebahq
+        scale = 1.0 / 0.2743
+        shift_loss = -0.5
+        scale_loss = 2.0
+    elif H.dataset_norm == 'ffhq_1024':
+        shift = -0.4387
+        scale = 1.0 / 0.2743
+        shift_loss = -0.5
+        scale_loss = 2.0
+    elif H.dataset_norm == ['cifar10', 'svhn']:
+        shift = -120.63838
+        scale = 1. / 64.16736
+    elif H.dataset_norm in ['gaussian_noise', 'uniform_noise']:
         shift = 0.
         scale = 1.
         shift_loss = 0.
         scale_loss = 1. # shouldn't matter
     else:
-        raise ValueError('unknown dataset: ', H.dataset)
+        raise ValueError('unknown dataset_norm: ', H.dataset_norm)
 
     do_low_bit = H.dataset in ['ffhq_256']
 
