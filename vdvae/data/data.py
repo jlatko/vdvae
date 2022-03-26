@@ -119,7 +119,7 @@ def set_up_data(H):
         scale = 1.0 / 0.2743
         shift_loss = -0.5
         scale_loss = 2.0
-    elif H.dataset_norm == ['cifar10', 'svhn']:
+    elif H.dataset_norm in ['cifar10', 'svhn']:
         shift = -120.63838
         scale = 1. / 64.16736
     elif H.dataset_norm in ['gaussian_noise', 'uniform_noise']:
