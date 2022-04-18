@@ -4,7 +4,9 @@ test256.png
 saved_models
 outputs
 visualizations
-notebooks
+notebooks_analysis
+
+*.ipynb_checkpoints
 .data
 wandb
 *.DS_Store

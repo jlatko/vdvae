@@ -11,6 +11,8 @@ from vdvae.data.data import set_up_data
 from vdvae.train_helpers import set_up_hyperparams, load_vaes, parse_hparams, setup_parsed
 from vdvae.model.vae_helpers import gaussian_analytical_kl
 import pandas as pd
+from vdvae.wandb_utils import WANDB_USER, WANDB_DIR
+from vdvae.constants import BASE_DIR
 import wandb
 
 
@@ -18,7 +20,7 @@ def setup_wandb(H):
     # add tags and initialize wandb run
     tags = ["stats", H.dataset]
 
-    wandb.init(project="vdvae_analysis", entity="johnnysummer", dir='/scratch/s193223/wandb', tags=tags)
+    wandb.init(project="vdvae_analysis", entity=WANDB_USER, dir=WANDB_DIR, tags=tags)
     wandb.config.update(H)
 
     # wandb configuration
@@ -148,7 +150,7 @@ def get_stats(H, ema_vae, data_valid, preprocess_fn):
     all_stats.to_pickle(os.path.join(H.destination_dir, f"{H.dataset}_{H.file_name}.pkl"))
 
 def add_params(parser):
-    # parser.add_argument('--destination_dir', type=str, default='/scratch/s193223/vdvae/latent_stats/')
+    # parser.add_argument('--destination_dir', type=str, default=f'{BASE_DIR}/vdvae/latent_stats/')
     parser.add_argument('--use_train', dest='use_train', action='store_true')
     parser.add_argument('--file_name', type=str, default='latent_stats')
     parser.add_argument('--ks', type=str, default='1,2,3,20,40,60')

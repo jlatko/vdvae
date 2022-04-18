@@ -1,3 +1,18 @@
+# 
+
+This is a fork from https://github.com/openai/vdvae, 
+which I used as a base to perform further experiments and analysis. 
+
+Notebooks rely on weights and biases experiments that are not public, so they cannot be rerun, but I upload them as reference.
+
+---
+---
+
+original readme below
+
+---
+---
+
 # Very Deep VAEs
 
 Repository for the paper "Very Deep VAEs Generalize Autoregressive Models and Can Outperform Them on Images" (https://arxiv.org/abs/2011.10650)

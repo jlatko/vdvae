@@ -14,6 +14,8 @@ from tqdm import tqdm
 from vdvae.data.data import set_up_data
 from vdvae.train_helpers import set_up_hyperparams, parse_hparams
 import pandas as pd
+from vdvae.wandb_utils import WANDB_USER, WANDB_DIR
+from vdvae.constants import BASE_DIR
 
 
 def mean_local_entropy(x, radius=3):
@@ -76,7 +78,7 @@ def get_complexities(H, data_valid, preprocess_fn):
 
 
 def add_params(parser):
-    parser.add_argument('--destination_dir', type=str, default='/scratch/s193223/vdvae/complexities/')
+    parser.add_argument('--destination_dir', type=str, default=f'{BASE_DIR}/vdvae/complexities/')
     parser.add_argument('--use_train', dest='use_train', action='store_true')
     parser.add_argument('--file_name', type=str, default='')
     parser.add_argument('-n', type=int, default=None)
@@ -92,7 +94,7 @@ def main():
 
     tags = ["complexities"]
 
-    wandb.init(project='vdvae_analysis', entity='johnnysummer', dir="/scratch/s193223/wandb/", tags=tags, name=run_name)
+    wandb.init(project='vdvae_analysis', entity=WANDB_USER, dir=WANDB_DIR, tags=tags, name=run_name)
     H.destination_dir = wandb.run.dir  # ???
 
     H, data_train, data_valid_or_test, preprocess_fn = set_up_data(H)

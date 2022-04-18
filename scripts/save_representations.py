@@ -9,6 +9,7 @@ from tqdm import tqdm
 
 from vdvae.data.data import set_up_data
 from vdvae.train_helpers import set_up_hyperparams, load_vaes
+from vdvae.constants import BASE_DIR
 
 def save_repr(H, ema_vae, data_valid, preprocess_fn, keys=("z", "kl", "qm", "qv", "pm", "pv")):
     valid_sampler = DistributedSampler(data_valid, num_replicas=H.mpi_size, rank=H.rank)
@@ -53,7 +54,7 @@ def save_repr(H, ema_vae, data_valid, preprocess_fn, keys=("z", "kl", "qm", "qv"
                     return
 
 def add_params(parser):
-    parser.add_argument('--destination_dir', type=str, default='/scratch/s193223/vdvae/latents/')
+    parser.add_argument('--destination_dir', type=str, default=f'{BASE_DIR}/vdvae/latents/')
     parser.add_argument('--use_train', dest='use_train', action='store_true')
     parser.add_argument('--check_files', dest='check_files', action='store_true')
     parser.add_argument('--keys_mode', type=str, default='z')

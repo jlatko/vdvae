@@ -12,6 +12,7 @@ from collections import defaultdict
 from tqdm import tqdm
 
 from vdvae.hps import Hyperparams
+from vdvae.constants import BASE_DIR
 
 import numpy as np
 from vdvae.latents import get_latents, get_available_latents
@@ -80,8 +81,8 @@ def parse_args(s=None):
     parser = argparse.ArgumentParser()
 
     parser.add_argument('--run_name', type=str, default=None)
-    parser.add_argument('--latents_dir', type=str, default="/scratch/s193223/vdvae/latents/")
-    parser.add_argument('--destination_dir', type=str, default='/scratch/s193223/vdvae/attr_means/')
+    parser.add_argument('--latents_dir', type=str, default=f"{BASE_DIR}/vdvae/latents/")
+    parser.add_argument('--destination_dir', type=str, default=f'{BASE_DIR}/vdvae/attr_means/')
     parser.add_argument('--keys_set', type=str, default='full')
     parser.add_argument('--layer_ids_set', type=str, default='full')
     parser.add_argument('--log_level', type=str, default='INFO')

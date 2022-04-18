@@ -11,7 +11,8 @@ from PIL import Image
 import os
 
 from vdvae.hps import Hyperparams
-from vdvae.wandb_utils import _download
+from vdvae.wandb_utils import _download, WANDB_USER, WANDB_DIR
+from vdvae.constants import BASE_DIR
 
 api = wandb.Api()
 
@@ -20,8 +21,8 @@ DPI = fig.dpi
 plt.close()
 
 
-project_viz="johnnysummer/vae_visualizations"
-project_scores = "johnnysummer/vdvae_analysis"
+project_viz=f"{WANDB_USER}/vae_visualizations"
+project_scores = f"{WANDB_USER}/vdvae_analysis"
 
 def get_scores(H, run_scores, attr):
     files_scores = run_scores.files()
@@ -144,8 +145,8 @@ def init_wandb(H, run_viz, runs_scores):
     else:
         tags.append("z")
 
-    # wandb.init(project='vae_visualizations', entity='johnnysummer', dir="/scratch/s193223/wandb/", tags=tags)
-    wandb.init(project='vae_visualizations', entity='johnnysummer', tags=tags)
+    # wandb.init(project='vae_visualizations', entity=WANDB_USER, dir=WANDB_DIR, tags=tags)
+    wandb.init(project='vae_visualizations', entity=WANDB_USER, tags=tags)
     wandb.config.update({"script": "enhance"})
 
     if H.run_name is None:

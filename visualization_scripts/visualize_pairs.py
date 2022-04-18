@@ -10,11 +10,13 @@ import wandb
 
 import imageio
 
+from vdvae.constants import BASE_DIR
 from vdvae.data.data import set_up_data
 from vdvae.latents import get_available_latents
 from vdvae.model.vae_helpers import draw_gaussian_diag_samples
 from vdvae.train_helpers import set_up_hyperparams, load_vaes
 from visualization_scripts.visualize_interpolate import resize
+from vdvae.wandb_utils import WANDB_USER, WANDB_DIR
 
 
 def init_wandb(H):
@@ -23,7 +25,7 @@ def init_wandb(H):
     if H.fixed:
         tags.append("fixed")
 
-    wandb.init(project='vae_visualizations', entity='johnnysummer', dir="/scratch/s193223/wandb/", tags=tags)
+    wandb.init(project='vae_visualizations', entity=WANDB_USER, dir=WANDB_DIR, tags=tags)
     wandb.config.update({"script": "vis_pairs"})
 
     if H.run_name:
@@ -35,7 +37,7 @@ def init_wandb(H):
         wandb.run.name =  'PAIRS-' + wandb.run.name
 
 def add_params(parser):
-    parser.add_argument('--latents_dir', type=str, default='/scratch/s193223/vdvae/latents/ffhq/all')
+    parser.add_argument('--latents_dir', type=str, default=f'{BASE_DIR}/vdvae/latents/ffhq/all')
     parser.add_argument('--n_files', type=int, default=5)
     parser.add_argument('--n_samples', type=int, default=10)
     parser.add_argument('--size', type=int, default=256)

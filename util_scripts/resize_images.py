@@ -2,8 +2,8 @@ import os
 from PIL import Image
 from tqdm import tqdm
 
-SOURCE_PATH = "/scratch/s193223/celebahq2/CelebAMask-HQ/CelebA-HQ-img"
-DESTINATION = "/scratch/s193223/celebahq2/CelebAMask-HQ/img256"
+SOURCE_PATH = f"{BASE_DIR}/celebahq2/CelebAMask-HQ/CelebA-HQ-img"
+DESTINATION = f"{BASE_DIR}/celebahq2/CelebAMask-HQ/img256"
 TARGET_RES = 256
 
 if not os.path.exists(DESTINATION):

@@ -7,13 +7,14 @@ import torch
 from tqdm import tqdm
 import imageio
 
+from vdvae.constants import BASE_DIR
 from vdvae.data.data import set_up_data
 from vdvae.latents import get_available_latents
 from vdvae.train_helpers import set_up_hyperparams, load_vaes
 
 
 def add_params(parser):
-    parser.add_argument('--latents_dir', type=str, default='/scratch/s193223/vdvae/latents/')
+    parser.add_argument('--latents_dir', type=str, default=f'{BASE_DIR}/vdvae/latents/')
     parser.add_argument('--n_samples', type=int, default=10)
     parser.add_argument('--n_steps', type=int, default=7)
     parser.add_argument('--destination_dir', type=str, default='./visualizations/')

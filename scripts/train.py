@@ -14,6 +14,8 @@ from vdvae.data.data import set_up_data
 from vdvae.utils import get_cpu_stats_over_ranks, mpi_size, mpi_rank
 from vdvae.train_helpers import load_vaes, load_opt, accumulate_stats, save_model, update_ema, \
     parse_hparams, setup_parsed
+from vdvae.wandb_utils import WANDB_USER, WANDB_DIR
+from vdvae.constants import BASE_DIR
 
 import wandb
 
@@ -181,7 +183,7 @@ def main():
     if H.cifar_group is not None:
         tags.append(H.cifar_group)
 
-    wandb.init(project='vdvae', entity='johnnysummer', dir="/scratch/s193223/wandb/", tags=tags, name=run_name, group=group_name)
+    wandb.init(project='vdvae', entity=WANDB_USER, dir=WANDB_DIR, tags=tags, name=run_name, group=group_name)
     H.save_dir = wandb.run.dir # ???
 
     logprint = setup_parsed(H, dir=os.path.join(wandb.run.dir, 'log'))

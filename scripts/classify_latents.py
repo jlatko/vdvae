@@ -13,7 +13,7 @@ else:
 from sklearn.preprocessing import StandardScaler
 
 from vdvae.attributes import get_attributes
-from vdvae.wandb_utils import _download
+from vdvae.wandb_utils import _download, WANDB_USER, WANDB_DIR
 
 if os.environ["CUDA_VISIBLE_DEVICES"]:
     from cuml.neighbors import KNeighborsClassifier as cuKNeighborsClassifier
@@ -33,6 +33,7 @@ from vdvae.hps import Hyperparams
 
 import numpy as np
 import pandas as pd
+from vdvae.constants import BASE_DIR
 from vdvae.latents import get_latents, get_available_latents
 from sklearn.model_selection import StratifiedKFold
 from sklearn.metrics import accuracy_score, f1_score, roc_auc_score
@@ -271,7 +272,7 @@ def parse_args(s=None):
     parser = argparse.ArgumentParser()
 
     parser.add_argument('--run_name', type=str, default=None)
-    parser.add_argument('--latents_dir', type=str, default="/scratch/s193223/vdvae/latents/")
+    parser.add_argument('--latents_dir', type=str, default=f"{BASE_DIR}/vdvae/latents/")
     parser.add_argument('--keys_set', type=str, default='small')
     parser.add_argument('--layer_ids_set', type=str, default='small')
     parser.add_argument('--log_level', type=str, default='INFO')
@@ -353,7 +354,7 @@ def init_wandb(H):
     tags.append(str(H.splits))
     tags.append(H.model)
 
-    wandb.init(project='vdvae_analysis', entity='johnnysummer', dir="/scratch/s193223/wandb/", tags=tags)
+    wandb.init(project='vdvae_analysis', entity=WANDB_USER, dir=WANDB_DIR, tags=tags)
     wandb.run.name = H.run_name if H.run_name else f"{H.model}_{H.keys_set}_{H.layer_ids_set}"
     wandb.run.save()
 

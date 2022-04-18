@@ -1,5 +1,6 @@
-HPARAMS_REGISTRY = {}
+from vdvae.constants import HOME_DIR
 
+HPARAMS_REGISTRY = {}
 
 class Hyperparams(dict):
     def __getattr__(self, attr):
@@ -24,12 +25,12 @@ cifar10.dataset = 'cifar10'
 cifar10.dataset_norm = 'cifar10'
 cifar10.n_batch = 16
 cifar10.ema_rate = 0.9999
-cifar10.data_root = "/home/s193223/hvae-oodd/data/CIFAR10/"
+cifar10.data_root = f"{HOME_DIR}/hvae-oodd/data/CIFAR10/"
 HPARAMS_REGISTRY['cifar10'] = cifar10
 
 svhn = Hyperparams()
 svhn.update(cifar10)
-svhn.data_root = "/home/s193223/hvae-oodd/data/SVHN/"
+svhn.data_root = f"{HOME_DIR}/hvae-oodd/data/SVHN/"
 svhn.dataset = 'svhn'
 svhn.dataset_norm = 'svhn'
 HPARAMS_REGISTRY['svhn'] = svhn
@@ -63,7 +64,7 @@ ffhq32 = Hyperparams()
 # ffhq32.grad_clip = 200.
 # ffhq32.skip_threshold = 400.
 ffhq32.update(cifar10)
-ffhq32.data_root = "/scratch/s193223/ffhq/"
+ffhq32.data_root = f"{BASE_DIR}/ffhq/"
 ffhq32.dataset = 'ffhq_32'
 ffhq32.dataset_norm = 'ffhq_32'
 HPARAMS_REGISTRY['ffhq32'] = ffhq32
@@ -71,7 +72,7 @@ HPARAMS_REGISTRY['ffhq32'] = ffhq32
 
 ffhq32_i = Hyperparams()
 ffhq32_i.update(i32)
-ffhq32_i.data_root = "/scratch/s193223/ffhq/"
+ffhq32_i.data_root = f"{BASE_DIR}/ffhq/"
 ffhq32_i.dataset = 'ffhq_32'
 ffhq32_i.dataset_norm = 'ffhq_32'
 HPARAMS_REGISTRY['ffhq32_i'] = ffhq32_i
@@ -97,7 +98,7 @@ ffhq64 = Hyperparams()
 ffhq64.update(i64)
 ffhq64.dataset = 'ffhq_64'
 ffhq64.dataset_norm = 'ffhq_64'
-ffhq64.data_root = "/scratch/s193223/ffhq/"
+ffhq64.data_root = f"{BASE_DIR}/ffhq/"
 HPARAMS_REGISTRY['ffhq64'] = ffhq64
 
 ffhq_256 = Hyperparams()
@@ -106,7 +107,7 @@ ffhq_256.n_batch = 1
 ffhq_256.lr = 0.00015
 ffhq_256.dataset = 'ffhq_256'
 ffhq_256.dataset_norm = 'ffhq_256'
-ffhq_256.data_root = "/scratch/s193223/ffhq/"
+ffhq_256.data_root = f"{BASE_DIR}/ffhq/"
 ffhq_256.epochs_per_eval = 1
 ffhq_256.epochs_per_eval_save = 1
 ffhq_256.num_images_visualize = 2
@@ -124,7 +125,7 @@ celebahq = Hyperparams()
 celebahq.update(ffhq_256)
 celebahq.dataset = 'celebahq'
 celebahq.dataset_norm = 'celebahq'
-celebahq.data_root = "/scratch/s193223/celebahq2/CelebAMask-HQ/"
+celebahq.data_root = f"{BASE_DIR}/celebahq2/CelebAMask-HQ/"
 HPARAMS_REGISTRY['celebahq'] = celebahq
 
 i256 = Hyperparams()
