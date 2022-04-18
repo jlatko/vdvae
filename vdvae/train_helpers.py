@@ -6,18 +6,20 @@ import argparse
 import os
 import json
 import subprocess
-from hps import Hyperparams, parse_args_and_update_hparams, add_vae_arguments
-from utils import (logger,
-                   local_mpi_rank,
-                   mpi_size,
-                   maybe_download,
-                   mpi_rank)
-from data import mkdir_p
+from vdvae.hps import Hyperparams, parse_args_and_update_hparams, add_vae_arguments
+from vdvae.utils import (logger,
+                         local_mpi_rank,
+                         mpi_size,
+                         maybe_download,
+                         mpi_rank)
+from vdvae.data.data import mkdir_p
 from contextlib import contextmanager
 import torch.distributed as dist
-from apex.optimizers import FusedAdam as AdamW
-from vae import VAE
+# from apex.optimizers import FusedAdam as AdamW
+from torch.optim import AdamW
+from vdvae.model.vae import VAE
 from torch.nn.parallel.distributed import DistributedDataParallel
+
 
 
 def update_ema(vae, ema_vae, ema_rate):

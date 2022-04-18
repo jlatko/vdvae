@@ -7,7 +7,7 @@ import pandas as pd
 from torch.utils.data import Dataset
 from tqdm import tqdm
 
-I256_DIR = "/scratch/s193223/inet/"
+I256_DIR = f"{BASE_DIR}/inet/"
 
 class ImageNet256Dataset(Dataset):
     """Face Landmarks dataset."""

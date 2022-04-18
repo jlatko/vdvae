@@ -10,10 +10,12 @@ from torch.utils.data.distributed import DistributedSampler
 from torch.cuda.amp import autocast
 from tqdm import tqdm
 
-from data import set_up_data
-from utils import get_cpu_stats_over_ranks, mpi_size, mpi_rank
-from train_helpers import set_up_hyperparams, load_vaes, load_opt, accumulate_stats, save_model, update_ema, \
+from vdvae.data.data import set_up_data
+from vdvae.utils import get_cpu_stats_over_ranks, mpi_size, mpi_rank
+from vdvae.train_helpers import load_vaes, load_opt, accumulate_stats, save_model, update_ema, \
     parse_hparams, setup_parsed
+from vdvae.wandb_utils import WANDB_USER, WANDB_DIR
+from vdvae.constants import BASE_DIR
 
 import wandb
 
@@ -79,6 +81,11 @@ def train_loop(H, data_train, data_valid, preprocess_fn, vae, ema_vae, logprint)
                 accumulated_stats['batch'] = iterate
                 accumulated_stats['lr'] = scheduler.get_last_lr()[0]
                 wandb.log(accumulated_stats, step=iterate)
+                if accumulated_stats["skipped_updates"] == 100:
+                    print("Skipped all updates, lowering LR...")
+                    for param_group in optimizer.param_groups:
+                        param_group['lr'] = param_group['lr'] / 2
+                        break
 
             if iterate % H.iters_per_print == 0 or iters_since_starting in early_evals:
                 logprint(model=H.desc, type='train_loss', lr=scheduler.get_last_lr()[0], epoch=epoch, step=iterate, **accumulate_stats(stats, H.iters_per_print))
@@ -158,13 +165,25 @@ def main():
     if H.run_name is not None:
         run_name = H.run_name
     else:
-        run_name = f"DDP{mpi_size()}_{H.dataset}_{time_str}"
+        run_name = f"{H.dataset}_{time_str}"
 
     if mpi_size() > 1:
-        run_name += '-' + str(mpi_rank())
+        run_name = f"DDP{mpi_size()}_" + run_name + '-' + str(mpi_rank())
         group_name = f"DDP{mpi_size()}_{H.dataset}_{time_str}"
 
-    wandb.init(project='vdvae', entity='johnnysummer', dir="/scratch/s193223/wandb/", name=run_name, group=group_name)
+    if H.test_eval:
+        tags = ["eval"]
+        if group_name is None:
+            group_name = "eval"
+    else:
+        tags = ["train"]
+        if group_name is None:
+            group_name = "train"
+
+    if H.cifar_group is not None:
+        tags.append(H.cifar_group)
+
+    wandb.init(project='vdvae', entity=WANDB_USER, dir=WANDB_DIR, tags=tags, name=run_name, group=group_name)
     H.save_dir = wandb.run.dir # ???
 
     logprint = setup_parsed(H, dir=os.path.join(wandb.run.dir, 'log'))

@@ -7,10 +7,11 @@ from torch.utils.data import DataLoader
 from torch.utils.data.distributed import DistributedSampler
 from tqdm import tqdm
 
-from data import set_up_data
-from train_helpers import set_up_hyperparams, load_vaes
-from vae_helpers import gaussian_analytical_kl
-import pandas as pd
+from vdvae.constants import BASE_DIR
+from vdvae.data.data import set_up_data
+from vdvae.train_helpers import set_up_hyperparams, load_vaes
+from vdvae.constants import BASE_DIR
+
 
 def all_finite(stats):
     for block_idx, block_stats in enumerate(stats):
@@ -89,7 +90,7 @@ def get_stats(H, ema_vae, data_valid, preprocess_fn):
     # all_stats.to_pickle(os.path.join(H.destination_dir, f"{H.dataset}_latent_stats.pkl"))
 
 def add_params(parser):
-    parser.add_argument('--destination_dir', type=str, default='/scratch/s193223/vdvae/latent_stats/')
+    parser.add_argument('--destination_dir', type=str, default=f'{BASE_DIR}/vdvae/latent_stats/')
     parser.add_argument('--file_name', type=str, default='latent_means')
     parser.add_argument('--use_train', dest='use_train', action='store_true')
     parser.add_argument('-n', type=int, default=None)

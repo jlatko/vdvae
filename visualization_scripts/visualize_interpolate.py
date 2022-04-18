@@ -1,29 +1,25 @@
 from copy import copy
-from time import sleep
 
 import numpy as np
 import os
 import torch
 from PIL import Image
-from torch.utils.data import DataLoader
-from torch.utils.data.distributed import DistributedSampler
 from tqdm import tqdm
 import imageio
 
-from attributes import get_attributes
-from data import set_up_data
-from latents import get_available_latents
-from train_helpers import set_up_hyperparams, load_vaes
+from vdvae.constants import BASE_DIR
+from vdvae.attributes import get_attributes
+from vdvae.data.data import set_up_data
+from vdvae.latents import get_available_latents
+from vdvae.train_helpers import set_up_hyperparams, load_vaes
 import wandb
-
-import torch.nn.functional as F
-
+from vdvae.wandb_utils import _download, WANDB_USER, WANDB_DIR
 
 MIN_FREQ = 2
 
 def add_params(parser):
-    parser.add_argument('--latents_dir', type=str, default='/scratch/s193223/vdvae/latents/')
-    parser.add_argument('--attr_means_dir', type=str, default='/scratch/s193223/vdvae/attr_means/')
+    parser.add_argument('--latents_dir', type=str, default=f'{BASE_DIR}/vdvae/latents/')
+    parser.add_argument('--attr_means_dir', type=str, default=f'{BASE_DIR}/vdvae/attr_means/')
     parser.add_argument('--norm', type=str, default="pixel", help="none|channel|pixel")
     parser.add_argument('--n_samples', type=int, default=1)
     parser.add_argument('--size', type=int, default=128)
@@ -163,7 +159,7 @@ def init_wandb(H):
     if H.fixed:
         tags.append("fixed")
 
-    wandb.init(project='vae_visualizations', entity='johnnysummer', dir="/scratch/s193223/wandb/", tags=tags)
+    wandb.init(project='vae_visualizations', entity=WANDB_USER, dir=WANDB_DIR, tags=tags)
     wandb.config.update({"script": "vis_attr"})
 
     if H.run_name:
@@ -172,7 +168,7 @@ def init_wandb(H):
     else:
         print(wandb.run.name)
         run_name = H.keys_set
-        # if H.latents_dir != '/scratch/s193223/vdvae/latents/':
+        # if H.latents_dir != f'{BASE_DIR}/vdvae/latents/':
         #     run_name += "_tuned"
         run_name += "_" + str(H.temp)
 
@@ -205,7 +201,7 @@ def main():
     attributes = get_attributes(H.keys_set)
 
     # lv_points = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 14, 16, 18, 20, 24, 27, 30, 33, 36, 40, 43, 48, 53, 58, 63]
-    lv_points = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 14, 16, 18, 20, 24, 27, 30, 33, 36, 40, 43, 48, 53, 58, 63]
+    lv_points = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 14, 16, 18, 20, 24, 27, 30, 33, 36, 40, 43, 48, 53]
 
     wandb.config.update(H)
     wandb.config.update({"attributes": attributes, "latent_ids": latent_ids, "lv_points": lv_points})

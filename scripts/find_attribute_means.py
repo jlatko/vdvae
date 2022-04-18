@@ -2,7 +2,7 @@ import argparse
 import os
 from time import sleep
 
-from attributes import get_attributes
+from vdvae.attributes import get_attributes
 
 os.environ["MKL_NUM_THREADS"] = "1"
 os.environ["NUMEXPR_NUM_THREADS"] = "1"
@@ -11,11 +11,11 @@ os.environ["OMP_NUM_THREADS"] = "1"
 from collections import defaultdict
 from tqdm import tqdm
 
-from hps import Hyperparams
+from vdvae.hps import Hyperparams
+from vdvae.constants import BASE_DIR
 
 import numpy as np
-import pandas as pd
-from latents import get_latents, get_available_latents
+from vdvae.latents import get_latents, get_available_latents
 import logging
 
 # TODO: consider accounting for the most frequent and correlated attributes (earings only for females etc)
@@ -28,7 +28,7 @@ def get_means(z, meta, col):
     return pos_mean, neg_mean
 
 def find_means(H, cols, layer_ind, latents_dir, handle_nan=False):
-    z, meta = get_latents(latents_dir=latents_dir, layer_ind=layer_ind, splits=[1,2,3], allow_missing=False, handle_nan=handle_nan, key=H.latent_key)
+    z, meta = get_latents(latents_dir=latents_dir, layer_ind=layer_ind, splits=[0,1,2,3], allow_missing=False, handle_nan=handle_nan, key=H.latent_key)
     logging.debug(z.shape)
 
     means_dict = {}
@@ -41,9 +41,9 @@ def find_means(H, cols, layer_ind, latents_dir, handle_nan=False):
         male_and_not_query = male & (~query)
         female_and_query = (~male) & query
         female_and_not_query = (~male) & (~query)
-        logging.info(f"{col}:"
-                     f"\n male (y/n) {male_and_query.sum()} | {male_and_not_query.sum()} "
-                     f"\n female (y/n) {female_and_query.sum()} | {female_and_not_query.sum()} ")
+        # logging.info(f"{col}:"
+        #              f"\n male (y/n) {male_and_query.sum()} | {male_and_not_query.sum()} "
+        #              f"\n female (y/n) {female_and_query.sum()} | {female_and_not_query.sum()} ")
         # male
         if male_and_query.sum() >= MIN_FREQ and male_and_not_query.sum() >= MIN_FREQ:
             pos_mean_male, neg_mean_male = get_means(z[male], meta[male], col)
@@ -52,7 +52,7 @@ def find_means(H, cols, layer_ind, latents_dir, handle_nan=False):
             means_dict[f"{col}_diff_male"] = pos_mean_male - neg_mean_male
             means_dict[f"{col}_diff_grouped"] = means_dict[f"{col}_diff_male"]
         else:
-            logging.info("skipping male")
+            logging.info(f"{col} skipping male")
         # female
         if female_and_query.sum() >= MIN_FREQ and female_and_not_query.sum() >= MIN_FREQ:
             pos_mean_female, neg_mean_female = get_means(z[~male], meta[~male], col)
@@ -65,7 +65,7 @@ def find_means(H, cols, layer_ind, latents_dir, handle_nan=False):
             else:
                 means_dict[f"{col}_diff_grouped"] = means_dict[f"{col}_diff_female"]
         else:
-            logging.info("skipping female")
+            logging.info(f"{col} skipping female")
 
 
         pos_mean, neg_mean = get_means(z, meta, col)
@@ -81,8 +81,8 @@ def parse_args(s=None):
     parser = argparse.ArgumentParser()
 
     parser.add_argument('--run_name', type=str, default=None)
-    parser.add_argument('--latents_dir', type=str, default="/scratch/s193223/vdvae/latents/")
-    parser.add_argument('--destination_dir', type=str, default='/scratch/s193223/vdvae/attr_means/')
+    parser.add_argument('--latents_dir', type=str, default=f"{BASE_DIR}/vdvae/latents/")
+    parser.add_argument('--destination_dir', type=str, default=f'{BASE_DIR}/vdvae/attr_means/')
     parser.add_argument('--keys_set', type=str, default='full')
     parser.add_argument('--layer_ids_set', type=str, default='full')
     parser.add_argument('--log_level', type=str, default='INFO')
@@ -100,6 +100,8 @@ def setup(H):
         latent_ids = [0,1,2,3,5,10,15,20,30,40,50]
     elif H.layer_ids_set == "mid":
         latent_ids = list(range(11)) + list(np.arange(12, 21, 2)) + list(np.arange(21, 42, 3)) + [43, 48, 53, 58, 63]
+    elif H.layer_ids_set == "mid_mem":
+        latent_ids = list(range(11)) + list(np.arange(12, 21, 2)) + list(np.arange(21, 42, 3)) + [43, 48, 53]
     elif H.layer_ids_set == "full":
         latent_ids = get_available_latents(latents_dir=H.latents_dir)
     else:
@@ -126,7 +128,7 @@ def main():
     logging.info(latent_ids)
 
     scores = defaultdict(list)
-    for i in tqdm(latent_ids):
+    for i in tqdm(list(reversed(latent_ids))):
         find_means(H, cols, i, latents_dir=H.latents_dir, handle_nan=H.handle_nan)
 
 

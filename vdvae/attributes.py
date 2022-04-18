@@ -1,7 +1,44 @@
 
 def get_attributes(keys_set):
     if keys_set == "small":
-        cols = ["Young", "Male",  "Smiling", "Chubby", "Blond_Hair"]
+        cols = ["Young", "Male",  "Smiling", "Wearing_Hat", "Blond_Hair"]
+    elif keys_set == "low_prev":
+        cols = ['Bald', 'Wearing_Hat', 'Gray_Hair', 'Eyeglasses', 'Pale_Skin',
+                'Mustache', 'Double_Chin', 'Chubby',
+                'Wearing_Necktie', 'Goatee', 'Sideburns', 'Receding_Hairline',
+                'Rosy_Cheeks']
+    elif keys_set == "male":
+        cols = [
+                 'Male',
+        ]
+    elif keys_set == "high_prev":
+        cols = [
+                 'Big_Nose',
+                 'Wavy_Hair',
+                 'Male',
+                 'Heavy_Makeup',
+                 'Smiling',
+                 'Attractive',
+                 'Young'
+        ]
+    elif keys_set == "oodd":
+        cols = [
+            'Bald', 'Wearing_Hat',  'Eyeglasses', 'Pale_Skin',
+            'Rosy_Cheeks', 'Male'
+        ]
+    elif keys_set == "mid":
+        cols = [
+            'Bald', 'Wearing_Hat',  'Eyeglasses', 'Pale_Skin',
+            'Rosy_Cheeks', 'Male',
+                 'Heavy_Makeup',
+                 "Narrow_Eyes", "Bushy_Eyebrows",
+                "Oval_Face",
+                 'Smiling',
+                 'Attractive',
+                 'Young',
+                 "Mustache",
+                 'Wavy_Hair', "Black_Hair",  "Blond_Hair",
+        ]
     elif keys_set == "big":
         cols = ["Young", "Male", "Bald", "Mustache", "Smiling", "Chubby",
                 "Straight_Hair", "Wavy_Hair", "Bangs",
@@ -11,6 +48,7 @@ def get_attributes(keys_set):
                 "Narrow_Eyes", "Bushy_Eyebrows",
                 "Oval_Face", "Big_Lips", "Big_Nose", "Pointy_Nose",
                 "Eyeglasses",
+                'Rosy_Cheeks',
                 "Heavy_Makeup", "Pale_Skin",
                 "Wearing_Hat", "Wearing_Earrings", "Wearing_Lipstick"]
     elif keys_set == "full":

@@ -1,20 +1,21 @@
 import io
 
+import wandb
+from PIL import Image
 from skimage.filters.rank import entropy
 from skimage.morphology import disk
 from time import sleep
 
 import numpy as np
 import os
-import torch
 from torch.utils.data import DataLoader
-from torch.utils.data.distributed import DistributedSampler
 from tqdm import tqdm
 
-from data import set_up_data
-from train_helpers import set_up_hyperparams, load_vaes
-from vae_helpers import gaussian_analytical_kl
+from vdvae.data.data import set_up_data
+from vdvae.train_helpers import set_up_hyperparams, parse_hparams
 import pandas as pd
+from vdvae.wandb_utils import WANDB_USER, WANDB_DIR
+from vdvae.constants import BASE_DIR
 
 
 def mean_local_entropy(x, radius=3):
@@ -32,28 +33,23 @@ def get_size_bytesio(img, ext="JPEG", optimize=False):
         s = f.getbuffer().nbytes
     return s
 
-def compression(x, mode=0):
+def compression(x):
     x = (x * 255).numpy().astype("uint8")
     if x.shape[0] == 1:
         x = x[0]
     else:
         x = x.transpose(1,2,0)
     img = Image.fromarray(x)
-    if mode == 0: # JPEG optimized/not-optimized
-        optimized = get_size_bytesio(img, ext="JPEG", optimize=True)
-        unoptimized = get_size_bytesio(img, ext="JPEG", optimize=False)
-        return optimized / unoptimized
-
-    if mode == 1: # JPEG optimized
-        optimized = get_size_bytesio(img, ext="JPEG", optimize=True)
-        return optimized
+    optimized = get_size_bytesio(img, ext="JPEG", optimize=True)
+    unoptimized = get_size_bytesio(img, ext="JPEG", optimize=False)
+    return optimized / unoptimized, optimized
 
 complexity_metrics = {
     "mean_local_entropy": mean_local_entropy,
     "compression": compression,
 }
 
-def get_complexities(H, data_valid, preprocess_fn, complexity_metric):
+def get_complexities(H, data_valid, preprocess_fn):
     idx = -1
     all_stats = []
     for x in tqdm(DataLoader(data_valid, batch_size=H.n_batch, drop_last=True, pin_memory=False, shuffle=False)):
@@ -68,40 +64,38 @@ def get_complexities(H, data_valid, preprocess_fn, complexity_metric):
 
             stat_dict["idx"] = idx
 
+            stat_dict["mean_local_entropy"] = mean_local_entropy(target[i], radius=5)
+            a, b = compression(target[i].permute(2,0,1))
+            stat_dict["compressed_ratio_t"] = a
+            stat_dict["compressed_size_t"] = b
 
             all_stats.append(stat_dict)
         if H.n is not None and len(all_stats) >= H.n:
             break
     all_stats = pd.DataFrame(all_stats)
-    all_stats.to_pickle(os.path.join(H.destination_dir, f"{H.dataset}_{H.file_name}_{H.complexity}_{H.complexity_param}.pkl"))
+    all_stats.to_pickle(os.path.join(H.destination_dir, f"complexity.pkl"))
 
 
 
 def add_params(parser):
-    parser.add_argument('--destination_dir', type=str, default='/scratch/s193223/vdvae/complexities/')
+    parser.add_argument('--destination_dir', type=str, default=f'{BASE_DIR}/vdvae/complexities/')
     parser.add_argument('--use_train', dest='use_train', action='store_true')
     parser.add_argument('--file_name', type=str, default='')
-    parser.add_argument("--complexity", type=str, default="mean_local_entropy", help="complexity metric")
-    parser.add_argument("--complexity_param", type=int, default=3, help="locality radius or compression mode")
     parser.add_argument('-n', type=int, default=None)
-
     return parser
 
-
-
 def main():
-    H, logprint = set_up_hyperparams(extra_args_fn=add_params)
+    H = parse_hparams()
 
-    if os.path.exists(H.destination_dir):
-        if len(os.listdir(H.destination_dir)) > 0:
-            print("WARNING: destination non-empty")
-            sleep(5)
-            print("continuing")
-        #     raise RuntimeError('Destination non empty')
+    if H.run_name is not None:
+        run_name = H.run_name
     else:
-        os.makedirs(H.destination_dir)
+        run_name = f"COMPLEX_{H.dataset}"
 
-    complexity_metric = complexity_metrics[H.complexity]
+    tags = ["complexities"]
+
+    wandb.init(project='vdvae_analysis', entity=WANDB_USER, dir=WANDB_DIR, tags=tags, name=run_name)
+    H.destination_dir = wandb.run.dir  # ???
 
     H, data_train, data_valid_or_test, preprocess_fn = set_up_data(H)
     if H.use_train:
@@ -109,7 +103,7 @@ def main():
     else:
         dataset = data_valid_or_test
 
-    get_complexities(H, dataset, preprocess_fn, complexity_metric)
+    get_complexities(H, dataset, preprocess_fn)
 
 if __name__ == "__main__":
     main()

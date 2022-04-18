@@ -5,7 +5,7 @@ import pandas as pd
 from torch.utils.data import Dataset
 
 
-CELEBAHQ_DIR = "/scratch/s193223/celebahq2/CelebAMask-HQ/"
+CELEBAHQ_DIR = f"{BASE_DIR}/celebahq2/CelebAMask-HQ/"
 
 def get_gaussian_noise(shape):
     return
